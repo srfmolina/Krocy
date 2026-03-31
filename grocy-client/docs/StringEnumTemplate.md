@@ -1,0 +1,10 @@
+
+# StringEnumTemplate
+
+## Enum
+
+
+    * `` (value: `""`)
+
+
+
