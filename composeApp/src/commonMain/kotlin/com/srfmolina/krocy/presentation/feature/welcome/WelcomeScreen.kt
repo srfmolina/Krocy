@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +38,7 @@ internal fun WelcomeScreen() {
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun WelcomePages(
     page: Int,
@@ -52,6 +54,7 @@ private fun WelcomePages(
 
         Button(
             modifier = Modifier.align(Alignment.BottomCenter),
+            shapes = ButtonDefaults.shapes(),
             onClick = onStart
         ) {
             Text("Empezar")
