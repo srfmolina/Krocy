@@ -1,4 +1,4 @@
-package com.srfmolina.krocy.presentation.base
+package com.srfmolina.krocy.base
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -32,7 +32,7 @@ abstract class BaseViewModel<Event : UiEvent, State : UiState, Effect : UiEffect
 
     // --- EVENT ---
     // Single entry point from the UI
-    fun onEvent(event: Event) {
+    fun launchEvent(event: Event) {
         viewModelScope.launch {
             handleEvent(event)
         }
@@ -47,7 +47,7 @@ abstract class BaseViewModel<Event : UiEvent, State : UiState, Effect : UiEffect
         _state.update { it.reduce() }
     }
 
-    protected fun setEffect(effect: Effect) {
+    protected fun launchEffect(effect: Effect) {
         viewModelScope.launch {
             _effect.send(effect)
         }
