@@ -16,6 +16,12 @@ interface KrocyItemDao {
     @Query("SELECT * FROM krocy_items ORDER BY createdAt DESC")
     fun getAll(): Flow<List<KrocyItemEntity>>
 
+    @Query("SELECT * FROM krocy_items WHERE id = :id LIMIT 1")
+    suspend fun getById(id: Long): KrocyItemEntity?
+
     @Delete
     suspend fun delete(item: KrocyItemEntity)
+
+    @Query("DELETE FROM krocy_items WHERE id = :id")
+    suspend fun deleteById(id: Long)
 }
