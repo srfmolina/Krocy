@@ -22,12 +22,14 @@ import com.srfmolina.krocy.presentation.theme.spacing
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-internal fun WelcomeScreen() {
+internal fun WelcomeScreen(
+    onStart: () -> Unit
+) {
     DotsPager(
         modifier = Modifier.fillMaxSize().padding(MaterialTheme.spacing.s4), // <- ahora sí tiene alto definido
         pageCount = 1
     ) { page ->
-        WelcomePages(page, {})
+        WelcomePages(page, onStart)
     }
 }
 
@@ -86,7 +88,7 @@ private fun WelcomeOne() {
 private fun WelcomeScreenPreview() {
     KrocyTheme {
         Surface {
-            WelcomeScreen()
+            WelcomeScreen(onStart = {})
         }
     }
 }
