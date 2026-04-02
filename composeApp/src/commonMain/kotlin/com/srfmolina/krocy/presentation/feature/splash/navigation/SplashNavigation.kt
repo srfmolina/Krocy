@@ -1,10 +1,10 @@
-package com.srfmolina.krocy.presentation.feature.spash.navigation
+package com.srfmolina.krocy.presentation.feature.splash.navigation
 
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
-import com.srfmolina.krocy.presentation.feature.spash.SplashScreen
+import com.srfmolina.krocy.presentation.feature.splash.SplashScreen
 import kotlinx.serialization.Serializable
 
 @Serializable

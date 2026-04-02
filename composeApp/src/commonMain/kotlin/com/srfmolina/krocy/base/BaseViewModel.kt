@@ -12,14 +12,13 @@ import kotlinx.coroutines.launch
 
 abstract class BaseViewModel<Event : UiEvent, State : UiState, Effect : UiEffect> : ViewModel() {
 
-    // Initial state — each child ViewModel defines it
-    private val initialState: State by lazy { createInitialState() }
+    // --- INITIAL STATE ---
     abstract fun createInitialState(): State
 
     // --- STATE ---
-    // StateFlow: always holds a value, the UI observes it with collectAsState()
-    private val _state: MutableStateFlow<State> = MutableStateFlow(initialState)
-    val state: StateFlow<State> = _state.asStateFlow()
+    // StateFlow: always holds a value, the UI observes it with collectAsStateWithLifecycle()
+    private val _state: MutableStateFlow<State> by lazy { MutableStateFlow(createInitialState()) }
+    val state: StateFlow<State> get() = _state.asStateFlow()
 
     // Direct access to the current state (without collect)
     val currentState: State get() = _state.value

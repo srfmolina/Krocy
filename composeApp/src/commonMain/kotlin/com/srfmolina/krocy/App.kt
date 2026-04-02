@@ -9,8 +9,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.navOptions
 import com.srfmolina.krocy.AppViewModel.Effect
 import com.srfmolina.krocy.AppViewModel.Event
+import com.srfmolina.krocy.presentation.feature.splash.navigation.SplashRoute
 import com.srfmolina.krocy.presentation.feature.welcome.navigation.navigateToWelcome
 import com.srfmolina.krocy.presentation.navigation.NavigationComponent
 import com.srfmolina.krocy.presentation.theme.KrocyTheme
@@ -35,7 +37,13 @@ fun App() {
             state.navController.currentBackStackEntryFlow.first() // The graph must be ready before we navigate...
             viewModel.effect.collect { effect ->
                 when (effect) {
-                    is Effect.NavigateToWelcome -> state.navController.navigateToWelcome()
+                    is Effect.NavigateToWelcome -> state.navController.navigateToWelcome(
+                        navOptions = navOptions {
+                            popUpTo<SplashRoute> {
+                                inclusive = true
+                            }
+                        }
+                    )
                 }
             }
         }
