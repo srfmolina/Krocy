@@ -25,8 +25,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            // Aquí irán las dependencias puras de dominio
-            // Por ejemplo: kotlinx-coroutines-core si usas Flow en los repositorios
+            implementation(libs.kotlinx.coroutines.core)
         }
 
         commonTest.dependencies {
