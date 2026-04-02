@@ -22,6 +22,8 @@ navigationCompose = "2.9.2"
 runner = "1.5.2"
 core = "1.5.0"
 kotlinxSerialization = "1.8.1"
+koin = "4.1.1"
+
 
 [libraries]
 androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
@@ -42,6 +44,7 @@ compose-material3 = { module = "org.jetbrains.compose.material3:material3", vers
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
 compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlinStdlib" }
 androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
@@ -49,6 +52,13 @@ androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
+koin-bom                = { module = "io.insert-koin:koin-bom",                version.ref = "koin" }
+koin-core               = { module = "io.insert-koin:koin-core" }
+koin-compose            = { module = "io.insert-koin:koin-compose" }
+koin-compose-viewmodel  = { module = "io.insert-koin:koin-compose-viewmodel" }
+koin-android            = { module = "io.insert-koin:koin-android" }
+koin-test               = { module = "io.insert-koin:koin-test" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
