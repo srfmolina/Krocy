@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import com.srfmolina.krocy.ui.presentation.common.AppIcon
 import com.srfmolina.krocy.ui.presentation.common.DotsPager
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
@@ -65,7 +66,7 @@ private fun WelcomeOne() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        AppIcon(120)
+        AppIcon(120.dp)
 
         Column(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2),

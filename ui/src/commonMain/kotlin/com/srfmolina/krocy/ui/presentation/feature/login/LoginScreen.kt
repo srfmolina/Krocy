@@ -38,7 +38,7 @@ internal fun LoginScreen() {
             alignment = Alignment.CenterVertically
         )
     ){
-        AppIcon(120)
+        AppIcon(120.dp)
 
         Text(
             text = "¡Bienvenido a Krocy!",

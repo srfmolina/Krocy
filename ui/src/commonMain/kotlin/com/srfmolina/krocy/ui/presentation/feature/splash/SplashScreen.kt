@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import com.srfmolina.krocy.ui.presentation.common.AppIcon
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 
@@ -23,7 +24,7 @@ internal fun SplashScreen() {
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            AppIcon(120)
+            AppIcon(120.dp)
         }
     }
 }

@@ -19,7 +19,6 @@ import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 import kotlinx.coroutines.flow.first
 import org.koin.compose.viewmodel.koinViewModel
 
-
 @Composable
 fun App() {
 
