@@ -6,22 +6,23 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.srfmolina.krocy.presentation.theme.KrocyTheme
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AppIcon(
-    size: Int
+    size: Dp
 ) {
     //TODO
-    LoadingIndicator(modifier = Modifier.size(size.dp))
+    LoadingIndicator(modifier = Modifier.size(size))
 }
 
 @PreviewLightDark
 @Composable
 private fun AppIconPreview() {
     KrocyTheme {
-        AppIcon(120)
+        AppIcon(120.dp)
     }
 }
