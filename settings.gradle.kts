@@ -33,7 +33,7 @@ plugins {
 }
 
 include(":composeApp")
-include(":domain")
 include(":grocy-client")
-include(":data")
 include(":ui")
+include(":domain")
+include(":data")

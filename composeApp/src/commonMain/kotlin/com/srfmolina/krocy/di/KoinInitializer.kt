@@ -1,16 +1,16 @@
 package com.srfmolina.krocy.di
 
-import com.srfmolina.data.di.dataModule
+import com.srfmolina.krocy.data.di.dataModule
+import com.srfmolina.krocy.ui.di.uiModule
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
-import org.koin.core.module.Module
 
 fun initKoin(
-    additionalModules: List<Module> = emptyList(),
+    additionalModules: List<org.koin.core.module.Module> = emptyList(),
     appDeclaration: KoinApplication.() -> Unit = {}
 ) {
     startKoin {
         appDeclaration()
-        modules(appModule + additionalModules + dataModule)
+        modules(uiModule + additionalModules + dataModule)
     }
 }
