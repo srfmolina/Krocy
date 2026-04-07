@@ -6,6 +6,7 @@ import androidx.navigation.navigation
 import com.srfmolina.krocy.ui.presentation.feature.login.navigation.loginScreen
 import com.srfmolina.krocy.ui.presentation.feature.splash.navigation.SplashRoute
 import com.srfmolina.krocy.ui.presentation.feature.splash.navigation.splashScreen
+import com.srfmolina.krocy.ui.presentation.feature.stock.navigation.stockScreen
 import com.srfmolina.krocy.ui.presentation.feature.welcome.navigation.welcomeScreen
 import kotlinx.serialization.Serializable
 
@@ -22,6 +23,8 @@ fun NavGraphBuilder.appNavGraph(
         )
 
         loginScreen()
+
+        stockScreen()
     }
 }
 

@@ -60,6 +60,10 @@ kotlin {
     }
 }
 
+dependencies {
+    debugImplementation(libs.compose.uiTooling)
+}
+
 // Bloque android separado, igual que en composeApp pero sin applicationId
 android {
     namespace = "com.srfmolina.krocy.ui"
