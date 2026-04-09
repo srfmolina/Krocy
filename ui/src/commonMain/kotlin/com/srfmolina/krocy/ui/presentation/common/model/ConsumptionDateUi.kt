@@ -1,9 +1,8 @@
 package com.srfmolina.krocy.ui.presentation.common.model
-enum class ConsumptionType {
-    EXPIRATION, PREFERENCE
-}
 
-data class ConsumptionDate(
+import com.srfmolina.krocy.domain.model.common.ConsumptionType
+
+internal data class ConsumptionDateUi(
     val type: ConsumptionType,
     val date: String,
     val expired: Boolean

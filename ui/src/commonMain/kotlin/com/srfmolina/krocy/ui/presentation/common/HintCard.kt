@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 import com.srfmolina.krocy.ui.presentation.theme.spacing
@@ -17,6 +18,7 @@ fun HintCard(
     text: String,
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    textStyle: TextStyle = MaterialTheme.typography.labelMedium
 ) {
     Card(
         colors = CardDefaults.cardColors(
@@ -27,7 +29,7 @@ fun HintCard(
         Text(
             text = text,
             modifier = Modifier.padding(MaterialTheme.spacing.s2),
-            style = MaterialTheme.typography.labelLarge
+            style = textStyle
         )
     }
 }
