@@ -18,6 +18,6 @@ class KrocyItemRepositoryImpl(
     override suspend fun save(item: KrocyItem) =
         dao.insert(item.toEntity())
 
-    override suspend fun delete(item: KrocyItem) =
-        dao.delete(item.toEntity())
+    override suspend fun deleteById(id: Int) =
+        dao.deleteById(id)
 }

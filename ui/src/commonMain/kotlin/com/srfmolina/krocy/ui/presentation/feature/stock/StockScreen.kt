@@ -13,8 +13,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.srfmolina.krocy.domain.model.common.ConsumptionType
 import com.srfmolina.krocy.ui.presentation.common.model.ConsumptionDateUi
-import com.srfmolina.krocy.ui.presentation.common.model.ConsumptionType
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockViewModel.Event
 import com.srfmolina.krocy.ui.presentation.feature.stock.component.StockItemComp
 import com.srfmolina.krocy.ui.presentation.feature.stock.model.StockItemUi
