@@ -22,7 +22,9 @@ fun NavGraphBuilder.appNavGraph(
             navController = navController
         )
 
-        loginScreen()
+        loginScreen(
+            navController = navController
+        )
 
         stockScreen()
     }

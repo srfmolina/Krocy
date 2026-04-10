@@ -28,7 +28,9 @@ import com.srfmolina.krocy.ui.presentation.theme.spacing
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-internal fun LoginScreen() {
+internal fun LoginScreen(
+    onDemoServer: () -> Unit
+) {
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -67,9 +69,7 @@ internal fun LoginScreen() {
         Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2)) {
             OutlinedButton(
                 shapes = ButtonDefaults.shapes(),
-                onClick = {
-                    //TODO
-                },
+                onClick = onDemoServer,
             ) {
                 Text("Servidor de prueba")
             }
@@ -91,7 +91,9 @@ internal fun LoginScreen() {
 private fun LoginScreenPreview() {
     KrocyTheme {
         Surface {
-            LoginScreen()
+            LoginScreen(
+                onDemoServer = {}
+            )
         }
     }
 }

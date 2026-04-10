@@ -5,6 +5,6 @@ import de.jensklingenberg.ktorfit.http.GET
 
 interface StockApi {
 
-    @GET("/stock")
+    @GET("stock")
     suspend fun getStock(): List<StockResponseDTO>
 }

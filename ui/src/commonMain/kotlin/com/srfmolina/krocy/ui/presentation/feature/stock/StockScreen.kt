@@ -31,6 +31,8 @@ internal fun StockScreen() {
     LaunchedEffect(Unit) {
         viewModel.launchEvent(Event.Init)
     }
+
+    StockScreen(items = state.items)
 }
 
 @Composable

@@ -18,7 +18,7 @@ data class StockResponseDTO(
     @SerialName("best_before_date")
     val bestBeforeDate: String?,
     @SerialName("is_aggregated_amount")
-    val isAggregatedAmount: Boolean,
+    val isAggregatedAmount: Int,
     @SerialName("product")
     val product: ProductResponseDTO
 )

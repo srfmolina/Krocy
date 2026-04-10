@@ -1,6 +1,5 @@
 package com.srfmolina.krocy.data.api.stock
 
-import com.srfmolina.krocy.data.api.createStockApi
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
 
