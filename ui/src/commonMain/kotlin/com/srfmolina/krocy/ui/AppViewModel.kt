@@ -7,19 +7,24 @@ import com.srfmolina.krocy.ui.base.BaseViewModel
 import com.srfmolina.krocy.ui.base.UiEffect
 import com.srfmolina.krocy.ui.base.UiEvent
 import com.srfmolina.krocy.ui.base.UiState
+import com.srfmolina.krocy.ui.presentation.common.model.TopBarConfigurationUi
 
-class AppViewModel : BaseViewModel<Event, State, Effect>() {
+internal class AppViewModel : BaseViewModel<Event, State, Effect>() {
 
     sealed interface Event: UiEvent {
         data object Init : Event
+        data object OnBack : Event
+        data class OnTopBarChange(val config: TopBarConfigurationUi) : Event
     }
 
     sealed interface Effect : UiEffect {
         data object NavigateToWelcome : Effect
+        data object NavigateBack : Effect
     }
 
     data class State(
-        val isLoading: Boolean = true
+        val isLoading: Boolean = true,
+        val topBarConfig: TopBarConfigurationUi? = null
     ) : UiState
 
     override fun createInitialState(): State = State()
@@ -27,6 +32,8 @@ class AppViewModel : BaseViewModel<Event, State, Effect>() {
     override suspend fun handleEvent(event: Event) {
         when (event) {
             is Event.Init -> init()
+            is Event.OnBack -> launchEffect(Effect.NavigateBack)
+            is Event.OnTopBarChange -> setState { copy(topBarConfig = event.config) }
         }
     }
 

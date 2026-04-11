@@ -11,11 +11,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object LoginRoute
 
-fun NavController.navigateToLogin(
+internal fun NavController.navigateToLogin(
     navOptions: NavOptions? = null
 ) = navigate(route = LoginRoute, navOptions)
 
-fun NavGraphBuilder.loginScreen(
+internal fun NavGraphBuilder.loginScreen(
     navController: NavController
 ) {
     composable<LoginRoute> {

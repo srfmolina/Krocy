@@ -15,6 +15,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.srfmolina.krocy.domain.model.common.ConsumptionType
 import com.srfmolina.krocy.ui.presentation.common.model.ConsumptionDateUi
+import com.srfmolina.krocy.ui.presentation.common.model.TopBarConfigurationUi
+import com.srfmolina.krocy.ui.presentation.common.model.TopBarType
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockViewModel.Event
 import com.srfmolina.krocy.ui.presentation.feature.stock.component.StockItemComp
 import com.srfmolina.krocy.ui.presentation.feature.stock.model.StockItemUi
@@ -24,11 +26,17 @@ import org.koin.compose.viewmodel.koinViewModel
 
 
 @Composable
-internal fun StockScreen() {
+internal fun StockScreen(
+    onChangeTopBar: (TopBarConfigurationUi) -> Unit
+) {
     val viewModel: StockViewModel = koinViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
+        onChangeTopBar(TopBarConfigurationUi(
+            title = "Resumen del inventario",
+            type = TopBarType.SMALL
+        ))
         viewModel.launchEvent(Event.Init)
     }
 
