@@ -41,7 +41,7 @@ private fun parseConsumptionDate(dateStr: String): ConsumptionDate? {
         ConsumptionDate(
             type = ConsumptionType.EXPIRATION,
             date = LocalDateTime.of(date, java.time.LocalTime.MIDNIGHT),
-            expired = !date.isAfter(today)
+            expired = date.isBefore(today)
         )
     } catch (_: Exception) {
         null

@@ -348,7 +348,7 @@ val unspecified_scheme = ColorFamily(
 @Composable
 fun KrocyTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable() () -> Unit
+    content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         darkTheme -> darkScheme
