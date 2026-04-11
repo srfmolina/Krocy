@@ -4,11 +4,13 @@ import com.srfmolina.krocy.data.datasource.remote.stock.model.StockResponseDTO
 import com.srfmolina.krocy.domain.model.common.ConsumptionDate
 import com.srfmolina.krocy.domain.model.common.ConsumptionType
 import com.srfmolina.krocy.domain.model.stock.StockItem
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
 
-private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 private const val NEVER_EXPIRES_PREFIX = "2999-12-31"
 
 fun StockResponseDTO.toDomain(): StockItem {
@@ -36,12 +38,12 @@ private fun Double.formatAmount(): String =
 
 private fun parseConsumptionDate(dateStr: String): ConsumptionDate? {
     return try {
-        val date = LocalDate.parse(dateStr.take(10), DATE_FORMATTER)
-        val today = LocalDate.now()
+        val date = LocalDate.parse(dateStr.take(10))
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
         ConsumptionDate(
             type = ConsumptionType.EXPIRATION,
-            date = LocalDateTime.of(date, java.time.LocalTime.MIDNIGHT),
-            expired = date.isBefore(today)
+            date = LocalDateTime(date, LocalTime(0, 0)),
+            expired = date < today
         )
     } catch (_: Exception) {
         null

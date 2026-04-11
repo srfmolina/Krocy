@@ -1,6 +1,6 @@
 package com.srfmolina.krocy.domain.model.common
 
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 data class ConsumptionDate(
     val type: ConsumptionType,
