@@ -40,7 +40,7 @@ private fun StockScreen(
     items: List<StockItemUi>
 ) {
     LazyColumn (
-        modifier = Modifier.fillMaxSize().padding(MaterialTheme.spacing.s4),
+        modifier = Modifier.fillMaxSize().padding(horizontal = MaterialTheme.spacing.s4),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s6)
     ) {
         items(items) { item ->
@@ -59,7 +59,7 @@ private fun StockScreenPreview() {
                     StockItemUi(
                         id = (1..1000).random(),
                         name = listOf("Apple", "Banana", "Milk", "Bread", "Cheese", "Eggs", "Butter").random(),
-                        hints = List((1..3).random()) {
+                        hints = List((2..8).random()) {
                             listOf("fresh", "organic", "frozen", "imported", "local", "gluten-free").random()
                         },
                         consumptionDate = if (listOf(true, false).random()) {

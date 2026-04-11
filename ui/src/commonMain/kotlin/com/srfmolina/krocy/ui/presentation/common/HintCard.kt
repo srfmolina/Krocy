@@ -18,7 +18,7 @@ fun HintCard(
     text: String,
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
-    textStyle: TextStyle = MaterialTheme.typography.labelMedium
+    textStyle: TextStyle = MaterialTheme.typography.labelLarge
 ) {
     Card(
         colors = CardDefaults.cardColors(
