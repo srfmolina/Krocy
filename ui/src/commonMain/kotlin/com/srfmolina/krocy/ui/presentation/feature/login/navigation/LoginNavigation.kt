@@ -6,10 +6,8 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.srfmolina.krocy.ui.presentation.feature.login.LoginScreen
 import com.srfmolina.krocy.ui.presentation.feature.stock.navigation.navigateToStock
-import kotlinx.serialization.Serializable
+import com.srfmolina.krocy.ui.presentation.navigation.LoginRoute
 
-@Serializable
-data object LoginRoute
 
 internal fun NavController.navigateToLogin(
     navOptions: NavOptions? = null

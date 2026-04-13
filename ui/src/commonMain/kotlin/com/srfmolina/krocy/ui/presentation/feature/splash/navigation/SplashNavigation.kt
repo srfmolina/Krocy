@@ -5,10 +5,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.srfmolina.krocy.ui.presentation.feature.splash.SplashScreen
-import kotlinx.serialization.Serializable
+import com.srfmolina.krocy.ui.presentation.navigation.SplashRoute
 
-@Serializable
-data object SplashRoute
 
 internal fun NavController.navigateToSplash(
     navOptions: NavOptions? = null
