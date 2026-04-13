@@ -1,13 +1,15 @@
 package com.srfmolina.krocy.data.di
 
 import com.srfmolina.krocy.data.api.stock.createStockApi
+import com.srfmolina.krocy.data.datasource.local.example.KrocyItemDataSource
+import com.srfmolina.krocy.data.datasource.local.example.KrocyItemDataSourceImpl
 import com.srfmolina.krocy.data.datasource.remote.createHttpClient
 import com.srfmolina.krocy.data.datasource.remote.stock.StockDataSource
 import com.srfmolina.krocy.data.datasource.remote.stock.StockDataSourceImpl
 import com.srfmolina.krocy.data.db.KrocyDatabase
 import com.srfmolina.krocy.data.db.createDatabase
 import com.srfmolina.krocy.data.db.dao.KrocyItemDao
-import com.srfmolina.krocy.data.repository.KrocyItemRepositoryImpl
+import com.srfmolina.krocy.data.repository.impl.KrocyItemRepositoryImpl
 import com.srfmolina.krocy.data.repository.impl.StockRepositoryImpl
 import com.srfmolina.krocy.domain.repository.KrocyItemRepository
 import com.srfmolina.krocy.domain.repository.StockRepository
@@ -18,11 +20,16 @@ val dataModule = module {
     // La baseUrl vendrá de un parámetro o configuración — por ahora como propiedad
     val baseUrl = "https://en.demo.grocy.info/api/"
 
-    single<KrocyDatabase> { createDatabase() }
-    single<KrocyItemDao>  { get<KrocyDatabase>().krocyItemDao() }
-    single<KrocyItemRepository> { KrocyItemRepositoryImpl(get()) }
     single { createHttpClient() }
     single { createStockApi(get(), baseUrl) }
+
+    single<KrocyDatabase> { createDatabase() }
+    single<KrocyItemDao>  { get<KrocyDatabase>().krocyItemDao() }
+
+    single<KrocyItemDataSource> { KrocyItemDataSourceImpl(get()) }
     single<StockDataSource> { StockDataSourceImpl(get()) }
+
+    single<KrocyItemRepository> { KrocyItemRepositoryImpl(get()) }
     single<StockRepository> { StockRepositoryImpl(get()) }
+
 }
