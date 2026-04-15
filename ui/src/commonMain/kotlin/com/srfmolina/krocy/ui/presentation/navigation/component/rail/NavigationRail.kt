@@ -1,4 +1,4 @@
-package com.srfmolina.krocy.ui.presentation.common
+package com.srfmolina.krocy.ui.presentation.navigation.component.rail
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
@@ -47,8 +47,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.srfmolina.krocy.ui.presentation.navigation.KrocyNavigationItem
 import com.srfmolina.krocy.ui.presentation.navigation.KrocyRoute
+import com.srfmolina.krocy.ui.presentation.navigation.NavigationItemUi
 import com.srfmolina.krocy.ui.presentation.navigation.SplashRoute
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 
@@ -74,7 +74,7 @@ private const val ANIM_DURATION_MS = 300
  */
 @Composable
 internal fun KrocyNavigationRail(
-    items: List<KrocyNavigationItem>,
+    items: List<NavigationItemUi>,
     selectedRoute: KrocyRoute,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
@@ -115,12 +115,12 @@ internal fun KrocyNavigationRail(
 
 @Composable
 private fun CompactLayout(
-    items: List<KrocyNavigationItem>,
+    items: List<NavigationItemUi>,
     selectedRoute: KrocyRoute,
     expanded: Boolean,
     onExpand: () -> Unit,
     onCollapse: () -> Unit,
-    onItemSelected: (KrocyNavigationItem) -> Unit,
+    onItemSelected: (NavigationItemUi) -> Unit,
     content: @Composable () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -189,11 +189,11 @@ private fun CompactLayout(
 
 @Composable
 private fun WideLayout(
-    items: List<KrocyNavigationItem>,
+    items: List<NavigationItemUi>,
     selectedRoute: KrocyRoute,
     expanded: Boolean,
     onToggle: () -> Unit,
-    onItemSelected: (KrocyNavigationItem) -> Unit,
+    onItemSelected: (NavigationItemUi) -> Unit,
     content: @Composable () -> Unit,
 ) {
     val railWidth by animateDpAsState(
@@ -238,10 +238,10 @@ private fun WideLayout(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RailPanel(
-    items: List<KrocyNavigationItem>,
+    items: List<NavigationItemUi>,
     selectedRoute: KrocyRoute,
     showLabels: Boolean,
-    onItemSelected: (KrocyNavigationItem) -> Unit,
+    onItemSelected: (NavigationItemUi) -> Unit,
     menuIcon: ImageVector,
     menuContentDescription: String,
     onMenuClick: () -> Unit,
@@ -282,7 +282,7 @@ private fun RailPanel(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RailItem(
-    item: KrocyNavigationItem,
+    item: NavigationItemUi,
     selected: Boolean,
     showLabel: Boolean,
     onClick: () -> Unit,
@@ -326,8 +326,8 @@ private fun RailItem(
 // ─────────────────────── Previews ───────────────────────
 
 private val previewItems = listOf(
-    KrocyNavigationItem(icon = Icons.Filled.Home, label = "Home", navigateTo = {}, route = SplashRoute),
-    KrocyNavigationItem(icon = Icons.Filled.ShoppingCart, label = "Stock", navigateTo = {}, route = SplashRoute),
+    NavigationItemUi(icon = Icons.Filled.Home, label = "Home", navigateTo = {}, route = SplashRoute),
+    NavigationItemUi(icon = Icons.Filled.ShoppingCart, label = "Stock", navigateTo = {}, route = SplashRoute),
 )
 
 @Composable

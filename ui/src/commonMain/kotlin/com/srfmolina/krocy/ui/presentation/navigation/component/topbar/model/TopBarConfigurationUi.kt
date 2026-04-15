@@ -1,13 +1,10 @@
-package com.srfmolina.krocy.ui.presentation.common.model
+package com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model
 
 import androidx.compose.material3.ExperimentalMaterial3Api
-
-internal enum class TopBarType {
-    SMALL, MEDIUM
-}
+import com.srfmolina.krocy.ui.presentation.common.model.ActionUi
 
 internal data class TopBarConfigurationUi @OptIn(ExperimentalMaterial3Api::class) constructor(
     val title: String,
-    val type: TopBarType,
+    val type: TopBarTypeUi,
     val action: ActionUi? = null
 )

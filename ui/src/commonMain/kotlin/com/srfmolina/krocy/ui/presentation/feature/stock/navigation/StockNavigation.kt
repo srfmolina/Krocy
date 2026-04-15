@@ -6,11 +6,10 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
-import com.srfmolina.krocy.ui.presentation.common.model.TopBarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockScreen
-import com.srfmolina.krocy.ui.presentation.navigation.KrocyNavigationItem
+import com.srfmolina.krocy.ui.presentation.navigation.NavigationItemUi
 import com.srfmolina.krocy.ui.presentation.navigation.StockRoute
-
+import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarConfigurationUi
 
 internal fun NavController.navigateToStock(
     navOptions: NavOptions? = null
@@ -26,7 +25,7 @@ internal fun NavGraphBuilder.stockScreen(
     }
 }
 
-internal fun NavController.stockNavigationItem() = KrocyNavigationItem(
+internal fun NavController.stockNavigationItemUi() = NavigationItemUi(
     icon = Icons.Outlined.Kitchen,
     label = "Inventario",
     contentDescription = "Botón navegación Inventario",

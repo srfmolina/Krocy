@@ -17,16 +17,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.navOptions
 import com.srfmolina.krocy.ui.AppViewModel.Effect
 import com.srfmolina.krocy.ui.AppViewModel.Event
-import com.srfmolina.krocy.ui.presentation.common.KrocyNavigationRail
-import com.srfmolina.krocy.ui.presentation.common.MediumTopBar
-import com.srfmolina.krocy.ui.presentation.common.SmallTopBar
-import com.srfmolina.krocy.ui.presentation.common.model.TopBarType
-import com.srfmolina.krocy.ui.presentation.feature.stock.navigation.stockNavigationItem
 import com.srfmolina.krocy.ui.presentation.feature.welcome.navigation.navigateToWelcome
-import com.srfmolina.krocy.ui.presentation.navigation.KrocyNavigationItem
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationComponent
 import com.srfmolina.krocy.ui.presentation.navigation.SplashRoute
-import com.srfmolina.krocy.ui.presentation.navigation.currentRailRoute
+import com.srfmolina.krocy.ui.presentation.navigation.component.rail.KrocyNavigationRail
+import com.srfmolina.krocy.ui.presentation.navigation.component.rail.model.RailRouteRegistry
+import com.srfmolina.krocy.ui.presentation.navigation.component.rail.model.currentRailRoute
+import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.MediumTopBar
+import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.SmallTopBar
+import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarTypeUi
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 import kotlinx.coroutines.flow.first
 import org.koin.compose.viewmodel.koinViewModel
@@ -40,15 +39,13 @@ fun App() {
     val state = rememberAppState()
 
     val scrollBehavior = when (vmState.topBarConfig?.type) {
-        TopBarType.SMALL -> TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-        TopBarType.MEDIUM -> TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+        TopBarTypeUi.SMALL -> TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+        TopBarTypeUi.MEDIUM -> TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
         null -> null
     }
 
     val currentRailRoute = state.navController.currentRailRoute()
-    val railItems: List<KrocyNavigationItem> = listOf(
-        state.navController.stockNavigationItem()
-    )
+    val railItems = RailRouteRegistry.railItemsUi(state.navController)
 
     KrocyTheme {
 
@@ -103,14 +100,14 @@ private fun MainContent(
             {
                 scrollBehavior?.let {
                     when (config.type) {
-                        TopBarType.SMALL -> SmallTopBar(
+                        TopBarTypeUi.SMALL -> SmallTopBar(
                             title = config.title,
                             scrollBehavior = scrollBehavior,
                             onBack = { viewModel.launchEvent(Event.OnBack) },
                             action = config.action
                         )
 
-                        TopBarType.MEDIUM -> MediumTopBar(
+                        TopBarTypeUi.MEDIUM -> MediumTopBar(
                             title = config.title,
                             scrollBehavior = scrollBehavior,
                             onBack = { viewModel.launchEvent(Event.OnBack) },

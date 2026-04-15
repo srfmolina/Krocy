@@ -1,4 +1,4 @@
-package com.srfmolina.krocy.ui.presentation.common
+package com.srfmolina.krocy.ui.presentation.navigation.component.topbar
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues

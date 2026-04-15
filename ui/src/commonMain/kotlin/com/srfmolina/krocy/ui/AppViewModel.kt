@@ -7,7 +7,7 @@ import com.srfmolina.krocy.ui.base.BaseViewModel
 import com.srfmolina.krocy.ui.base.UiEffect
 import com.srfmolina.krocy.ui.base.UiEvent
 import com.srfmolina.krocy.ui.base.UiState
-import com.srfmolina.krocy.ui.presentation.common.model.TopBarConfigurationUi
+import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarConfigurationUi
 
 internal class AppViewModel : BaseViewModel<Event, State, Effect>() {
 
