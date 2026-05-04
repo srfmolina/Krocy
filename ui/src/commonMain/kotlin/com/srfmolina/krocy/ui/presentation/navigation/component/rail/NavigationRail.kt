@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.srfmolina.krocy.ui.presentation.navigation.component.rail
 
 import androidx.compose.animation.AnimatedVisibility
@@ -248,7 +250,6 @@ private fun WideLayout(
  * Items display icon-only when [showLabels] is false (collapsed), or icon + label side-by-side
  * when [showLabels] is true (expanded).
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RailPanel(
     items: List<NavigationItemUi>,
@@ -306,7 +307,6 @@ private fun RailPanel(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RailItem(
     item: NavigationItemUi,

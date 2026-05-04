@@ -9,24 +9,19 @@ import com.srfmolina.krocy.ui.presentation.navigation.KrocyRoute
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationItemUi
 import com.srfmolina.krocy.ui.presentation.navigation.StockRoute
 
-internal object RailRouteRegistry {
-
-    private val routes: Map<String, KrocyRoute> = listOf(
-        StockRoute
-    ).associateBy { it::class.qualifiedName!! }
-
-    fun fromRoute(route: String?): KrocyRoute? {
-        return route?.substringBefore("?")?.let { routes[it] }
-    }
-
-    fun railItemsUi(navController: NavHostController): List<NavigationItemUi>
-        = listOf(
-            navController.stockNavigationItemUi()
-        )
-}
+private val railRoutes: List<KrocyRoute> = listOf(
+    StockRoute,
+    // Add new top-level destinations here
+)
 
 @Composable
 internal fun NavController.currentRailRoute(): KrocyRoute? {
-    val entry = currentBackStackEntryAsState().value
-    return RailRouteRegistry.fromRoute(entry?.destination?.route)
+    val entry = currentBackStackEntryAsState().value ?: return null
+    val route = entry.destination.route?.substringBefore("?") ?: return null
+    return railRoutes.firstOrNull { it::class.qualifiedName == route }
 }
+
+internal fun NavHostController.appRailItems(): List<NavigationItemUi> = listOf(
+    stockNavigationItemUi(),
+    // Mirror railRoutes order here
+)

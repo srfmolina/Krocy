@@ -24,7 +24,6 @@ internal class AppViewModel : BaseViewModel<Event, State, Effect>() {
 
     data class State(
         val isLoading: Boolean = true,
-        val showNavigationRail: Boolean = false,
         val topBarConfig: TopBarConfigurationUi? = null
     ) : UiState
 

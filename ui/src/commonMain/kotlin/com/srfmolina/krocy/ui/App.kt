@@ -21,7 +21,7 @@ import com.srfmolina.krocy.ui.presentation.feature.welcome.navigation.navigateTo
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationComponent
 import com.srfmolina.krocy.ui.presentation.navigation.SplashRoute
 import com.srfmolina.krocy.ui.presentation.navigation.component.rail.KrocyNavigationRail
-import com.srfmolina.krocy.ui.presentation.navigation.component.rail.model.RailRouteRegistry
+import com.srfmolina.krocy.ui.presentation.navigation.component.rail.model.appRailItems
 import com.srfmolina.krocy.ui.presentation.navigation.component.rail.model.currentRailRoute
 import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.MediumTopBar
 import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.SmallTopBar
@@ -45,7 +45,6 @@ fun App() {
     }
 
     val currentRailRoute = state.navController.currentRailRoute()
-    val railItems = RailRouteRegistry.railItemsUi(state.navController)
 
     KrocyTheme {
 
@@ -71,7 +70,7 @@ fun App() {
 
         if (currentRailRoute != null) {
             KrocyNavigationRail(
-                items = railItems,
+                items = state.navController.appRailItems(),
                 selectedRoute = currentRailRoute,
             ) {
                 MainContent(scrollBehavior, vmState, viewModel, state)
