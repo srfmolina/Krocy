@@ -67,15 +67,18 @@ private const val ANIM_DURATION_MS = 300
 /**
  * Adaptive navigation rail that adjusts its behaviour based on available screen width.
  *
- * - **Compact** (< 600 dp): the rail is hidden. A floating hamburger icon appears at the
- *   top-start corner; tapping it slides the rail in as a modal overlay with a dismissible
- *   scrim. Selecting a destination or tapping the scrim collapses the overlay.
+ * - **Compact** (< 600 dp): the rail is hidden. The modal is controlled externally via
+ *   [compactExpanded] and [onCompactDismiss] — the caller decides when to open it (e.g. a
+ *   button in the top bar). Selecting a destination or tapping the scrim calls [onCompactDismiss].
  *
  * - **Wide** (≥ 600 dp): the rail is always visible in its collapsed form (icon-only, 80 dp).
  *   Tapping the header menu icon expands it to full width (240 dp) with destination labels.
+ *   This toggle is managed internally.
  *
  * @param items             Ordered list of navigation destinations.
  * @param selectedRoute     Currently active destination.
+ * @param compactExpanded   Whether the compact modal rail is open. Ignored on wide screens.
+ * @param onCompactDismiss  Called when the compact modal should close (scrim tap or item select).
  * @param modifier          Modifier applied to the root container.
  * @param content           Main screen content rendered beside or behind the rail.
  */
@@ -83,6 +86,8 @@ private const val ANIM_DURATION_MS = 300
 internal fun KrocyNavigationRail(
     items: List<NavigationItemUi>,
     selectedRoute: KrocyRoute,
+    compactExpanded: Boolean,
+    onCompactDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
@@ -90,18 +95,17 @@ internal fun KrocyNavigationRail(
         modifier = modifier.fillMaxSize()
     ) {
         val isCompact = maxWidth < COMPACT_BREAKPOINT
-        var expanded by rememberSaveable { mutableStateOf(false) }
+        var wideExpanded by rememberSaveable { mutableStateOf(false) }
 
         if (isCompact) {
             CompactLayout(
                 items = items,
                 selectedRoute = selectedRoute,
-                expanded = expanded,
-                onExpand = { expanded = true },
-                onCollapse = { expanded = false },
+                expanded = compactExpanded,
+                onCollapse = onCompactDismiss,
                 onItemSelected = { item ->
                     item.navigateTo()
-                    expanded = false
+                    onCompactDismiss()
                 },
                 content = content,
             )
@@ -109,8 +113,8 @@ internal fun KrocyNavigationRail(
             WideLayout(
                 items = items,
                 selectedRoute = selectedRoute,
-                expanded = expanded,
-                onToggle = { expanded = !expanded },
+                expanded = wideExpanded,
+                onToggle = { wideExpanded = !wideExpanded },
                 onItemSelected = { item ->
                     item.navigateTo()
                 },
@@ -127,7 +131,6 @@ private fun CompactLayout(
     items: List<NavigationItemUi>,
     selectedRoute: KrocyRoute,
     expanded: Boolean,
-    onExpand: () -> Unit,
     onCollapse: () -> Unit,
     onItemSelected: (NavigationItemUi) -> Unit,
     content: @Composable () -> Unit,
@@ -173,23 +176,6 @@ private fun CompactLayout(
                 menuContentDescription = "Close navigation menu",
                 onMenuClick = onCollapse,
             )
-        }
-
-        // Floating hamburger button — shown only while the modal is closed
-        AnimatedVisibility(
-            visible = !expanded,
-            enter = fadeIn(tween(ANIM_DURATION_MS)),
-            exit = fadeOut(tween(ANIM_DURATION_MS)),
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(MaterialTheme.spacing.s1),
-        ) {
-            IconButton(onClick = onExpand) {
-                Icon(
-                    imageVector = Icons.Filled.Menu,
-                    contentDescription = "Open navigation menu",
-                )
-            }
         }
     }
 }
@@ -395,11 +381,27 @@ private fun PreviewContent() {
 
 @PreviewLightDark
 @Composable
-fun KrocyNavigationRailCompactPreview() {
+fun KrocyNavigationRailCompactClosedPreview() {
     KrocyTheme {
         KrocyNavigationRail(
             items = previewItems,
             selectedRoute = SplashRoute,
+            compactExpanded = false,
+            onCompactDismiss = {},
+            content = { PreviewContent() },
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+fun KrocyNavigationRailCompactOpenPreview() {
+    KrocyTheme {
+        KrocyNavigationRail(
+            items = previewItems,
+            selectedRoute = SplashRoute,
+            compactExpanded = true,
+            onCompactDismiss = {},
             content = { PreviewContent() },
         )
     }
@@ -412,6 +414,8 @@ fun KrocyNavigationRailWideCollapsedPreview() {
         KrocyNavigationRail(
             items = previewItems,
             selectedRoute = SplashRoute,
+            compactExpanded = false,
+            onCompactDismiss = {},
             content = { PreviewContent() },
         )
     }
