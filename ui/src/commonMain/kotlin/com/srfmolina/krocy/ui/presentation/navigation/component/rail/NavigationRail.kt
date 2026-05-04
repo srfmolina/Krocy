@@ -2,6 +2,7 @@ package com.srfmolina.krocy.ui.presentation.navigation.component.rail
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -19,7 +20,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -31,7 +31,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationRailDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,15 +41,21 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.lerp
 import com.srfmolina.krocy.ui.presentation.navigation.KrocyRoute
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationItemUi
 import com.srfmolina.krocy.ui.presentation.navigation.SplashRoute
+import com.srfmolina.krocy.ui.presentation.navigation.StockRoute
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
+import com.srfmolina.krocy.ui.presentation.theme.spacing
 
 private val COMPACT_BREAKPOINT = 600.dp
 private val RAIL_COLLAPSED_WIDTH = 80.dp
@@ -79,7 +84,9 @@ internal fun KrocyNavigationRail(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+    BoxWithConstraints(
+        modifier = modifier.fillMaxSize()
+    ) {
         val isCompact = maxWidth < COMPACT_BREAKPOINT
         var expanded by rememberSaveable { mutableStateOf(false) }
 
@@ -173,7 +180,7 @@ private fun CompactLayout(
             exit = fadeOut(tween(ANIM_DURATION_MS)),
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(4.dp),
+                .padding(MaterialTheme.spacing.s1),
         ) {
             IconButton(onClick = onExpand) {
                 Icon(
@@ -201,6 +208,11 @@ private fun WideLayout(
         animationSpec = tween(ANIM_DURATION_MS),
         label = "railWidth",
     )
+    val labelRevealProgress by animateFloatAsState(
+        targetValue = if (expanded) 1f else 0f,
+        animationSpec = tween(ANIM_DURATION_MS),
+        label = "labelRevealProgress",
+    )
 
     Row(modifier = Modifier.fillMaxSize()) {
         RailPanel(
@@ -210,6 +222,7 @@ private fun WideLayout(
             items = items,
             selectedRoute = selectedRoute,
             showLabels = expanded,
+            labelRevealProgress = labelRevealProgress,
             onItemSelected = onItemSelected,
             menuIcon = if (expanded) Icons.AutoMirrored.Filled.MenuOpen else Icons.Filled.Menu,
             menuContentDescription = if (expanded) "Collapse navigation" else "Expand navigation",
@@ -246,34 +259,48 @@ private fun RailPanel(
     menuContentDescription: String,
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier,
+    labelRevealProgress: Float = if (showLabels) 1f else 0f,
 ) {
     Surface(
         modifier = modifier,
-        color = NavigationRailDefaults.ContainerColor,
-        shadowElevation = if (showLabels) 4.dp else 0.dp,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shadowElevation = if (showLabels) MaterialTheme.spacing.s1 else 0.dp,
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(vertical = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .padding(vertical = MaterialTheme.spacing.s3),
         ) {
-            IconButton(onClick = onMenuClick) {
+            // Button pinned to top-left of the panel (= screen top-left corner)
+            // so it never moves as the rail animates its width
+            IconButton(
+                onClick = onMenuClick,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(horizontal = MaterialTheme.spacing.s4),
+            ) {
                 Icon(
                     imageVector = menuIcon,
                     contentDescription = menuContentDescription,
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            items.forEach { item ->
-                RailItem(
-                    item = item,
-                    selected = selectedRoute == item.route,
-                    showLabel = showLabels,
-                    onClick = { onItemSelected(item) },
-                )
+            // Nav items below the 40dp button + 8dp gap
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopStart)
+                    .padding(top = MaterialTheme.spacing.s12),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                items.forEach { item ->
+                    RailItem(
+                        item = item,
+                        selected = selectedRoute == item.route,
+                        labelRevealProgress = labelRevealProgress,
+                        onClick = { onItemSelected(item) },
+                    )
+                }
             }
         }
     }
@@ -284,9 +311,15 @@ private fun RailPanel(
 private fun RailItem(
     item: NavigationItemUi,
     selected: Boolean,
-    showLabel: Boolean,
+    labelRevealProgress: Float,
     onClick: () -> Unit,
 ) {
+    // Icon shifts smoothly from centered (20dp) to MD3-inset (16dp) as labels reveal
+    val paddingStart = lerp(20.dp, MaterialTheme.spacing.s4, labelRevealProgress)
+    val paddingEnd = lerp(0.dp, MaterialTheme.spacing.s4, labelRevealProgress)
+    // Text fades in after 30% of the expansion; fully opaque at 80%
+    val textAlpha = ((labelRevealProgress - 0.3f) / 0.5f).coerceIn(0f, 1f)
+
     Surface(
         onClick = onClick,
         shape = MaterialTheme.shapes.extraLarge,
@@ -298,25 +331,43 @@ private fun RailItem(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = MaterialTheme.spacing.s2, vertical = MaterialTheme.spacing.s1),
     ) {
         Row(
             modifier = Modifier.padding(
-                horizontal = if (showLabel) 16.dp else 0.dp,
-                vertical = 16.dp,
+                start = paddingStart,
+                end = paddingEnd,
+                top = MaterialTheme.spacing.s4,
+                bottom = MaterialTheme.spacing.s4,
             ),
-            horizontalArrangement = if (showLabel) Arrangement.Start else Arrangement.Center,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 imageVector = item.icon,
                 contentDescription = item.contentDescription,
             )
-            if (showLabel) {
-                Spacer(modifier = Modifier.width(12.dp))
+            // Clip-grow container: layout width animates from 0 → intrinsic width,
+            // revealing the label as the rail expands (no pixel compression)
+            Row(
+                modifier = Modifier
+                    .layout { measurable, constraints ->
+                        val fullWidth = measurable.minIntrinsicWidth(constraints.maxHeight)
+                        val animatedWidth = (fullWidth * labelRevealProgress).toInt()
+                        val placeable = measurable.measure(
+                            constraints.copy(maxWidth = fullWidth.coerceAtLeast(1)),
+                        )
+                        layout(animatedWidth, placeable.height) {
+                            placeable.place(0, 0)
+                        }
+                    }
+                    .clipToBounds(),
+            ) {
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.s3))
                 Text(
                     text = item.label,
                     style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.graphicsLayer { alpha = textAlpha },
                 )
             }
         }
@@ -327,14 +378,14 @@ private fun RailItem(
 
 private val previewItems = listOf(
     NavigationItemUi(icon = Icons.Filled.Home, label = "Home", navigateTo = {}, route = SplashRoute),
-    NavigationItemUi(icon = Icons.Filled.ShoppingCart, label = "Stock", navigateTo = {}, route = SplashRoute),
+    NavigationItemUi(icon = Icons.Filled.ShoppingCart, label = "Stock", navigateTo = {}, route = StockRoute),
 )
 
 @Composable
 private fun PreviewContent() {
     Surface(modifier = Modifier.fillMaxSize()) {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.Center,
         ) {
             Text("Main content area")

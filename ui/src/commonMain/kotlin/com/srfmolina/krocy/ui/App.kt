@@ -73,8 +73,9 @@ fun App() {
             KrocyNavigationRail(
                 items = railItems,
                 selectedRoute = currentRailRoute,
-                content = { MainContent(scrollBehavior, vmState, viewModel, state) }
-            )
+            ) {
+                MainContent(scrollBehavior, vmState, viewModel, state)
+            }
         } else {
             MainContent(scrollBehavior, vmState, viewModel, state)
         }

@@ -39,6 +39,8 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
 
+            implementation(libs.compose.material3.adaptive)
+
             implementation(project(":data"))
             implementation(project(":domain"))
         }
