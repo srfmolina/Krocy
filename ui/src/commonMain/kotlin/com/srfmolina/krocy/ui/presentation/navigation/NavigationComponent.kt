@@ -8,9 +8,10 @@ import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.Top
 @Composable
 internal fun NavigationComponent(
     navController: NavHostController,
-    onChangeTopBar: (TopBarConfigurationUi) -> Unit
+    onChangeTopBar: (TopBarConfigurationUi) -> Unit,
+    onOpenNavRail: () -> Unit
 ) {
     NavHost(navController = navController, startDestination = AppRoute) {
-        appNavGraph(navController, onChangeTopBar)
+        appNavGraph(navController, onChangeTopBar, onOpenNavRail)
     }
 }

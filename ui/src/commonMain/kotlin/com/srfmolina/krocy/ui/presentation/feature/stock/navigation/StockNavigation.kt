@@ -16,11 +16,13 @@ internal fun NavController.navigateToStock(
 ) = navigate(route = StockRoute, navOptions)
 
 internal fun NavGraphBuilder.stockScreen(
-    onChangeTopBar: (TopBarConfigurationUi) -> Unit
+    onChangeTopBar: (TopBarConfigurationUi) -> Unit,
+    onOpenNavRail: () -> Unit
 ) {
     composable<StockRoute> {
         StockScreen(
-            onChangeTopBar = onChangeTopBar
+            onChangeTopBar = onChangeTopBar,
+            onOpenNavRail = onOpenNavRail
         )
     }
 }

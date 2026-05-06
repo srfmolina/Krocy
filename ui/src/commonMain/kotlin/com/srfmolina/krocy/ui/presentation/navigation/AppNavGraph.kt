@@ -12,7 +12,8 @@ import kotlinx.serialization.Serializable
 
 internal fun NavGraphBuilder.appNavGraph(
     navController: NavController,
-    onChangeTopBar: (TopBarConfigurationUi) -> Unit
+    onChangeTopBar: (TopBarConfigurationUi) -> Unit,
+    onOpenNavRail: () -> Unit
 ){
     navigation<AppRoute>(
         startDestination = SplashRoute
@@ -28,7 +29,8 @@ internal fun NavGraphBuilder.appNavGraph(
         )
 
         stockScreen(
-            onChangeTopBar = onChangeTopBar
+            onChangeTopBar = onChangeTopBar,
+            onOpenNavRail = onOpenNavRail
         )
     }
 }

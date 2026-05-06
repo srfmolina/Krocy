@@ -30,8 +30,10 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -236,6 +238,7 @@ private fun WideLayout(
  * Items display icon-only when [showLabels] is false (collapsed), or icon + label side-by-side
  * when [showLabels] is true (expanded).
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun RailPanel(
     items: List<NavigationItemUi>,
@@ -256,15 +259,16 @@ private fun RailPanel(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(vertical = MaterialTheme.spacing.s3),
+                .padding(vertical = MaterialTheme.spacing.s2),
         ) {
             // Button pinned to top-left of the panel (= screen top-left corner)
             // so it never moves as the rail animates its width
             IconButton(
-                onClick = onMenuClick,
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(horizontal = MaterialTheme.spacing.s4),
+                onClick = onMenuClick,
+                shapes = IconButtonDefaults.shapes()
             ) {
                 Icon(
                     imageVector = menuIcon,

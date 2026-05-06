@@ -6,5 +6,6 @@ import com.srfmolina.krocy.ui.presentation.common.model.ActionUi
 internal data class TopBarConfigurationUi @OptIn(ExperimentalMaterial3Api::class) constructor(
     val title: String,
     val type: TopBarTypeUi,
-    val action: ActionUi? = null
+    val leadingAction: ActionUi,
+    val trailingAction: ActionUi? = null
 )

@@ -35,8 +35,8 @@ import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 internal fun SmallTopBar(
     title: String,
     scrollBehavior: TopAppBarScrollBehavior,
-    onBack: () -> Unit,
-    action: ActionUi? = null
+    leadingAction: ActionUi, //TODO: hide menu icon leading actions in larger screens
+    trailingAction: ActionUi? = null
 ) {
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(),
@@ -49,24 +49,24 @@ internal fun SmallTopBar(
         },
         navigationIcon = {
             IconButton(
-                onClick = onBack,
+                onClick = leadingAction.onClick,
                 shapes = IconButtonDefaults.shapes()
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Localized description" //TODO
+                    imageVector = leadingAction.icon,
+                    contentDescription = leadingAction.contentDescription
                 )
             }
         },
         actions = {
-            action?.let {
+            trailingAction?.let {
                 IconButton(
-                    onClick = action.onClick,
+                    onClick = trailingAction.onClick,
                     shapes = IconButtonDefaults.shapes()
                 ) {
                     Icon(
-                        imageVector = action.icon,
-                        contentDescription = action.contentDescription
+                        imageVector = trailingAction.icon,
+                        contentDescription = trailingAction.contentDescription
                     )
                 }
             }
@@ -80,7 +80,7 @@ internal fun SmallTopBar(
 internal fun MediumTopBar(
     title: String,
     scrollBehavior: TopAppBarScrollBehavior,
-    onBack: () -> Unit,
+    leadingAction: ActionUi,
     action: ActionUi? = null
 ) {
     MediumTopAppBar(
@@ -93,10 +93,10 @@ internal fun MediumTopBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = onBack) {
+            IconButton(onClick = leadingAction.onClick) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Localized description" //TODO
+                    imageVector = leadingAction.icon,
+                    contentDescription = leadingAction.contentDescription
                 )
             }
         },
@@ -133,8 +133,12 @@ fun SmallTopBarPreview() {
                 SmallTopBar(
                     title = "Small top bar",
                     scrollBehavior = scrollBehavior,
-                    onBack = {},
-                    action = ActionUi(
+                    leadingAction = ActionUi(
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "example",
+                        onClick = {}
+                    ),
+                    trailingAction = ActionUi(
                         icon = Icons.Filled.Menu,
                         contentDescription = "example",
                         onClick = {}
@@ -176,7 +180,11 @@ fun MediumTopBarPreview() {
                 MediumTopBar(
                     title = "Medium top bar",
                     scrollBehavior = scrollBehavior,
-                    onBack = {},
+                    leadingAction = ActionUi(
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "example",
+                        onClick = {}
+                    ),
                     action = ActionUi(
                         icon = Icons.Filled.Menu,
                         contentDescription = "example",

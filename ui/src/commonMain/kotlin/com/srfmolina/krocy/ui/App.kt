@@ -11,9 +11,6 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -48,7 +45,6 @@ fun App() {
     }
 
     val currentRailRoute = state.navController.currentRailRoute()
-    var isNavRailOpen by rememberSaveable { mutableStateOf(false) }
 
     KrocyTheme {
 
@@ -67,7 +63,6 @@ fun App() {
                             }
                         }
                     )
-                    is Effect.NavigateBack -> state.navController.popBackStack()
                 }
             }
         }
@@ -76,13 +71,13 @@ fun App() {
             KrocyNavigationRail(
                 items = state.navController.appRailItems(),
                 selectedRoute = currentRailRoute,
-                compactExpanded = isNavRailOpen,
-                onCompactDismiss = { isNavRailOpen = false },
+                compactExpanded = vmState.isNavRailOpen,
+                onCompactDismiss = { viewModel.launchEvent(Event.OnChangeNavRailStatus(false)) },
             ) {
-                MainContent(scrollBehavior, vmState, viewModel, state, onOpenNavRail = { isNavRailOpen = true })
+                MainContent(scrollBehavior, vmState, viewModel, state, onOpenNavRail = { viewModel.launchEvent(Event.OnChangeNavRailStatus(true)) })
             }
         } else {
-            MainContent(scrollBehavior, vmState, viewModel, state, onOpenNavRail = { isNavRailOpen = true })
+            MainContent(scrollBehavior, vmState, viewModel, state, onOpenNavRail = { viewModel.launchEvent(Event.OnChangeNavRailStatus(true)) })
         }
 
     }
@@ -110,15 +105,15 @@ private fun MainContent(
                         TopBarTypeUi.SMALL -> SmallTopBar(
                             title = config.title,
                             scrollBehavior = scrollBehavior,
-                            onBack = { viewModel.launchEvent(Event.OnBack) },
-                            action = config.action
+                            leadingAction = config.leadingAction,
+                            trailingAction = config.trailingAction
                         )
 
                         TopBarTypeUi.MEDIUM -> MediumTopBar(
                             title = config.title,
                             scrollBehavior = scrollBehavior,
-                            onBack = { viewModel.launchEvent(Event.OnBack) },
-                            action = config.action
+                            leadingAction = config.leadingAction,
+                            action = config.trailingAction
                         )
                     }
                 }
@@ -135,7 +130,8 @@ private fun MainContent(
                 navController = state.navController,
                 onChangeTopBar = { config ->
                     viewModel.launchEvent(Event.OnTopBarChange(config))
-                }
+                },
+                onOpenNavRail = onOpenNavRail
             )
         }
     }
