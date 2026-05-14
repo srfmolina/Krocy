@@ -15,6 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -28,14 +29,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.srfmolina.krocy.ui.presentation.common.model.ActionUi
+import com.srfmolina.krocy.ui.presentation.common.model.DisplaySizeUi
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
+import com.srfmolina.krocy.ui.presentation.theme.displaySize
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun SmallTopBar(
     title: String,
     scrollBehavior: TopAppBarScrollBehavior,
-    leadingAction: ActionUi, //TODO: hide menu icon leading actions in larger screens
+    navigationAction: ActionUi, //TODO: hide menu icon leading actions in larger screens
     trailingAction: ActionUi? = null
 ) {
     CenterAlignedTopAppBar(
@@ -47,17 +50,7 @@ internal fun SmallTopBar(
                 overflow = TextOverflow.Ellipsis
             )
         },
-        navigationIcon = {
-            IconButton(
-                onClick = leadingAction.onClick,
-                shapes = IconButtonDefaults.shapes()
-            ) {
-                Icon(
-                    imageVector = leadingAction.icon,
-                    contentDescription = leadingAction.contentDescription
-                )
-            }
-        },
+        navigationIcon = { NavigationIcon(navigationAction) },
         actions = {
             trailingAction?.let {
                 IconButton(
@@ -80,7 +73,7 @@ internal fun SmallTopBar(
 internal fun MediumTopBar(
     title: String,
     scrollBehavior: TopAppBarScrollBehavior,
-    leadingAction: ActionUi,
+    navigationAction: ActionUi,
     action: ActionUi? = null
 ) {
     MediumTopAppBar(
@@ -92,14 +85,7 @@ internal fun MediumTopBar(
                 overflow = TextOverflow.Ellipsis
             )
         },
-        navigationIcon = {
-            IconButton(onClick = leadingAction.onClick) {
-                Icon(
-                    imageVector = leadingAction.icon,
-                    contentDescription = leadingAction.contentDescription
-                )
-            }
-        },
+        navigationIcon = { NavigationIcon(navigationAction) },
         actions = {
             action?.let {
                 IconButton(
@@ -115,6 +101,22 @@ internal fun MediumTopBar(
         },
         scrollBehavior = scrollBehavior
     )
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun NavigationIcon(navigationAction: ActionUi) {
+    if (MaterialTheme.displaySize == DisplaySizeUi.S || navigationAction.icon != Icons.Filled.Menu) {
+        IconButton(
+            onClick = navigationAction.onClick,
+            shapes = IconButtonDefaults.shapes()
+        ) {
+            Icon(
+                imageVector = navigationAction.icon,
+                contentDescription = navigationAction.contentDescription
+            )
+        }
+    }
 }
 
 // PREVIEW //
@@ -133,7 +135,7 @@ fun SmallTopBarPreview() {
                 SmallTopBar(
                     title = "Small top bar",
                     scrollBehavior = scrollBehavior,
-                    leadingAction = ActionUi(
+                    navigationAction = ActionUi(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "example",
                         onClick = {}
@@ -180,7 +182,7 @@ fun MediumTopBarPreview() {
                 MediumTopBar(
                     title = "Medium top bar",
                     scrollBehavior = scrollBehavior,
-                    leadingAction = ActionUi(
+                    navigationAction = ActionUi(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "example",
                         onClick = {}

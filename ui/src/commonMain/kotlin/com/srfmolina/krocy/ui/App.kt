@@ -49,23 +49,23 @@ fun App() {
     KrocyTheme {
 
         LaunchedEffect(Unit) {
-            viewModel.launchEvent(Event.Init)
-        }
+                viewModel.launchEvent(Event.Init)
+            }
 
-        LaunchedEffect(state.navController) {
-            state.navController.currentBackStackEntryFlow.first() // The graph must be ready before we navigate...
-            viewModel.effect.collect { effect ->
-                when (effect) {
-                    is Effect.NavigateToWelcome -> state.navController.navigateToWelcome(
-                        navOptions = navOptions {
-                            popUpTo<SplashRoute> {
-                                inclusive = true
+            LaunchedEffect(state.navController) {
+                state.navController.currentBackStackEntryFlow.first() // The graph must be ready before we navigate...
+                viewModel.effect.collect { effect ->
+                    when (effect) {
+                        is Effect.NavigateToWelcome -> state.navController.navigateToWelcome(
+                            navOptions = navOptions {
+                                popUpTo<SplashRoute> {
+                                    inclusive = true
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
-        }
 
         if (currentRailRoute != null) {
             KrocyNavigationRail(
@@ -79,7 +79,6 @@ fun App() {
         } else {
             MainContent(scrollBehavior, vmState, viewModel, state, onOpenNavRail = { viewModel.launchEvent(Event.OnChangeNavRailStatus(true)) })
         }
-
     }
 }
 
@@ -105,14 +104,14 @@ private fun MainContent(
                         TopBarTypeUi.SMALL -> SmallTopBar(
                             title = config.title,
                             scrollBehavior = scrollBehavior,
-                            leadingAction = config.leadingAction,
+                            navigationAction = config.leadingAction,
                             trailingAction = config.trailingAction
                         )
 
                         TopBarTypeUi.MEDIUM -> MediumTopBar(
                             title = config.title,
                             scrollBehavior = scrollBehavior,
-                            leadingAction = config.leadingAction,
+                            navigationAction = config.leadingAction,
                             action = config.trailingAction
                         )
                     }
