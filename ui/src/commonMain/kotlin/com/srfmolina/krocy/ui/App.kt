@@ -35,49 +35,49 @@ import org.koin.compose.viewmodel.koinViewModel
 fun App() {
 
     val viewModel: AppViewModel = koinViewModel()
-    val vmState by viewModel.state.collectAsStateWithLifecycle()
-    val state = rememberAppState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val navControllerState = rememberNavControllerState()
 
-    val scrollBehavior = when (vmState.topBarConfig?.type) {
+    val scrollBehavior = when (state.topBarConfig?.type) {
         TopBarTypeUi.SMALL -> TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
         TopBarTypeUi.MEDIUM -> TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
         null -> null
     }
 
-    val currentRailRoute = state.navController.currentRailRoute()
+    val currentRailRoute = navControllerState.navController.currentRailRoute()
 
     KrocyTheme {
 
         LaunchedEffect(Unit) {
-                viewModel.launchEvent(Event.Init)
-            }
+            viewModel.launchEvent(Event.Init)
+        }
 
-            LaunchedEffect(state.navController) {
-                state.navController.currentBackStackEntryFlow.first() // The graph must be ready before we navigate...
-                viewModel.effect.collect { effect ->
-                    when (effect) {
-                        is Effect.NavigateToWelcome -> state.navController.navigateToWelcome(
-                            navOptions = navOptions {
-                                popUpTo<SplashRoute> {
-                                    inclusive = true
-                                }
+        LaunchedEffect(navControllerState.navController) {
+            navControllerState.navController.currentBackStackEntryFlow.first() // The graph must be ready before we navigate...
+            viewModel.effect.collect { effect ->
+                when (effect) {
+                    is Effect.NavigateToWelcome -> navControllerState.navController.navigateToWelcome(
+                        navOptions = navOptions {
+                            popUpTo<SplashRoute> {
+                                inclusive = true
                             }
-                        )
-                    }
+                        }
+                    )
                 }
             }
+        }
 
         if (currentRailRoute != null) {
             KrocyNavigationRail(
-                items = state.navController.appRailItems(),
+                items = navControllerState.navController.appRailItems(),
                 selectedRoute = currentRailRoute,
-                compactExpanded = vmState.isNavRailOpen,
+                compactExpanded = state.isNavRailOpen,
                 onCompactDismiss = { viewModel.launchEvent(Event.OnChangeNavRailStatus(false)) },
             ) {
-                MainContent(scrollBehavior, vmState, viewModel, state, onOpenNavRail = { viewModel.launchEvent(Event.OnChangeNavRailStatus(true)) })
+                MainContent(scrollBehavior, state, viewModel, navControllerState, onOpenNavRail = { viewModel.launchEvent(Event.OnChangeNavRailStatus(true)) })
             }
         } else {
-            MainContent(scrollBehavior, vmState, viewModel, state, onOpenNavRail = { viewModel.launchEvent(Event.OnChangeNavRailStatus(true)) })
+            MainContent(scrollBehavior, state, viewModel, navControllerState, onOpenNavRail = { viewModel.launchEvent(Event.OnChangeNavRailStatus(true)) })
         }
     }
 }
