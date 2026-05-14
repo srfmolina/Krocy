@@ -1,10 +1,10 @@
 package com.srfmolina.krocy.data.datasource.remote.stock
 
-import com.srfmolina.krocy.data.api.stock.StockApi
-import com.srfmolina.krocy.data.datasource.remote.stock.model.StockResponseDTO
+import org.openapitools.client.apis.StockApi
+import org.openapitools.client.models.CurrentStockResponse
 
-internal class StockDataSourceImpl(private val api: StockApi): StockDataSource {
-    override suspend fun getStock(): Result<List<StockResponseDTO>> = runCatching {
-        api.getStock()
+internal class StockDataSourceImpl(private val api: StockApi) : StockDataSource {
+    override suspend fun getStock(): Result<List<CurrentStockResponse>> = runCatching {
+        api.stockGet().body()
     }
 }
