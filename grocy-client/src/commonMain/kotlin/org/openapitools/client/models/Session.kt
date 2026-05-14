@@ -24,9 +24,8 @@
 package org.openapitools.client.models
 
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -45,11 +44,11 @@ data class Session (
 
     @SerialName(value = "session_key") val sessionKey: kotlin.String? = null,
 
-    @SerialName(value = "expires") val expires: kotlin.time.Instant? = null,
+    @SerialName(value = "expires") val expires: kotlin.String? = null,
 
-    @SerialName(value = "last_used") val lastUsed: kotlin.time.Instant? = null,
+    @SerialName(value = "last_used") val lastUsed: kotlin.String? = null,
 
-    @SerialName(value = "row_created_timestamp") val rowCreatedTimestamp: kotlin.time.Instant? = null
+    @SerialName(value = "row_created_timestamp") val rowCreatedTimestamp: kotlin.String? = null
 
 ) {
 

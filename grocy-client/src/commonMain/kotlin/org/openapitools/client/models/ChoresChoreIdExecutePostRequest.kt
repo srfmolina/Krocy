@@ -24,9 +24,8 @@
 package org.openapitools.client.models
 
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -40,13 +39,13 @@ import kotlinx.serialization.encoding.*
 data class ChoresChoreIdExecutePostRequest (
 
     /* The time of when the chore was executed, when omitted, the current time is used */
-    @SerialName(value = "tracked_time") val trackedTime: kotlin.time.Instant? = null,
+    @SerialName(value = "tracked_time") val trackedTime: kotlin.String? = null,
 
     /* A valid user id of who executed this chore, when omitted, the currently authenticated user will be used */
     @SerialName(value = "done_by") val doneBy: kotlin.Int? = null,
 
     /* `true` when the execution should be tracked as skipped, defaults to `false` when omitted */
-    @SerialName(value = "skipped") val skipped: kotlin.Boolean? = false
+    @SerialName(value = "skipped") val skipped: kotlin.Int? = 0
 
 ) {
 

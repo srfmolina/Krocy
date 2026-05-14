@@ -7,12 +7,12 @@
 | **id** | **kotlin.Int** |  |  [optional] |
 | **name** | **kotlin.String** |  |  [optional] |
 | **description** | **kotlin.String** |  |  [optional] |
-| **dueDate** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
+| **dueDate** | **kotlin.String** |  |  [optional] |
 | **done** | **kotlin.Int** |  |  [optional] |
-| **doneTimestamp** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
+| **doneTimestamp** | **kotlin.String** |  |  [optional] |
 | **categoryId** | **kotlin.Int** |  |  [optional] |
 | **assignedToUserId** | **kotlin.Int** |  |  [optional] |
-| **rowCreatedTimestamp** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
+| **rowCreatedTimestamp** | **kotlin.String** |  |  [optional] |
 | **userfields** | **kotlin.String** | Key/value pairs of userfields |  [optional] |
 
 

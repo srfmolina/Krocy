@@ -23,12 +23,8 @@
 
 package org.openapitools.client.models
 
-import org.openapitools.client.models.Chore
-import org.openapitools.client.models.UserDto
-
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -48,14 +44,14 @@ data class ChoreDetailsResponse (
     @SerialName(value = "chore") val chore: Chore? = null,
 
     /* When this chore was last tracked */
-    @SerialName(value = "last_tracked") val lastTracked: kotlin.time.Instant? = null,
+    @SerialName(value = "last_tracked") val lastTracked: kotlin.String? = null,
 
     /* How often this chore was tracked so far */
     @SerialName(value = "track_count") val trackCount: kotlin.Int? = null,
 
     @SerialName(value = "last_done_by") val lastDoneBy: UserDto? = null,
 
-    @SerialName(value = "next_estimated_execution_time") val nextEstimatedExecutionTime: kotlin.time.Instant? = null,
+    @SerialName(value = "next_estimated_execution_time") val nextEstimatedExecutionTime: kotlin.String? = null,
 
     @SerialName(value = "next_execution_assigned_user") val nextExecutionAssignedUser: UserDto? = null,
 

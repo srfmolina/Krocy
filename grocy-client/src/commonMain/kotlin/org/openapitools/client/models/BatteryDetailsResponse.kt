@@ -23,11 +23,8 @@
 
 package org.openapitools.client.models
 
-import org.openapitools.client.models.Battery
-
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -44,12 +41,12 @@ data class BatteryDetailsResponse (
     @SerialName(value = "chore") val chore: Battery? = null,
 
     /* When this battery was last charged */
-    @SerialName(value = "last_charged") val lastCharged: kotlin.time.Instant? = null,
+    @SerialName(value = "last_charged") val lastCharged: kotlin.String? = null,
 
     /* How often this battery was charged so far */
     @SerialName(value = "charge_cycles_count") val chargeCyclesCount: kotlin.Int? = null,
 
-    @SerialName(value = "next_estimated_charge_time") val nextEstimatedChargeTime: kotlin.time.Instant? = null
+    @SerialName(value = "next_estimated_charge_time") val nextEstimatedChargeTime: kotlin.String? = null
 
 ) {
 

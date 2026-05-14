@@ -23,11 +23,8 @@
 
 package org.openapitools.client.models
 
-import org.openapitools.client.models.StockTransactionType
-
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -54,7 +51,7 @@ data class StockJournal (
 
     @SerialName(value = "undone") val undone: kotlin.Int? = null,
 
-    @SerialName(value = "undone_timestamp") val undoneTimestamp: kotlin.time.Instant? = null,
+    @SerialName(value = "undone_timestamp") val undoneTimestamp: kotlin.String? = null,
 
     @SerialName(value = "amount") val amount: kotlin.Double? = null,
 
@@ -70,11 +67,11 @@ data class StockJournal (
 
     @SerialName(value = "user_display_name") val userDisplayName: kotlin.String? = null,
 
-    @SerialName(value = "spoiled") val spoiled: kotlin.Boolean? = false,
+    @SerialName(value = "spoiled") val spoiled: kotlin.Int? = 0,
 
     @SerialName(value = "transaction_type") val transactionType: StockTransactionType? = null,
 
-    @SerialName(value = "row_created_timestamp") val rowCreatedTimestamp: kotlin.time.Instant? = null
+    @SerialName(value = "row_created_timestamp") val rowCreatedTimestamp: kotlin.String? = null
 
 ) {
 

@@ -24,9 +24,8 @@
 package org.openapitools.client.models
 
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -42,7 +41,7 @@ data class StockShoppinglistClearPostRequest (
     @SerialName(value = "list_id") val listId: kotlin.Int? = null,
 
     /* When `true`, only done items will be removed (defaults to `false` when ommited) */
-    @SerialName(value = "done_only") val doneOnly: kotlin.Boolean? = null
+    @SerialName(value = "done_only") val doneOnly: kotlin.Int? = null
 
 ) {
 

@@ -21,7 +21,7 @@ Prints the shoppinglist with a thermal printer
 
 val apiInstance = PrintApi()
 val list : kotlin.Int = 56 // kotlin.Int | Shopping list id
-val printHeader : kotlin.Boolean = true // kotlin.Boolean | Prints Grocy logo if true
+val printHeader : kotlin.Int = true // kotlin.Int | Prints Grocy logo if true
 try {
     val result : PrintShoppinglistThermalGet200Response = apiInstance.printShoppinglistThermalGet(list, printHeader)
     println(result)
@@ -38,7 +38,7 @@ try {
 | **list** | **kotlin.Int**| Shopping list id | [optional] [default to 1] |
 | Name | Type | Description  | Notes |
 | ------------- | ------------- | ------------- | ------------- |
-| **printHeader** | **kotlin.Boolean**| Prints Grocy logo if true | [optional] [default to true] |
+| **printHeader** | **kotlin.Int**| Prints Grocy logo if true | [optional] [default to true] |
 
 ### Return type
 

@@ -23,23 +23,16 @@
 
 package org.openapitools.client.apis
 
-import org.openapitools.client.models.Error400
-import org.openapitools.client.models.PrintShoppinglistThermalGet200Response
-
-import org.openapitools.client.infrastructure.*
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
-import io.ktor.client.request.forms.formData
 import io.ktor.client.engine.HttpClientEngine
 import kotlinx.serialization.json.Json
-import io.ktor.http.ParametersBuilder
-import io.ktor.http.Headers
-import io.ktor.http.HttpHeaders
-import io.ktor.http.ContentType
-import io.ktor.http.content.PartData
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import org.openapitools.client.infrastructure.ApiClient
+import org.openapitools.client.infrastructure.HttpResponse
+import org.openapitools.client.infrastructure.RequestConfig
+import org.openapitools.client.infrastructure.RequestMethod
+import org.openapitools.client.infrastructure.wrap
+import org.openapitools.client.models.PrintShoppinglistThermalGet200Response
 
 open class PrintApi : ApiClient {
 
@@ -63,7 +56,7 @@ open class PrintApi : ApiClient {
      * @return PrintShoppinglistThermalGet200Response
      */
     @Suppress("UNCHECKED_CAST")
-    open suspend fun printShoppinglistThermalGet(list: kotlin.Int? = 1, printHeader: kotlin.Boolean? = true): HttpResponse<PrintShoppinglistThermalGet200Response> {
+    open suspend fun printShoppinglistThermalGet(list: kotlin.Int? = 1, printHeader: kotlin.Int? = 1): HttpResponse<PrintShoppinglistThermalGet200Response> {
 
         val localVariableAuthNames = listOf<String>("ApiKeyAuth")
 

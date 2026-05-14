@@ -24,9 +24,8 @@
 package org.openapitools.client.models
 
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -55,7 +54,7 @@ data class User (
 
     @SerialName(value = "picture_file_name") val pictureFileName: kotlin.String? = null,
 
-    @SerialName(value = "row_created_timestamp") val rowCreatedTimestamp: kotlin.time.Instant? = null
+    @SerialName(value = "row_created_timestamp") val rowCreatedTimestamp: kotlin.String? = null
 
 ) {
 

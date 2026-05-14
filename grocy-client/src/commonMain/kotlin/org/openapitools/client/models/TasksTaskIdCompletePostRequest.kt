@@ -24,9 +24,8 @@
 package org.openapitools.client.models
 
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -38,7 +37,7 @@ import kotlinx.serialization.encoding.*
 data class TasksTaskIdCompletePostRequest (
 
     /* The time of when the task was completed, when omitted, the current time is used */
-    @SerialName(value = "done_time") val doneTime: kotlin.time.Instant? = null
+    @SerialName(value = "done_time") val doneTime: kotlin.String? = null
 
 ) {
 

@@ -24,9 +24,8 @@
 package org.openapitools.client.models
 
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -38,7 +37,7 @@ import kotlinx.serialization.encoding.*
 data class BatteriesBatteryIdChargePostRequest (
 
     /* The time of when the battery was charged, when omitted, the current time is used */
-    @SerialName(value = "tracked_time") val trackedTime: kotlin.time.Instant? = null
+    @SerialName(value = "tracked_time") val trackedTime: kotlin.String? = null
 
 ) {
 

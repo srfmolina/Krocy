@@ -23,11 +23,8 @@
 
 package org.openapitools.client.models
 
-import org.openapitools.client.models.ProductWithoutUserfields
-
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -59,7 +56,7 @@ data class CurrentStockResponse (
     @SerialName(value = "best_before_date") val bestBeforeDate: kotlinx.datetime.LocalDate? = null,
 
     /* Indicates wheter this product has sub-products or not / if the fields `amount_aggregated` and `amount_opened_aggregated` are filled */
-    @SerialName(value = "is_aggregated_amount") val isAggregatedAmount: kotlin.Boolean? = null,
+    @SerialName(value = "is_aggregated_amount") val isAggregatedAmount: kotlin.Int? = null,
 
     @SerialName(value = "product") val product: ProductWithoutUserfields? = null
 

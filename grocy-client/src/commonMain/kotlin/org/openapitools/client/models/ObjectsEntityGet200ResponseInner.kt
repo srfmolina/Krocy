@@ -23,18 +23,8 @@
 
 package org.openapitools.client.models
 
-import org.openapitools.client.models.Battery
-import org.openapitools.client.models.Chore
-import org.openapitools.client.models.Location
-import org.openapitools.client.models.Product
-import org.openapitools.client.models.ProductBarcode
-import org.openapitools.client.models.QuantityUnit
-import org.openapitools.client.models.ShoppingListItem
-import org.openapitools.client.models.StockEntry
-
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -123,7 +113,7 @@ data class ObjectsEntityGet200ResponseInner (
 
     @SerialName(value = "picture_file_name") val pictureFileName: kotlin.String? = null,
 
-    @SerialName(value = "row_created_timestamp") val rowCreatedTimestamp: kotlin.time.Instant? = null,
+    @SerialName(value = "row_created_timestamp") val rowCreatedTimestamp: kotlin.String? = null,
 
     @SerialName(value = "shopping_location_id") val shoppingLocationId: kotlin.Int? = null,
 
@@ -148,9 +138,9 @@ data class ObjectsEntityGet200ResponseInner (
 
     @SerialName(value = "period_days") val periodDays: kotlin.Int? = null,
 
-    @SerialName(value = "track_date_only") val trackDateOnly: kotlin.Boolean? = null,
+    @SerialName(value = "track_date_only") val trackDateOnly: kotlin.Int? = null,
 
-    @SerialName(value = "rollover") val rollover: kotlin.Boolean? = null,
+    @SerialName(value = "rollover") val rollover: kotlin.Int? = null,
 
     @SerialName(value = "assignment_type") val assignmentType: ObjectsEntityGet200ResponseInner.AssignmentType? = null,
 
@@ -158,9 +148,9 @@ data class ObjectsEntityGet200ResponseInner (
 
     @SerialName(value = "next_execution_assigned_to_user_id") val nextExecutionAssignedToUserId: kotlin.Int? = null,
 
-    @SerialName(value = "start_date") val startDate: kotlin.time.Instant? = null,
+    @SerialName(value = "start_date") val startDate: kotlin.String? = null,
 
-    @SerialName(value = "rescheduled_date") val rescheduledDate: kotlin.time.Instant? = null,
+    @SerialName(value = "rescheduled_date") val rescheduledDate: kotlin.String? = null,
 
     @SerialName(value = "rescheduled_next_execution_assigned_to_user_id") val rescheduledNextExecutionAssignedToUserId: kotlin.Int? = null,
 

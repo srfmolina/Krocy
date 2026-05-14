@@ -9,7 +9,7 @@
 | **description** | **kotlin.String** |  |  [optional] |
 | **usedIn** | **kotlin.String** |  |  [optional] |
 | **chargeIntervalDays** | **kotlin.Int** |  |  [optional] |
-| **rowCreatedTimestamp** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
+| **rowCreatedTimestamp** | **kotlin.String** |  |  [optional] |
 | **userfields** | **kotlin.String** | Key/value pairs of userfields |  [optional] |
 
 

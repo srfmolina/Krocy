@@ -18,7 +18,7 @@
 | **defaultBestBeforeDays** | **kotlin.Int** |  |  [optional] |
 | **defaultBestBeforeDaysAfterOpen** | **kotlin.Int** |  |  [optional] |
 | **pictureFileName** | **kotlin.String** |  |  [optional] |
-| **rowCreatedTimestamp** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
+| **rowCreatedTimestamp** | **kotlin.String** |  |  [optional] |
 | **shoppingLocationId** | **kotlin.Int** |  |  [optional] |
 | **treatOpenedAsOutOfStock** | **kotlin.Int** |  |  [optional] |
 | **autoReprintStockLabel** | **kotlin.Int** |  |  [optional] |

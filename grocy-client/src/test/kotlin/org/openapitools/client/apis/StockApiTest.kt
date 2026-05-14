@@ -23,30 +23,7 @@
 
 package org.openapitools.client.apis
 
-import io.kotlintest.shouldBe
 import io.kotlintest.specs.ShouldSpec
-
-import org.openapitools.client.apis.StockApi
-import org.openapitools.client.models.CurrentStockResponse
-import org.openapitools.client.models.CurrentVolatilStockResponse
-import org.openapitools.client.models.Error400
-import org.openapitools.client.models.Error500
-import org.openapitools.client.models.ExternalBarcodeLookupResponse
-import org.openapitools.client.models.ProductDetailsResponse
-import org.openapitools.client.models.ProductPriceHistory
-import org.openapitools.client.models.StockEntry
-import org.openapitools.client.models.StockEntryEntryIdPutRequest
-import org.openapitools.client.models.StockLocation
-import org.openapitools.client.models.StockLogEntry
-import org.openapitools.client.models.StockProductsProductIdAddPostRequest
-import org.openapitools.client.models.StockProductsProductIdConsumePostRequest
-import org.openapitools.client.models.StockProductsProductIdInventoryPostRequest
-import org.openapitools.client.models.StockProductsProductIdOpenPostRequest
-import org.openapitools.client.models.StockProductsProductIdTransferPostRequest
-import org.openapitools.client.models.StockShoppinglistAddMissingProductsPostRequest
-import org.openapitools.client.models.StockShoppinglistAddProductPostRequest
-import org.openapitools.client.models.StockShoppinglistClearPostRequest
-import org.openapitools.client.models.StockShoppinglistRemoveProductPostRequest
 
 class StockApiTest : ShouldSpec() {
     init {
@@ -57,7 +34,7 @@ class StockApiTest : ShouldSpec() {
         should("test stockBarcodesExternalLookupBarcodeGet") {
             // uncomment below to test stockBarcodesExternalLookupBarcodeGet
             //val barcode : kotlin.String = barcode_example // kotlin.String | The barcode to lookup up
-            //val add : kotlin.Boolean = true // kotlin.Boolean | When true, the product is added to the database on a successful lookup and the new product id is in included in the response
+            //val add : kotlin.Int = true // kotlin.Int | When true, the product is added to the database on a successful lookup and the new product id is in included in the response
             //val result : ExternalBarcodeLookupResponse = apiInstance.stockBarcodesExternalLookupBarcodeGet(barcode, add)
             //result shouldBe ("TODO")
         }
@@ -143,7 +120,7 @@ class StockApiTest : ShouldSpec() {
         should("test stockProductsProductIdEntriesGet") {
             // uncomment below to test stockProductsProductIdEntriesGet
             //val productId : kotlin.Int = 56 // kotlin.Int | A valid product id
-            //val includeSubProducts : kotlin.Boolean = true // kotlin.Boolean | If sub products should be included (if the given product is a parent product and in addition to the ones of the given product)
+            //val includeSubProducts : kotlin.Int = true // kotlin.Int | If sub products should be included (if the given product is a parent product and in addition to the ones of the given product)
             //val query : kotlin.collections.List<kotlin.String> =  // kotlin.collections.List<kotlin.String> | An array of filter conditions, each of them is a string in the form of `<field><condition><value>` where<br>`<field>` is a valid field name<br>`<condition>` is a comparison operator, one of<br>&nbsp;&nbsp;`=` equal<br>&nbsp;&nbsp;`!=` not equal<br>&nbsp;&nbsp;`~` LIKE<br>&nbsp;&nbsp;`!~` not LIKE<br>&nbsp;&nbsp;`<` less<br>&nbsp;&nbsp;`>` greater<br>&nbsp;&nbsp;`<=` less or equal<br>&nbsp;&nbsp;`>=` greater or equal<br>&nbsp;&nbsp;`§` regular expression<br>`<value>` is the value to search for
             //val order : kotlin.String = order_example // kotlin.String | A valid field name by which the response should be ordered, use the separator `:` to specify the sort order (`asc` or `desc`, defaults to `asc` when omitted)
             //val limit : kotlin.Int = 56 // kotlin.Int | The maximum number of objects to return
@@ -173,7 +150,7 @@ class StockApiTest : ShouldSpec() {
         should("test stockProductsProductIdLocationsGet") {
             // uncomment below to test stockProductsProductIdLocationsGet
             //val productId : kotlin.Int = 56 // kotlin.Int | A valid product id
-            //val includeSubProducts : kotlin.Boolean = true // kotlin.Boolean | If sub product locations should be included (if the given product is a parent product and in addition to the ones of the given product)
+            //val includeSubProducts : kotlin.Int = true // kotlin.Int | If sub product locations should be included (if the given product is a parent product and in addition to the ones of the given product)
             //val query : kotlin.collections.List<kotlin.String> =  // kotlin.collections.List<kotlin.String> | An array of filter conditions, each of them is a string in the form of `<field><condition><value>` where<br>`<field>` is a valid field name<br>`<condition>` is a comparison operator, one of<br>&nbsp;&nbsp;`=` equal<br>&nbsp;&nbsp;`!=` not equal<br>&nbsp;&nbsp;`~` LIKE<br>&nbsp;&nbsp;`!~` not LIKE<br>&nbsp;&nbsp;`<` less<br>&nbsp;&nbsp;`>` greater<br>&nbsp;&nbsp;`<=` less or equal<br>&nbsp;&nbsp;`>=` greater or equal<br>&nbsp;&nbsp;`§` regular expression<br>`<value>` is the value to search for
             //val order : kotlin.String = order_example // kotlin.String | A valid field name by which the response should be ordered, use the separator `:` to specify the sort order (`asc` or `desc`, defaults to `asc` when omitted)
             //val limit : kotlin.Int = 56 // kotlin.Int | The maximum number of objects to return

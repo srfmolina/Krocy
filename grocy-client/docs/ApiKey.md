@@ -6,9 +6,9 @@
 | ------------ | ------------- | ------------- | ------------- |
 | **id** | **kotlin.Int** |  |  [optional] |
 | **apiKey** | **kotlin.String** |  |  [optional] |
-| **expires** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
-| **lastUsed** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
-| **rowCreatedTimestamp** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
+| **expires** | **kotlin.String** |  |  [optional] |
+| **lastUsed** | **kotlin.String** |  |  [optional] |
+| **rowCreatedTimestamp** | **kotlin.String** |  |  [optional] |
 
 
 

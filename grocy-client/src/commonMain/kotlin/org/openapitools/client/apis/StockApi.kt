@@ -23,10 +23,24 @@
 
 package org.openapitools.client.apis
 
+import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.engine.HttpClientEngine
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
+import org.openapitools.client.infrastructure.ApiClient
+import org.openapitools.client.infrastructure.HttpResponse
+import org.openapitools.client.infrastructure.RequestConfig
+import org.openapitools.client.infrastructure.RequestMethod
+import org.openapitools.client.infrastructure.map
+import org.openapitools.client.infrastructure.toMultiValue
+import org.openapitools.client.infrastructure.wrap
 import org.openapitools.client.models.CurrentStockResponse
 import org.openapitools.client.models.CurrentVolatilStockResponse
-import org.openapitools.client.models.Error400
-import org.openapitools.client.models.Error500
 import org.openapitools.client.models.ExternalBarcodeLookupResponse
 import org.openapitools.client.models.ProductDetailsResponse
 import org.openapitools.client.models.ProductPriceHistory
@@ -43,21 +57,6 @@ import org.openapitools.client.models.StockShoppinglistAddMissingProductsPostReq
 import org.openapitools.client.models.StockShoppinglistAddProductPostRequest
 import org.openapitools.client.models.StockShoppinglistClearPostRequest
 import org.openapitools.client.models.StockShoppinglistRemoveProductPostRequest
-
-import org.openapitools.client.infrastructure.*
-import io.ktor.client.HttpClient
-import io.ktor.client.HttpClientConfig
-import io.ktor.client.request.forms.formData
-import io.ktor.client.engine.HttpClientEngine
-import kotlinx.serialization.json.Json
-import io.ktor.http.ParametersBuilder
-import io.ktor.http.Headers
-import io.ktor.http.HttpHeaders
-import io.ktor.http.ContentType
-import io.ktor.http.content.PartData
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
 
 open class StockApi : ApiClient {
 
@@ -81,7 +80,7 @@ open class StockApi : ApiClient {
      * @return ExternalBarcodeLookupResponse
      */
     @Suppress("UNCHECKED_CAST")
-    open suspend fun stockBarcodesExternalLookupBarcodeGet(barcode: kotlin.String, add: kotlin.Boolean? = false): HttpResponse<ExternalBarcodeLookupResponse> {
+    open suspend fun stockBarcodesExternalLookupBarcodeGet(barcode: kotlin.String, add: kotlin.Int? = 0): HttpResponse<ExternalBarcodeLookupResponse> {
 
         val localVariableAuthNames = listOf<String>("ApiKeyAuth")
 
@@ -471,7 +470,7 @@ open class StockApi : ApiClient {
      * @return kotlin.collections.List<StockEntry>
      */
     @Suppress("UNCHECKED_CAST")
-    open suspend fun stockProductsProductIdEntriesGet(productId: kotlin.Int, includeSubProducts: kotlin.Boolean? = null, query: kotlin.collections.List<kotlin.String>? = null, order: kotlin.String? = null, limit: kotlin.Int? = null, offset: kotlin.Int? = null): HttpResponse<kotlin.collections.List<StockEntry>> {
+    open suspend fun stockProductsProductIdEntriesGet(productId: kotlin.Int, includeSubProducts: kotlin.Int? = null, query: kotlin.collections.List<kotlin.String>? = null, order: kotlin.String? = null, limit: kotlin.Int? = null, offset: kotlin.Int? = null): HttpResponse<kotlin.collections.List<StockEntry>> {
 
         val localVariableAuthNames = listOf<String>("ApiKeyAuth")
 
@@ -599,7 +598,7 @@ open class StockApi : ApiClient {
      * @return kotlin.collections.List<StockLocation>
      */
     @Suppress("UNCHECKED_CAST")
-    open suspend fun stockProductsProductIdLocationsGet(productId: kotlin.Int, includeSubProducts: kotlin.Boolean? = null, query: kotlin.collections.List<kotlin.String>? = null, order: kotlin.String? = null, limit: kotlin.Int? = null, offset: kotlin.Int? = null): HttpResponse<kotlin.collections.List<StockLocation>> {
+    open suspend fun stockProductsProductIdLocationsGet(productId: kotlin.Int, includeSubProducts: kotlin.Int? = null, query: kotlin.collections.List<kotlin.String>? = null, order: kotlin.String? = null, limit: kotlin.Int? = null, offset: kotlin.Int? = null): HttpResponse<kotlin.collections.List<StockLocation>> {
 
         val localVariableAuthNames = listOf<String>("ApiKeyAuth")
 

@@ -18,7 +18,7 @@
 | **defaultBestBeforeDays** | **kotlin.Int** |  |  [optional] |
 | **defaultBestBeforeDaysAfterOpen** | **kotlin.Int** |  |  [optional] |
 | **pictureFileName** | **kotlin.String** |  |  [optional] |
-| **rowCreatedTimestamp** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
+| **rowCreatedTimestamp** | **kotlin.String** |  |  [optional] |
 | **shoppingLocationId** | **kotlin.Int** |  |  [optional] |
 | **treatOpenedAsOutOfStock** | **kotlin.Int** |  |  [optional] |
 | **autoReprintStockLabel** | **kotlin.Int** |  |  [optional] |
@@ -30,13 +30,13 @@
 | **periodType** | [**inline**](#PeriodType) |  |  [optional] |
 | **periodConfig** | **kotlin.String** |  |  [optional] |
 | **periodDays** | **kotlin.Int** |  |  [optional] |
-| **trackDateOnly** | **kotlin.Boolean** |  |  [optional] |
-| **rollover** | **kotlin.Boolean** |  |  [optional] |
+| **trackDateOnly** | **kotlin.Int** |  |  [optional] |
+| **rollover** | **kotlin.Int** |  |  [optional] |
 | **assignmentType** | [**inline**](#AssignmentType) |  |  [optional] |
 | **assignmentConfig** | **kotlin.String** |  |  [optional] |
 | **nextExecutionAssignedToUserId** | **kotlin.Int** |  |  [optional] |
-| **startDate** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
-| **rescheduledDate** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
+| **startDate** | **kotlin.String** |  |  [optional] |
+| **rescheduledDate** | **kotlin.String** |  |  [optional] |
 | **rescheduledNextExecutionAssignedToUserId** | **kotlin.Int** |  |  [optional] |
 | **usedIn** | **kotlin.String** |  |  [optional] |
 | **chargeIntervalDays** | **kotlin.Int** |  |  [optional] |
