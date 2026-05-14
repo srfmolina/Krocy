@@ -3,12 +3,15 @@ package com.srfmolina.krocy.ui.presentation.navigation
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarConfigurationUi
 
 @Composable
-fun NavigationComponent(
-    navController: NavHostController
+internal fun NavigationComponent(
+    navController: NavHostController,
+    onChangeTopBar: (TopBarConfigurationUi) -> Unit,
+    onOpenNavRail: () -> Unit
 ) {
     NavHost(navController = navController, startDestination = AppRoute) {
-        appNavGraph(navController)
+        appNavGraph(navController, onChangeTopBar, onOpenNavRail)
     }
 }

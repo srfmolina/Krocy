@@ -2,12 +2,15 @@ package com.srfmolina.krocy.ui.presentation.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import androidx.window.core.layout.WindowSizeClass
+import com.srfmolina.krocy.ui.presentation.common.model.DisplaySizeUi
 
 @Immutable
 data class ExtendedColorScheme(
@@ -355,9 +358,17 @@ fun KrocyTheme(
         else -> lightScheme
     }
 
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val displaySize = when {
+        windowSizeClass.isWidthAtLeastBreakpoint((WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) -> DisplaySizeUi.L
+        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)   -> DisplaySizeUi.M
+        else                                                                                    -> DisplaySizeUi.S
+    }
+
     CompositionLocalProvider(
         LocalKrocySpacing provides KrocySpacing(),
-        LocalExtendedColorScheme provides if (darkTheme) extendedDark else extendedLight
+        LocalExtendedColorScheme provides if (darkTheme) extendedDark else extendedLight,
+        LocalDisplaySize provides displaySize
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

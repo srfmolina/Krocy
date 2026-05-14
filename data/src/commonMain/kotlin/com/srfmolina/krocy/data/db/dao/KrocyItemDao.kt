@@ -4,11 +4,11 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.srfmolina.krocy.data.entity.KrocyItemEntity
+import com.srfmolina.krocy.data.entity.example.KrocyItemEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface KrocyItemDao {
+interface KrocyItemDao { // An example
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(item: KrocyItemEntity)
 

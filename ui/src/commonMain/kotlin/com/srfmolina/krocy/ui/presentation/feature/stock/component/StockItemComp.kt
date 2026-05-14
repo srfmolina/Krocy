@@ -2,8 +2,7 @@ package com.srfmolina.krocy.ui.presentation.feature.stock.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -41,25 +40,24 @@ internal fun StockItemComp(
         )
 
         if (showRow) {
-            LazyRow (
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2)
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2)
             ) {
                 item.consumptionDate?.let {
-                    item {
-                        val containerColor = when {
-                            it.expired -> MaterialTheme.colorScheme.errorContainer
-                            it.type == ConsumptionType.EXPIRATION -> MaterialTheme.extendedColorScheme.danger.colorContainer
-                            it.type == ConsumptionType.PREFERENCE -> MaterialTheme.extendedColorScheme.warning.colorContainer
-                            else -> MaterialTheme.colorScheme.error
-                        }
-                        HintCard(
-                            text = it.date,
-                            containerColor = containerColor
-                        )
+                    val containerColor = when {
+                        it.expired -> MaterialTheme.colorScheme.errorContainer
+                        it.type == ConsumptionType.EXPIRATION -> MaterialTheme.extendedColorScheme.danger.colorContainer
+                        it.type == ConsumptionType.PREFERENCE -> MaterialTheme.extendedColorScheme.warning.colorContainer
+                        else -> MaterialTheme.colorScheme.error
                     }
+                    HintCard(
+                        text = it.date,
+                        containerColor = containerColor
+                    )
                 }
 
-                items(item.hints) { hint ->
+                item.hints.forEach { hint ->
                     HintCard(
                         text = hint
                     )

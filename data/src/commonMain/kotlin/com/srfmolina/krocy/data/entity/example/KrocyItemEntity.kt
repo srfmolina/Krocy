@@ -1,4 +1,4 @@
-package com.srfmolina.krocy.data.entity
+package com.srfmolina.krocy.data.entity.example
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
