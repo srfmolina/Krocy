@@ -15,7 +15,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -54,14 +53,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
+import com.srfmolina.krocy.ui.presentation.common.model.DisplaySizeUi
 import com.srfmolina.krocy.ui.presentation.navigation.KrocyRoute
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationItemUi
 import com.srfmolina.krocy.ui.presentation.navigation.SplashRoute
 import com.srfmolina.krocy.ui.presentation.navigation.StockRoute
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
+import com.srfmolina.krocy.ui.presentation.theme.displaySize
 import com.srfmolina.krocy.ui.presentation.theme.spacing
 
-private val COMPACT_BREAKPOINT = 600.dp
 private val RAIL_COLLAPSED_WIDTH = 80.dp
 private val RAIL_EXPANDED_WIDTH = 240.dp
 private const val ANIM_DURATION_MS = 300
@@ -93,10 +93,10 @@ internal fun KrocyNavigationRail(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    BoxWithConstraints(
+    Box(
         modifier = modifier.fillMaxSize()
     ) {
-        val isCompact = maxWidth < COMPACT_BREAKPOINT
+        val isCompact = MaterialTheme.displaySize == DisplaySizeUi.S
         var wideExpanded by rememberSaveable { mutableStateOf(false) }
 
         if (isCompact) {
