@@ -24,9 +24,8 @@
 package org.openapitools.client.models
 
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -41,10 +40,10 @@ data class CurrentBatteryResponse (
 
     @SerialName(value = "battery_id") val batteryId: kotlin.Int? = null,
 
-    @SerialName(value = "last_tracked_time") val lastTrackedTime: kotlin.time.Instant? = null,
+    @SerialName(value = "last_tracked_time") val lastTrackedTime: kotlin.String? = null,
 
     /* The next estimated charge time of this battery, 2999-12-31 23:59:59 when the given battery has no charge_interval_days defined */
-    @SerialName(value = "next_estimated_charge_time") val nextEstimatedChargeTime: kotlin.time.Instant? = null
+    @SerialName(value = "next_estimated_charge_time") val nextEstimatedChargeTime: kotlin.String? = null
 
 ) {
 

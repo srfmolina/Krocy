@@ -23,12 +23,8 @@
 
 package org.openapitools.client.models
 
-import org.openapitools.client.models.TaskCategory
-import org.openapitools.client.models.UserDto
-
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -55,17 +51,17 @@ data class CurrentTaskResponse (
 
     @SerialName(value = "description") val description: kotlin.String? = null,
 
-    @SerialName(value = "due_date") val dueDate: kotlin.time.Instant? = null,
+    @SerialName(value = "due_date") val dueDate: kotlin.String? = null,
 
     @SerialName(value = "done") val done: kotlin.Int? = null,
 
-    @SerialName(value = "done_timestamp") val doneTimestamp: kotlin.time.Instant? = null,
+    @SerialName(value = "done_timestamp") val doneTimestamp: kotlin.String? = null,
 
     @SerialName(value = "category_id") val categoryId: kotlin.Int? = null,
 
     @SerialName(value = "assigned_to_user_id") val assignedToUserId: kotlin.Int? = null,
 
-    @SerialName(value = "row_created_timestamp") val rowCreatedTimestamp: kotlin.time.Instant? = null,
+    @SerialName(value = "row_created_timestamp") val rowCreatedTimestamp: kotlin.String? = null,
 
     @SerialName(value = "assigned_to_user") val assignedToUser: UserDto? = null,
 

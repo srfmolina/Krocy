@@ -10,15 +10,15 @@
 | **periodType** | [**inline**](#PeriodType) |  |  [optional] |
 | **periodConfig** | **kotlin.String** |  |  [optional] |
 | **periodDays** | **kotlin.Int** |  |  [optional] |
-| **trackDateOnly** | **kotlin.Boolean** |  |  [optional] |
-| **rollover** | **kotlin.Boolean** |  |  [optional] |
+| **trackDateOnly** | **kotlin.Int** |  |  [optional] |
+| **rollover** | **kotlin.Int** |  |  [optional] |
 | **assignmentType** | [**inline**](#AssignmentType) |  |  [optional] |
 | **assignmentConfig** | **kotlin.String** |  |  [optional] |
 | **nextExecutionAssignedToUserId** | **kotlin.Int** |  |  [optional] |
-| **startDate** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
-| **rescheduledDate** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
+| **startDate** | **kotlin.String** |  |  [optional] |
+| **rescheduledDate** | **kotlin.String** |  |  [optional] |
 | **rescheduledNextExecutionAssignedToUserId** | **kotlin.Int** |  |  [optional] |
-| **rowCreatedTimestamp** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
+| **rowCreatedTimestamp** | **kotlin.String** |  |  [optional] |
 | **userfields** | **kotlin.String** | Key/value pairs of userfields |  [optional] |
 
 

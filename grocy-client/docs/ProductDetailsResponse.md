@@ -23,7 +23,7 @@
 | **location** | [**Location**](Location.md) |  |  [optional] |
 | **averageShelfLifeDays** | **kotlin.Double** |  |  [optional] |
 | **spoilRatePercent** | **kotlin.Double** |  |  [optional] |
-| **hasChilds** | **kotlin.Boolean** | True when the product is a parent product of others |  [optional] |
+| **hasChilds** | **kotlin.Int** | True when the product is a parent product of others |  [optional] |
 | **defaultLocation** | [**Location**](Location.md) |  |  [optional] |
 | **quConversionFactorPurchaseToStock** | **kotlin.Double** | The conversion factor of the corresponding QU conversion from the product&#39;s qu_id_purchase to qu_id_stock |  [optional] |
 | **quConversionFactorPriceToStock** | **kotlin.Double** | The conversion factor of the corresponding QU conversion from the product&#39;s qu_id_price to qu_id_stock |  [optional] |

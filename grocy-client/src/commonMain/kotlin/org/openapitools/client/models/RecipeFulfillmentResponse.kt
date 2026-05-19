@@ -24,9 +24,8 @@
 package org.openapitools.client.models
 
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -43,9 +42,9 @@ data class RecipeFulfillmentResponse (
 
     @SerialName(value = "recipe_id") val recipeId: kotlin.Int? = null,
 
-    @SerialName(value = "need_fulfilled") val needFulfilled: kotlin.Boolean? = null,
+    @SerialName(value = "need_fulfilled") val needFulfilled: kotlin.Int? = null,
 
-    @SerialName(value = "need_fulfilled_with_shopping_list") val needFulfilledWithShoppingList: kotlin.Boolean? = null,
+    @SerialName(value = "need_fulfilled_with_shopping_list") val needFulfilledWithShoppingList: kotlin.Int? = null,
 
     @SerialName(value = "missing_products_count") val missingProductsCount: kotlin.Int? = null,
 

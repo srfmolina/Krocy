@@ -23,11 +23,8 @@
 
 package org.openapitools.client.models
 
-import org.openapitools.client.models.UserDto
-
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -50,18 +47,18 @@ data class CurrentChoreResponse (
 
     @SerialName(value = "chore_name") val choreName: kotlin.String? = null,
 
-    @SerialName(value = "last_tracked_time") val lastTrackedTime: kotlin.time.Instant? = null,
+    @SerialName(value = "last_tracked_time") val lastTrackedTime: kotlin.String? = null,
 
-    @SerialName(value = "track_date_only") val trackDateOnly: kotlin.Boolean? = null,
+    @SerialName(value = "track_date_only") val trackDateOnly: kotlin.Int? = null,
 
     /* The next estimated execution time of this chore, 2999-12-31 23:59:59 when the given chore has a period_type of manually */
-    @SerialName(value = "next_estimated_execution_time") val nextEstimatedExecutionTime: kotlin.time.Instant? = null,
+    @SerialName(value = "next_estimated_execution_time") val nextEstimatedExecutionTime: kotlin.String? = null,
 
     @SerialName(value = "next_execution_assigned_to_user_id") val nextExecutionAssignedToUserId: kotlin.Int? = null,
 
-    @SerialName(value = "is_rescheduled") val isRescheduled: kotlin.Boolean? = null,
+    @SerialName(value = "is_rescheduled") val isRescheduled: kotlin.Int? = null,
 
-    @SerialName(value = "is_reassigned") val isReassigned: kotlin.Boolean? = null,
+    @SerialName(value = "is_reassigned") val isReassigned: kotlin.Int? = null,
 
     @SerialName(value = "next_execution_assigned_user") val nextExecutionAssignedUser: UserDto? = null
 

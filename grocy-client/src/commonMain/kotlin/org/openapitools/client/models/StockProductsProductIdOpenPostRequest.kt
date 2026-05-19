@@ -24,9 +24,8 @@
 package org.openapitools.client.models
 
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -46,7 +45,7 @@ data class StockProductsProductIdOpenPostRequest (
     @SerialName(value = "stock_entry_id") val stockEntryId: kotlin.String? = null,
 
     /* `true` when any in stock sub product should be used when the given product is a parent product and currently not in stock */
-    @SerialName(value = "allow_subproduct_substitution") val allowSubproductSubstitution: kotlin.Boolean? = null
+    @SerialName(value = "allow_subproduct_substitution") val allowSubproductSubstitution: kotlin.Int? = null
 
 ) {
 

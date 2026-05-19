@@ -24,9 +24,8 @@
 package org.openapitools.client.models
 
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -47,7 +46,7 @@ data class Location (
 
     @SerialName(value = "description") val description: kotlin.String? = null,
 
-    @SerialName(value = "row_created_timestamp") val rowCreatedTimestamp: kotlin.time.Instant? = null,
+    @SerialName(value = "row_created_timestamp") val rowCreatedTimestamp: kotlin.String? = null,
 
     /* Key/value pairs of userfields */
     @SerialName(value = "userfields") val userfields: kotlin.String? = null

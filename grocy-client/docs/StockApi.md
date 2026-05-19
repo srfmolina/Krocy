@@ -48,7 +48,7 @@ Executes an external barcode lookoup via the configured plugin with the given ba
 
 val apiInstance = StockApi()
 val barcode : kotlin.String = barcode_example // kotlin.String | The barcode to lookup up
-val add : kotlin.Boolean = true // kotlin.Boolean | When true, the product is added to the database on a successful lookup and the new product id is in included in the response
+val add : kotlin.Int = true // kotlin.Int | When true, the product is added to the database on a successful lookup and the new product id is in included in the response
 try {
     val result : ExternalBarcodeLookupResponse = apiInstance.stockBarcodesExternalLookupBarcodeGet(barcode, add)
     println(result)
@@ -65,7 +65,7 @@ try {
 | **barcode** | **kotlin.String**| The barcode to lookup up | |
 | Name | Type | Description  | Notes |
 | ------------- | ------------- | ------------- | ------------- |
-| **add** | **kotlin.Boolean**| When true, the product is added to the database on a successful lookup and the new product id is in included in the response | [optional] [default to false] |
+| **add** | **kotlin.Int**| When true, the product is added to the database on a successful lookup and the new product id is in included in the response | [optional] [default to false] |
 
 ### Return type
 
@@ -530,7 +530,7 @@ Returns all stock entries of the given product in order of next use (Opened firs
 
 val apiInstance = StockApi()
 val productId : kotlin.Int = 56 // kotlin.Int | A valid product id
-val includeSubProducts : kotlin.Boolean = true // kotlin.Boolean | If sub products should be included (if the given product is a parent product and in addition to the ones of the given product)
+val includeSubProducts : kotlin.Int = true // kotlin.Int | If sub products should be included (if the given product is a parent product and in addition to the ones of the given product)
 val query : kotlin.collections.List<kotlin.String> =  // kotlin.collections.List<kotlin.String> | An array of filter conditions, each of them is a string in the form of `<field><condition><value>` where<br>`<field>` is a valid field name<br>`<condition>` is a comparison operator, one of<br>&nbsp;&nbsp;`=` equal<br>&nbsp;&nbsp;`!=` not equal<br>&nbsp;&nbsp;`~` LIKE<br>&nbsp;&nbsp;`!~` not LIKE<br>&nbsp;&nbsp;`<` less<br>&nbsp;&nbsp;`>` greater<br>&nbsp;&nbsp;`<=` less or equal<br>&nbsp;&nbsp;`>=` greater or equal<br>&nbsp;&nbsp;`§` regular expression<br>`<value>` is the value to search for
 val order : kotlin.String = order_example // kotlin.String | A valid field name by which the response should be ordered, use the separator `:` to specify the sort order (`asc` or `desc`, defaults to `asc` when omitted)
 val limit : kotlin.Int = 56 // kotlin.Int | The maximum number of objects to return
@@ -549,7 +549,7 @@ try {
 
 ### Parameters
 | **productId** | **kotlin.Int**| A valid product id | |
-| **includeSubProducts** | **kotlin.Boolean**| If sub products should be included (if the given product is a parent product and in addition to the ones of the given product) | [optional] |
+| **includeSubProducts** | **kotlin.Int**| If sub products should be included (if the given product is a parent product and in addition to the ones of the given product) | [optional] |
 | **query** | [**kotlin.collections.List&lt;kotlin.String&gt;**](kotlin.String.md)| An array of filter conditions, each of them is a string in the form of &#x60;&lt;field&gt;&lt;condition&gt;&lt;value&gt;&#x60; where&lt;br&gt;&#x60;&lt;field&gt;&#x60; is a valid field name&lt;br&gt;&#x60;&lt;condition&gt;&#x60; is a comparison operator, one of&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;&#x3D;&#x60; equal&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;!&#x3D;&#x60; not equal&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;~&#x60; LIKE&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;!~&#x60; not LIKE&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;&lt;&#x60; less&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;&gt;&#x60; greater&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;&lt;&#x3D;&#x60; less or equal&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;&gt;&#x3D;&#x60; greater or equal&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;§&#x60; regular expression&lt;br&gt;&#x60;&lt;value&gt;&#x60; is the value to search for | [optional] |
 | **order** | **kotlin.String**| A valid field name by which the response should be ordered, use the separator &#x60;:&#x60; to specify the sort order (&#x60;asc&#x60; or &#x60;desc&#x60;, defaults to &#x60;asc&#x60; when omitted) | [optional] |
 | **limit** | **kotlin.Int**| The maximum number of objects to return | [optional] |
@@ -683,7 +683,7 @@ Returns all locations where the given product currently has stock
 
 val apiInstance = StockApi()
 val productId : kotlin.Int = 56 // kotlin.Int | A valid product id
-val includeSubProducts : kotlin.Boolean = true // kotlin.Boolean | If sub product locations should be included (if the given product is a parent product and in addition to the ones of the given product)
+val includeSubProducts : kotlin.Int = true // kotlin.Int | If sub product locations should be included (if the given product is a parent product and in addition to the ones of the given product)
 val query : kotlin.collections.List<kotlin.String> =  // kotlin.collections.List<kotlin.String> | An array of filter conditions, each of them is a string in the form of `<field><condition><value>` where<br>`<field>` is a valid field name<br>`<condition>` is a comparison operator, one of<br>&nbsp;&nbsp;`=` equal<br>&nbsp;&nbsp;`!=` not equal<br>&nbsp;&nbsp;`~` LIKE<br>&nbsp;&nbsp;`!~` not LIKE<br>&nbsp;&nbsp;`<` less<br>&nbsp;&nbsp;`>` greater<br>&nbsp;&nbsp;`<=` less or equal<br>&nbsp;&nbsp;`>=` greater or equal<br>&nbsp;&nbsp;`§` regular expression<br>`<value>` is the value to search for
 val order : kotlin.String = order_example // kotlin.String | A valid field name by which the response should be ordered, use the separator `:` to specify the sort order (`asc` or `desc`, defaults to `asc` when omitted)
 val limit : kotlin.Int = 56 // kotlin.Int | The maximum number of objects to return
@@ -702,7 +702,7 @@ try {
 
 ### Parameters
 | **productId** | **kotlin.Int**| A valid product id | |
-| **includeSubProducts** | **kotlin.Boolean**| If sub product locations should be included (if the given product is a parent product and in addition to the ones of the given product) | [optional] |
+| **includeSubProducts** | **kotlin.Int**| If sub product locations should be included (if the given product is a parent product and in addition to the ones of the given product) | [optional] |
 | **query** | [**kotlin.collections.List&lt;kotlin.String&gt;**](kotlin.String.md)| An array of filter conditions, each of them is a string in the form of &#x60;&lt;field&gt;&lt;condition&gt;&lt;value&gt;&#x60; where&lt;br&gt;&#x60;&lt;field&gt;&#x60; is a valid field name&lt;br&gt;&#x60;&lt;condition&gt;&#x60; is a comparison operator, one of&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;&#x3D;&#x60; equal&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;!&#x3D;&#x60; not equal&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;~&#x60; LIKE&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;!~&#x60; not LIKE&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;&lt;&#x60; less&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;&gt;&#x60; greater&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;&lt;&#x3D;&#x60; less or equal&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;&gt;&#x3D;&#x60; greater or equal&lt;br&gt;&amp;nbsp;&amp;nbsp;&#x60;§&#x60; regular expression&lt;br&gt;&#x60;&lt;value&gt;&#x60; is the value to search for | [optional] |
 | **order** | **kotlin.String**| A valid field name by which the response should be ordered, use the separator &#x60;:&#x60; to specify the sort order (&#x60;asc&#x60; or &#x60;desc&#x60;, defaults to &#x60;asc&#x60; when omitted) | [optional] |
 | **limit** | **kotlin.Int**| The maximum number of objects to return | [optional] |

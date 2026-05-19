@@ -24,9 +24,8 @@
 package org.openapitools.client.models
 
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -64,9 +63,9 @@ data class Chore (
 
     @SerialName(value = "period_days") val periodDays: kotlin.Int? = null,
 
-    @SerialName(value = "track_date_only") val trackDateOnly: kotlin.Boolean? = null,
+    @SerialName(value = "track_date_only") val trackDateOnly: kotlin.Int? = null,
 
-    @SerialName(value = "rollover") val rollover: kotlin.Boolean? = null,
+    @SerialName(value = "rollover") val rollover: kotlin.Int? = null,
 
     @SerialName(value = "assignment_type") val assignmentType: Chore.AssignmentType? = null,
 
@@ -74,13 +73,13 @@ data class Chore (
 
     @SerialName(value = "next_execution_assigned_to_user_id") val nextExecutionAssignedToUserId: kotlin.Int? = null,
 
-    @SerialName(value = "start_date") val startDate: kotlin.time.Instant? = null,
+    @SerialName(value = "start_date") val startDate: kotlin.String? = null,
 
-    @SerialName(value = "rescheduled_date") val rescheduledDate: kotlin.time.Instant? = null,
+    @SerialName(value = "rescheduled_date") val rescheduledDate: kotlin.String? = null,
 
     @SerialName(value = "rescheduled_next_execution_assigned_to_user_id") val rescheduledNextExecutionAssignedToUserId: kotlin.Int? = null,
 
-    @SerialName(value = "row_created_timestamp") val rowCreatedTimestamp: kotlin.time.Instant? = null,
+    @SerialName(value = "row_created_timestamp") val rowCreatedTimestamp: kotlin.String? = null,
 
     /* Key/value pairs of userfields */
     @SerialName(value = "userfields") val userfields: kotlin.String? = null

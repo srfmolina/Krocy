@@ -10,7 +10,7 @@
 | **lastName** | **kotlin.String** |  |  [optional] |
 | **displayName** | **kotlin.String** |  |  [optional] |
 | **pictureFileName** | **kotlin.String** |  |  [optional] |
-| **rowCreatedTimestamp** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
+| **rowCreatedTimestamp** | **kotlin.String** |  |  [optional] |
 
 
 

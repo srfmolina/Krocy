@@ -10,7 +10,7 @@ data class AppState(
 )
 
 @Composable
-fun rememberNavControllerState(
+fun rememberNavControllerState( //TODO: maybe we don't need this
     navController: NavHostController = rememberNavController()
 ): AppState = remember(navController) {
     AppState(

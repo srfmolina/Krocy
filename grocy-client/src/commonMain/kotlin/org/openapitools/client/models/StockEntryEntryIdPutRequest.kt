@@ -24,9 +24,8 @@
 package org.openapitools.client.models
 
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -53,7 +52,7 @@ data class StockEntryEntryIdPutRequest (
     @SerialName(value = "price") val price: kotlin.Double? = null,
 
     /* If the stock entry was already opened or not */
-    @SerialName(value = "open") val `open`: kotlin.Boolean? = null,
+    @SerialName(value = "open") val `open`: kotlin.Int? = null,
 
     /* If omitted, the default location of the product is used */
     @SerialName(value = "location_id") val locationId: kotlin.Int? = null,

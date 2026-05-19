@@ -23,14 +23,8 @@
 
 package org.openapitools.client.models
 
-import org.openapitools.client.models.Location
-import org.openapitools.client.models.Product
-import org.openapitools.client.models.ProductBarcode
-import org.openapitools.client.models.QuantityUnit
-
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -107,7 +101,7 @@ data class ProductDetailsResponse (
     @SerialName(value = "spoil_rate_percent") val spoilRatePercent: kotlin.Double? = null,
 
     /* True when the product is a parent product of others */
-    @SerialName(value = "has_childs") val hasChilds: kotlin.Boolean? = null,
+    @SerialName(value = "has_childs") val hasChilds: kotlin.Int? = null,
 
     @SerialName(value = "default_location") val defaultLocation: Location? = null,
 

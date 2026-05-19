@@ -23,11 +23,8 @@
 
 package org.openapitools.client.models
 
-import org.openapitools.client.models.StockTransactionType
-
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -51,7 +48,7 @@ data class StockProductsProductIdConsumePostRequest (
     @SerialName(value = "transaction_type") val transactionType: StockTransactionType? = null,
 
     /* True when the given product was spoiled, defaults to false */
-    @SerialName(value = "spoiled") val spoiled: kotlin.Boolean? = null,
+    @SerialName(value = "spoiled") val spoiled: kotlin.Int? = null,
 
     /* A specific stock entry id to consume, if used, the amount has to be 1 */
     @SerialName(value = "stock_entry_id") val stockEntryId: kotlin.String? = null,
@@ -63,10 +60,10 @@ data class StockProductsProductIdConsumePostRequest (
     @SerialName(value = "location_id") val locationId: kotlin.Int? = null,
 
     /* For tare weight handling enabled products, `true` when the given is the absolute amount to be consumed, not the amount including the container weight */
-    @SerialName(value = "exact_amount") val exactAmount: kotlin.Boolean? = null,
+    @SerialName(value = "exact_amount") val exactAmount: kotlin.Int? = null,
 
     /* `true` when any in stock sub product should be used when the given product is a parent product and currently not in stock */
-    @SerialName(value = "allow_subproduct_substitution") val allowSubproductSubstitution: kotlin.Boolean? = null
+    @SerialName(value = "allow_subproduct_substitution") val allowSubproductSubstitution: kotlin.Int? = null
 
 ) {
 

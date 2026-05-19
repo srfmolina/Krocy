@@ -24,9 +24,8 @@
 package org.openapitools.client.models
 
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -44,11 +43,11 @@ data class TimeResponse (
 
     @SerialName(value = "timezone") val timezone: kotlin.String? = null,
 
-    @SerialName(value = "time_local") val timeLocal: kotlin.time.Instant? = null,
+    @SerialName(value = "time_local") val timeLocal: kotlin.String? = null,
 
-    @SerialName(value = "time_local_sqlite3") val timeLocalSqlite3: kotlin.time.Instant? = null,
+    @SerialName(value = "time_local_sqlite3") val timeLocalSqlite3: kotlin.String? = null,
 
-    @SerialName(value = "time_utc") val timeUtc: kotlin.time.Instant? = null,
+    @SerialName(value = "time_utc") val timeUtc: kotlin.String? = null,
 
     @SerialName(value = "timestamp") val timestamp: kotlin.Int? = null,
 

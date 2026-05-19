@@ -16,7 +16,7 @@
 | **&#x60;open&#x60;** | **kotlin.Int** |  |  [optional] |
 | **openedDate** | [**kotlinx.datetime.LocalDate**](kotlinx.datetime.LocalDate.md) |  |  [optional] |
 | **note** | **kotlin.String** |  |  [optional] |
-| **rowCreatedTimestamp** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
+| **rowCreatedTimestamp** | **kotlin.String** |  |  [optional] |
 
 
 

@@ -23,12 +23,7 @@
 
 package org.openapitools.client.apis
 
-import io.kotlintest.shouldBe
 import io.kotlintest.specs.ShouldSpec
-
-import org.openapitools.client.apis.PrintApi
-import org.openapitools.client.models.Error400
-import org.openapitools.client.models.PrintShoppinglistThermalGet200Response
 
 class PrintApiTest : ShouldSpec() {
     init {
@@ -39,7 +34,7 @@ class PrintApiTest : ShouldSpec() {
         should("test printShoppinglistThermalGet") {
             // uncomment below to test printShoppinglistThermalGet
             //val list : kotlin.Int = 56 // kotlin.Int | Shopping list id
-            //val printHeader : kotlin.Boolean = true // kotlin.Boolean | Prints Grocy logo if true
+            //val printHeader : kotlin.Int = true // kotlin.Int | Prints Grocy logo if true
             //val result : PrintShoppinglistThermalGet200Response = apiInstance.printShoppinglistThermalGet(list, printHeader)
             //result shouldBe ("TODO")
         }

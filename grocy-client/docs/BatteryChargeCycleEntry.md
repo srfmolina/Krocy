@@ -6,8 +6,8 @@
 | ------------ | ------------- | ------------- | ------------- |
 | **id** | **kotlin.Int** |  |  [optional] |
 | **batteryId** | **kotlin.Int** |  |  [optional] |
-| **trackedTime** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
-| **rowCreatedTimestamp** | [**kotlin.time.Instant**](kotlin.time.Instant.md) |  |  [optional] |
+| **trackedTime** | **kotlin.String** |  |  [optional] |
+| **rowCreatedTimestamp** | **kotlin.String** |  |  [optional] |
 
 
 

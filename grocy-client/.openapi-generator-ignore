@@ -21,3 +21,7 @@
 #docs/*.md
 # Then explicitly reverse the ignore rule for a single file:
 #!docs/README.md
+
+# Workaround for broken Grocy spec: path params reference these schemas but they are never defined
+# in components/schemas, so the generator never creates model files for them.
+src/commonMain/kotlin/org/openapitools/client/models/ExposedEntityTypeAliases.kt

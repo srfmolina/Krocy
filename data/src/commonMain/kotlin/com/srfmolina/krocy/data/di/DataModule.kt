@@ -1,6 +1,5 @@
 package com.srfmolina.krocy.data.di
 
-import com.srfmolina.krocy.data.api.stock.createStockApi
 import com.srfmolina.krocy.data.datasource.local.example.KrocyItemDataSource
 import com.srfmolina.krocy.data.datasource.local.example.KrocyItemDataSourceImpl
 import com.srfmolina.krocy.data.datasource.remote.createHttpClient
@@ -14,14 +13,15 @@ import com.srfmolina.krocy.data.repository.impl.StockRepositoryImpl
 import com.srfmolina.krocy.domain.repository.KrocyItemRepository
 import com.srfmolina.krocy.domain.repository.StockRepository
 import org.koin.dsl.module
+import org.openapitools.client.apis.StockApi
 
 val dataModule = module {
 
     // La baseUrl vendrá de un parámetro o configuración — por ahora como propiedad
-    val baseUrl = "https://en.demo.grocy.info/api/"
+    val baseUrl = "https://en.demo.grocy.info/api"
 
     single { createHttpClient() }
-    single { createStockApi(get(), baseUrl) }
+    single { StockApi(baseUrl = baseUrl) }
 
     single<KrocyDatabase> { createDatabase() }
     single<KrocyItemDao>  { get<KrocyDatabase>().krocyItemDao() }

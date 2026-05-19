@@ -24,9 +24,8 @@
 package org.openapitools.client.models
 
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -37,7 +36,7 @@ import kotlinx.serialization.encoding.*
 
 data class DbChangedTimeResponse (
 
-    @SerialName(value = "changed_time") val changedTime: kotlin.time.Instant? = null
+    @SerialName(value = "changed_time") val changedTime: kotlin.String? = null
 
 ) {
 
