@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.Dp
 import com.srfmolina.krocy.ui.presentation.theme.spacing
 
 @Composable
-fun PhotoHolder(size: Dp, modifier: Modifier = Modifier, cornerRadius: Dp = MaterialTheme.spacing.s3) {
+internal fun PhotoHolder(size: Dp, modifier: Modifier = Modifier, cornerRadius: Dp = MaterialTheme.spacing.s3) {
     val shape = RoundedCornerShape(cornerRadius)
     Box(
         modifier = modifier

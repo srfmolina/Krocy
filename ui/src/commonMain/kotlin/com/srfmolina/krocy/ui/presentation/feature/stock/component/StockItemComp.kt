@@ -9,16 +9,12 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,6 +30,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.srfmolina.krocy.domain.model.common.ConsumptionType
 import com.srfmolina.krocy.ui.presentation.common.HintCard
 import com.srfmolina.krocy.ui.presentation.common.PhotoHolder
+import com.srfmolina.krocy.ui.presentation.common.TheeDotsMenuButton
 import com.srfmolina.krocy.ui.presentation.common.model.ConsumptionDateUi
 import com.srfmolina.krocy.ui.presentation.common.model.DisplaySizeUi
 import com.srfmolina.krocy.ui.presentation.feature.stock.model.StockItemUi
@@ -50,7 +47,7 @@ internal fun StockItemComp(
     if (MaterialTheme.displaySize == DisplaySizeUi.S) {
         StockItemCompact(item, modifier)
     } else {
-        StockItemDenseRow(item, modifier)
+        StockItemRow(item, modifier)
     }
 }
 
@@ -76,7 +73,6 @@ private fun StockItemCompact(item: StockItemUi, modifier: Modifier = Modifier) {
             Text(
                 text = item.name,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -86,61 +82,71 @@ private fun StockItemCompact(item: StockItemUi, modifier: Modifier = Modifier) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2)
                 ) {
-                    ExpiryChip(item.consumptionDate, dense = false)
+                    ExpiryChip(item.consumptionDate)
 
                     Text(
                         text = "·",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
+                    HintCard(
+                        text = item.quantity,
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
 
                     Text(
-                        text = item.quantity,
+                        text = "·",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
                     )
+
+                    RowOfHints(item.hints)
 
                 }
             }
         }
-        IconButton(
-            onClick = {},
-            shapes = IconButtonDefaults.shapes()
-        ) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+        TheeDotsMenuButton(actions = emptyList()) //TODO
+    }
+}
+
+@Composable
+private fun RowOfHints(
+    hints: List<String>,
+    modifier: Modifier = Modifier
+) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2),
+        modifier = modifier
+    ) {
+        items(hints) { hint ->
+            HintCard(
+                text = hint,
             )
         }
     }
 }
 
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun StockItemDenseRow(item: StockItemUi, modifier: Modifier = Modifier) {
+private fun StockItemRow(item: StockItemUi, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(MaterialTheme.spacing.s14)
+            .height(MaterialTheme.spacing.s18)
             .padding(horizontal = MaterialTheme.spacing.s4),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s4)
     ) {
-        PhotoHolder(size = MaterialTheme.spacing.s10) //TODO
+        PhotoHolder(size = MaterialTheme.spacing.s12) //TODO
         Text(
             text = item.name,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.weight(1f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
         Box(modifier = Modifier.width(MaterialTheme.spacing.s32)) {
-            item.consumptionDate?.let { ExpiryChip(it, dense = true) }
+            item.consumptionDate?.let { ExpiryChip(it) }
         }
         Text(
             text = item.quantity,
@@ -150,35 +156,21 @@ private fun StockItemDenseRow(item: StockItemUi, modifier: Modifier = Modifier) 
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        Text(
-            text = item.hints.getOrNull(1) ?: "—",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(MaterialTheme.spacing.s28),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        IconButton(
-            onClick = {},
-            shapes = IconButtonDefaults.shapes(),
-            modifier = Modifier.size(MaterialTheme.spacing.s12)
-        ) { //TODO
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+
+        Box(modifier = Modifier.width(MaterialTheme.spacing.s28)) {
+            RowOfHints(item.hints)
         }
+
+        TheeDotsMenuButton(actions = emptyList()) //TODO
     }
 }
 
 @Composable
-private fun ExpiryChip(consumptionDate: ConsumptionDateUi, dense: Boolean) {
+private fun ExpiryChip(consumptionDate: ConsumptionDateUi) {
     val containerColor = expiryHintColor(consumptionDate)
     HintCard(
         text = consumptionDate.date,
         containerColor = containerColor,
-        textStyle = if (dense) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium
     )
 
 }
@@ -262,11 +254,11 @@ private fun StockItemCompactPreview(
 
 @PreviewLightDark
 @Composable
-private fun StockItemDensePreview() {
+private fun StockItemRowPreview() {
     KrocyTheme {
         Surface {
             Column {
-                StockItemDenseRow(
+                StockItemRow(
                     StockItemUi(
                         id = 1, name = "Galletas María",
                         hints = listOf("2 paquetes", "1 abierto"),
@@ -275,7 +267,7 @@ private fun StockItemDensePreview() {
                     )
                 )
                 HorizontalDivider()
-                StockItemDenseRow(
+                StockItemRow(
                     StockItemUi(
                         id = 2, name = "Yogur natural",
                         hints = listOf("8 unidades", "2 abiertos"),
@@ -284,7 +276,7 @@ private fun StockItemDensePreview() {
                     )
                 )
                 HorizontalDivider()
-                StockItemDenseRow(
+                StockItemRow(
                     StockItemUi(
                         id = 3, name = "Leche entera",
                         hints = listOf("3 briks", "1 abierto"),

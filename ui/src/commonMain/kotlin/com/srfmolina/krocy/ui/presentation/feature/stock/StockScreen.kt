@@ -19,9 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.srfmolina.krocy.domain.model.common.ConsumptionType
-import com.srfmolina.krocy.ui.presentation.common.model.ActionUi
 import com.srfmolina.krocy.ui.presentation.common.model.ConsumptionDateUi
 import com.srfmolina.krocy.ui.presentation.common.model.DisplaySizeUi
+import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockViewModel.Event
 import com.srfmolina.krocy.ui.presentation.feature.stock.component.StockItemComp
 import com.srfmolina.krocy.ui.presentation.feature.stock.model.StockItemUi
@@ -45,7 +45,7 @@ internal fun StockScreen(
         onChangeTopBar(TopBarConfigurationUi(
             title = "Resumen del inventario",
             type = TopBarTypeUi.SMALL,
-            leadingAction = ActionUi(
+            leadingAction = IconActionUi(
                 icon = Icons.Filled.Menu,
                 contentDescription = "Localized description", //TODO
                 onClick = onOpenNavRail

@@ -28,8 +28,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.srfmolina.krocy.ui.presentation.common.model.ActionUi
 import com.srfmolina.krocy.ui.presentation.common.model.DisplaySizeUi
+import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 import com.srfmolina.krocy.ui.presentation.theme.displaySize
 
@@ -38,8 +38,8 @@ import com.srfmolina.krocy.ui.presentation.theme.displaySize
 internal fun SmallTopBar(
     title: String,
     scrollBehavior: TopAppBarScrollBehavior,
-    navigationAction: ActionUi, //TODO: hide menu icon leading actions in larger screens
-    trailingAction: ActionUi? = null
+    navigationAction: IconActionUi, //TODO: hide menu icon leading actions in larger screens
+    trailingAction: IconActionUi? = null
 ) {
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(),
@@ -73,8 +73,8 @@ internal fun SmallTopBar(
 internal fun MediumTopBar(
     title: String,
     scrollBehavior: TopAppBarScrollBehavior,
-    navigationAction: ActionUi,
-    action: ActionUi? = null
+    navigationAction: IconActionUi,
+    action: IconActionUi? = null
 ) {
     MediumTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(),
@@ -105,7 +105,7 @@ internal fun MediumTopBar(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun NavigationIcon(navigationAction: ActionUi) {
+private fun NavigationIcon(navigationAction: IconActionUi) {
     if (MaterialTheme.displaySize == DisplaySizeUi.S || navigationAction.icon != Icons.Filled.Menu) {
         IconButton(
             onClick = navigationAction.onClick,
@@ -135,12 +135,12 @@ fun SmallTopBarPreview() {
                 SmallTopBar(
                     title = "Small top bar",
                     scrollBehavior = scrollBehavior,
-                    navigationAction = ActionUi(
+                    navigationAction = IconActionUi(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "example",
                         onClick = {}
                     ),
-                    trailingAction = ActionUi(
+                    trailingAction = IconActionUi(
                         icon = Icons.Filled.Menu,
                         contentDescription = "example",
                         onClick = {}
@@ -182,12 +182,12 @@ fun MediumTopBarPreview() {
                 MediumTopBar(
                     title = "Medium top bar",
                     scrollBehavior = scrollBehavior,
-                    navigationAction = ActionUi(
+                    navigationAction = IconActionUi(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "example",
                         onClick = {}
                     ),
-                    action = ActionUi(
+                    action = IconActionUi(
                         icon = Icons.Filled.Menu,
                         contentDescription = "example",
                         onClick = {}
