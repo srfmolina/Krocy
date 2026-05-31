@@ -1,15 +1,12 @@
 package com.srfmolina.krocy.ui.presentation.feature.stock
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -19,16 +16,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.srfmolina.krocy.domain.model.common.ConsumptionType
+import com.srfmolina.krocy.ui.presentation.common.model.ActionUi
 import com.srfmolina.krocy.ui.presentation.common.model.ConsumptionDateUi
-import com.srfmolina.krocy.ui.presentation.common.model.DisplaySizeUi
-import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockViewModel.Event
 import com.srfmolina.krocy.ui.presentation.feature.stock.component.StockItemComp
 import com.srfmolina.krocy.ui.presentation.feature.stock.model.StockItemUi
 import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarTypeUi
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
-import com.srfmolina.krocy.ui.presentation.theme.displaySize
 import com.srfmolina.krocy.ui.presentation.theme.spacing
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -45,7 +40,7 @@ internal fun StockScreen(
         onChangeTopBar(TopBarConfigurationUi(
             title = "Resumen del inventario",
             type = TopBarTypeUi.SMALL,
-            leadingAction = IconActionUi(
+            leadingAction = ActionUi(
                 icon = Icons.Filled.Menu,
                 contentDescription = "Localized description", //TODO
                 onClick = onOpenNavRail
@@ -61,30 +56,12 @@ internal fun StockScreen(
 private fun StockScreen(
     items: List<StockItemUi>
 ) {
-    if (MaterialTheme.displaySize == DisplaySizeUi.S) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(horizontal = MaterialTheme.spacing.s4),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s3)
-        ) {
-            items(items) { item ->
-                StockItemComp(
-                    modifier = Modifier.padding(MaterialTheme.spacing.s3),
-                    item = item
-                )
-            }
-        }
-    } else {
-        @OptIn(ExperimentalFoundationApi::class)
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            itemsIndexed(items) { index, item ->
-                StockItemComp(
-                    modifier = Modifier.padding(MaterialTheme.spacing.s4),
-                    item = item
-                )
-                if (index < items.lastIndex) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                }
-            }
+    LazyColumn (
+        modifier = Modifier.fillMaxSize().padding(horizontal = MaterialTheme.spacing.s4),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s6)
+    ) {
+        items(items) { item ->
+            StockItemComp(item)
         }
     }
 }
@@ -110,8 +87,7 @@ private fun StockScreenPreview() {
                             )
                         } else {
                             null
-                        },
-                        quantity = "3 Packs"
+                        }
                     )
                 }
             )

@@ -15,6 +15,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -51,18 +52,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
-import com.srfmolina.krocy.ui.presentation.common.model.DisplaySizeUi
 import com.srfmolina.krocy.ui.presentation.navigation.KrocyRoute
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationItemUi
 import com.srfmolina.krocy.ui.presentation.navigation.SplashRoute
 import com.srfmolina.krocy.ui.presentation.navigation.StockRoute
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
-import com.srfmolina.krocy.ui.presentation.theme.displaySize
 import com.srfmolina.krocy.ui.presentation.theme.spacing
 
+private val COMPACT_BREAKPOINT = 600.dp
 private val RAIL_COLLAPSED_WIDTH = 80.dp
 private val RAIL_EXPANDED_WIDTH = 240.dp
 private const val ANIM_DURATION_MS = 300
@@ -94,10 +93,10 @@ internal fun KrocyNavigationRail(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    Box(
+    BoxWithConstraints(
         modifier = modifier.fillMaxSize()
     ) {
-        val isCompact = MaterialTheme.displaySize == DisplaySizeUi.S
+        val isCompact = maxWidth < COMPACT_BREAKPOINT
         var wideExpanded by rememberSaveable { mutableStateOf(false) }
 
         if (isCompact) {
@@ -176,7 +175,6 @@ private fun CompactLayout(
                 showLabels = true,
                 onItemSelected = onItemSelected,
                 menuIcon = Icons.AutoMirrored.Filled.MenuOpen,
-                menuIconPadding = MaterialTheme.spacing.s2,
                 menuContentDescription = "Close navigation menu",
                 onMenuClick = onCollapse,
             )
@@ -217,7 +215,6 @@ private fun WideLayout(
             labelRevealProgress = labelRevealProgress,
             onItemSelected = onItemSelected,
             menuIcon = if (expanded) Icons.AutoMirrored.Filled.MenuOpen else Icons.Filled.Menu,
-            menuIconPadding = MaterialTheme.spacing.s4,
             menuContentDescription = if (expanded) "Collapse navigation" else "Expand navigation",
             onMenuClick = onToggle,
         )
@@ -249,7 +246,6 @@ private fun RailPanel(
     showLabels: Boolean,
     onItemSelected: (NavigationItemUi) -> Unit,
     menuIcon: ImageVector,
-    menuIconPadding: Dp,
     menuContentDescription: String,
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -265,11 +261,12 @@ private fun RailPanel(
                 .fillMaxSize()
                 .padding(vertical = MaterialTheme.spacing.s2),
         ) {
-
+            // Button pinned to top-left of the panel (= screen top-left corner)
+            // so it never moves as the rail animates its width
             IconButton(
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(horizontal = menuIconPadding),
+                    .padding(horizontal = MaterialTheme.spacing.s4),
                 onClick = onMenuClick,
                 shapes = IconButtonDefaults.shapes()
             ) {
@@ -340,7 +337,8 @@ private fun RailItem(
                 imageVector = item.icon,
                 contentDescription = item.contentDescription,
             )
-
+            // Clip-grow container: layout width animates from 0 → intrinsic width,
+            // revealing the label as the rail expands (no pixel compression)
             Row(
                 modifier = Modifier
                     .layout { measurable, constraints ->

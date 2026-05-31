@@ -41,7 +41,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun DotsPager(
+fun DotsPager(
     modifier: Modifier = Modifier, // <- expón el modifier
     pageCount: Int,
     content: @Composable (page: Int) -> Unit
