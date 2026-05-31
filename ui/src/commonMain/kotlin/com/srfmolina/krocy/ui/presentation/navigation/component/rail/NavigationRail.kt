@@ -54,13 +54,12 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
-import com.srfmolina.krocy.ui.presentation.common.model.DisplaySizeUi
 import com.srfmolina.krocy.ui.presentation.navigation.KrocyRoute
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationItemUi
 import com.srfmolina.krocy.ui.presentation.navigation.SplashRoute
 import com.srfmolina.krocy.ui.presentation.navigation.StockRoute
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
-import com.srfmolina.krocy.ui.presentation.theme.displaySize
+import com.srfmolina.krocy.ui.presentation.theme.isCompact
 import com.srfmolina.krocy.ui.presentation.theme.spacing
 
 private val RAIL_COLLAPSED_WIDTH = 80.dp
@@ -97,7 +96,7 @@ internal fun KrocyNavigationRail(
     Box(
         modifier = modifier.fillMaxSize()
     ) {
-        val isCompact = MaterialTheme.displaySize == DisplaySizeUi.S
+        val isCompact = MaterialTheme.isCompact
         var wideExpanded by rememberSaveable { mutableStateOf(false) }
 
         if (isCompact) {

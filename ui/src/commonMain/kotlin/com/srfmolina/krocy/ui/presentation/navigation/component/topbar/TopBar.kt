@@ -28,10 +28,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.srfmolina.krocy.ui.presentation.common.model.DisplaySizeUi
 import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
-import com.srfmolina.krocy.ui.presentation.theme.displaySize
+import com.srfmolina.krocy.ui.presentation.theme.isCompact
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -106,7 +105,7 @@ internal fun MediumTopBar(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun NavigationIcon(navigationAction: IconActionUi) {
-    if (MaterialTheme.displaySize == DisplaySizeUi.S || navigationAction.icon != Icons.Filled.Menu) {
+    if (MaterialTheme.isCompact || navigationAction.icon != Icons.Filled.Menu) {
         IconButton(
             onClick = navigationAction.onClick,
             shapes = IconButtonDefaults.shapes()

@@ -25,11 +25,10 @@ import com.srfmolina.krocy.ui.presentation.common.HintCard
 import com.srfmolina.krocy.ui.presentation.common.PhotoHolder
 import com.srfmolina.krocy.ui.presentation.common.TheeDotsMenuButton
 import com.srfmolina.krocy.ui.presentation.common.model.ConsumptionDateUi
-import com.srfmolina.krocy.ui.presentation.common.model.DisplaySizeUi
 import com.srfmolina.krocy.ui.presentation.feature.stock.model.StockItemUi
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
-import com.srfmolina.krocy.ui.presentation.theme.displaySize
 import com.srfmolina.krocy.ui.presentation.theme.extendedColorScheme
+import com.srfmolina.krocy.ui.presentation.theme.isCompact
 import com.srfmolina.krocy.ui.presentation.theme.spacing
 
 @Composable
@@ -37,7 +36,7 @@ internal fun StockItemComp(
     item: StockItemUi,
     modifier: Modifier = Modifier
 ) {
-    if (MaterialTheme.displaySize == DisplaySizeUi.S) {
+    if (MaterialTheme.isCompact) {
         StockItemCompact(item, modifier)
     } else {
         StockItemRow(item, modifier)

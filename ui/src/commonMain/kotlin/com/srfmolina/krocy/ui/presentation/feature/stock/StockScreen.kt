@@ -19,7 +19,6 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.srfmolina.krocy.domain.model.common.ConsumptionType
 import com.srfmolina.krocy.ui.presentation.common.model.ConsumptionDateUi
-import com.srfmolina.krocy.ui.presentation.common.model.DisplaySizeUi
 import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockViewModel.Event
 import com.srfmolina.krocy.ui.presentation.feature.stock.component.StockItemComp
@@ -27,7 +26,7 @@ import com.srfmolina.krocy.ui.presentation.feature.stock.model.StockItemUi
 import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarTypeUi
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
-import com.srfmolina.krocy.ui.presentation.theme.displaySize
+import com.srfmolina.krocy.ui.presentation.theme.isCompact
 import com.srfmolina.krocy.ui.presentation.theme.spacing
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -60,7 +59,7 @@ internal fun StockScreen(
 private fun StockScreen(
     items: List<StockItemUi>
 ) {
-    if (MaterialTheme.displaySize == DisplaySizeUi.S) {
+    if (MaterialTheme.isCompact) {
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(horizontal = MaterialTheme.spacing.s4),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s3)
