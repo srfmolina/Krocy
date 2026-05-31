@@ -1,6 +1,5 @@
 package com.srfmolina.krocy.ui.presentation.feature.stock
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -74,7 +73,6 @@ private fun StockScreen(
             }
         }
     } else {
-        @OptIn(ExperimentalFoundationApi::class)
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             itemsIndexed(items) { index, item ->
                 StockItemComp(

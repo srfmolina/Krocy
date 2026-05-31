@@ -31,7 +31,8 @@ internal fun HintCard(
             text = text,
             modifier = Modifier.padding(MaterialTheme.spacing.s2),
             style = textStyle,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1
         )
     }
 }

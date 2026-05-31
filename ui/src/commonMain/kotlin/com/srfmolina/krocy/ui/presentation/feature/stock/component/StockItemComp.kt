@@ -3,7 +3,6 @@ package com.srfmolina.krocy.ui.presentation.feature.stock.component
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
@@ -60,12 +59,7 @@ private fun StockItemCompact(item: StockItemUi, modifier: Modifier = Modifier) {
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s1)
             ) {
-                Text(
-                    text = item.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                StockItemName(item.name)
 
                 RowOfHints(item)
 
@@ -76,21 +70,28 @@ private fun StockItemCompact(item: StockItemUi, modifier: Modifier = Modifier) {
 }
 
 @Composable
+private fun StockItemName(
+    name: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = name,
+        modifier = modifier,
+        style = MaterialTheme.typography.titleMedium,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
+    )
+}
+
+@Composable
 private fun RowOfHints(
     item: StockItemUi
 ) {
-
-    val hasExpiry = item.consumptionDate != null
-
     LazyRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2)
     ) {
-        item {
-            if (hasExpiry) {
-                ExpiryChip(item.consumptionDate)
-            }
-        }
+        item.consumptionDate?.let { item { ExpiryChip(item.consumptionDate) } }
 
         item {
             HintCard(
@@ -107,6 +108,31 @@ private fun RowOfHints(
     }
 }
 
+/**
+ * Content-sized (non-lazy) variant of [RowOfHints] for wide layouts, where the chips sit
+ * to the right of a weighted name and must not consume the row's remaining width.
+ */
+@Composable
+private fun RowOfHintsStatic(
+    item: StockItemUi
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2)
+    ) {
+        item.consumptionDate?.let { ExpiryChip(it) }
+
+        HintCard(
+            text = item.quantity,
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+
+        item.hints.forEach { hint ->
+            HintCard(text = hint)
+        }
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -118,17 +144,11 @@ private fun StockItemRow(item: StockItemUi, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s4)
     ) {
         PhotoHolder(size = MaterialTheme.spacing.s12) //TODO
-        Text(
-            text = item.name,
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.weight(1f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        StockItemName(item.name, modifier = Modifier.weight(1f))
 
-        Spacer(Modifier.weight(1f))
-
-        RowOfHints(item)
+        // Content-sized so the weighted name above pushes it to the right edge.
+        // A LazyRow would fill the remaining width and starve the name (see StockItemCompact).
+        RowOfHintsStatic(item)
 
         TheeDotsMenuButton(actions = emptyList()) //TODO
     }
