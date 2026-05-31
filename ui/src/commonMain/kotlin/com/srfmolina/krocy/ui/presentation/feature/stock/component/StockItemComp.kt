@@ -1,18 +1,13 @@
 package com.srfmolina.krocy.ui.presentation.feature.stock.component
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -21,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -54,70 +48,58 @@ internal fun StockItemComp(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun StockItemCompact(item: StockItemUi, modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(MaterialTheme.spacing.s4)
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = MaterialTheme.spacing.s18)
-            .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
-            .padding(MaterialTheme.spacing.s3),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s4)
-    ) {
-        PhotoHolder(size = MaterialTheme.spacing.s18) //TODO
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s1)
+
+    Surface {
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s4)
         ) {
-            Text(
-                text = item.name,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            val hasExpiry = item.consumptionDate != null
-            if (hasExpiry) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2)
-                ) {
-                    ExpiryChip(item.consumptionDate)
+            PhotoHolder(size = MaterialTheme.spacing.s18) //TODO
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s1)
+            ) {
+                Text(
+                    text = item.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-                    Text(
-                        text = "·",
-                        style = MaterialTheme.typography.labelMedium,
-                    )
+                RowOfHints(item)
 
-                    HintCard(
-                        text = item.quantity,
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-
-                    Text(
-                        text = "·",
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-
-                    RowOfHints(item.hints)
-
-                }
             }
+            TheeDotsMenuButton(actions = emptyList()) //TODO
         }
-        TheeDotsMenuButton(actions = emptyList()) //TODO
     }
 }
 
 @Composable
 private fun RowOfHints(
-    hints: List<String>,
-    modifier: Modifier = Modifier
+    item: StockItemUi
 ) {
+
+    val hasExpiry = item.consumptionDate != null
+
     LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2),
-        modifier = modifier
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2)
     ) {
-        items(hints) { hint ->
+        item {
+            if (hasExpiry) {
+                ExpiryChip(item.consumptionDate)
+            }
+        }
+
+        item {
+            HintCard(
+                text = item.quantity,
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        }
+
+        items(item.hints) { hint ->
             HintCard(
                 text = hint,
             )
@@ -131,9 +113,7 @@ private fun RowOfHints(
 private fun StockItemRow(item: StockItemUi, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
-            .fillMaxWidth()
-            .height(MaterialTheme.spacing.s18)
-            .padding(horizontal = MaterialTheme.spacing.s4),
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s4)
     ) {
@@ -145,21 +125,10 @@ private fun StockItemRow(item: StockItemUi, modifier: Modifier = Modifier) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        Box(modifier = Modifier.width(MaterialTheme.spacing.s32)) {
-            item.consumptionDate?.let { ExpiryChip(it) }
-        }
-        Text(
-            text = item.quantity,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(MaterialTheme.spacing.s28),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
 
-        Box(modifier = Modifier.width(MaterialTheme.spacing.s28)) {
-            RowOfHints(item.hints)
-        }
+        Spacer(Modifier.weight(1f))
+
+        RowOfHints(item)
 
         TheeDotsMenuButton(actions = emptyList()) //TODO
     }
@@ -240,7 +209,8 @@ private fun StockItemCompactPreview(
     KrocyTheme {
         Surface {
             StockItemCompact(
-                StockItemUi(
+                modifier = Modifier.padding(MaterialTheme.spacing.s4),
+                item = StockItemUi(
                     id = 0,
                     name = "Galletas María",
                     hints = item.hints,
@@ -259,7 +229,8 @@ private fun StockItemRowPreview() {
         Surface {
             Column {
                 StockItemRow(
-                    StockItemUi(
+                    modifier = Modifier.padding(MaterialTheme.spacing.s4),
+                    item = StockItemUi(
                         id = 1, name = "Galletas María",
                         hints = listOf("2 paquetes", "1 abierto"),
                         consumptionDate = ConsumptionDateUi(ConsumptionType.PREFERENCE, "En 12 días", expired = false),
@@ -268,7 +239,8 @@ private fun StockItemRowPreview() {
                 )
                 HorizontalDivider()
                 StockItemRow(
-                    StockItemUi(
+                    modifier = Modifier.padding(MaterialTheme.spacing.s4),
+                    item = StockItemUi(
                         id = 2, name = "Yogur natural",
                         hints = listOf("8 unidades", "2 abiertos"),
                         consumptionDate = ConsumptionDateUi(ConsumptionType.EXPIRATION, "En 2 días", expired = false),
@@ -277,7 +249,8 @@ private fun StockItemRowPreview() {
                 )
                 HorizontalDivider()
                 StockItemRow(
-                    StockItemUi(
+                    modifier = Modifier.padding(MaterialTheme.spacing.s4),
+                    item = StockItemUi(
                         id = 3, name = "Leche entera",
                         hints = listOf("3 briks", "1 abierto"),
                         consumptionDate = ConsumptionDateUi(ConsumptionType.EXPIRATION, "Hace 1 día", expired = true),

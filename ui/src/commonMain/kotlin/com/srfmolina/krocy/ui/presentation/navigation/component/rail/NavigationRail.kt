@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import com.srfmolina.krocy.ui.presentation.common.model.DisplaySizeUi
@@ -175,6 +176,7 @@ private fun CompactLayout(
                 showLabels = true,
                 onItemSelected = onItemSelected,
                 menuIcon = Icons.AutoMirrored.Filled.MenuOpen,
+                menuIconPadding = MaterialTheme.spacing.s2,
                 menuContentDescription = "Close navigation menu",
                 onMenuClick = onCollapse,
             )
@@ -215,6 +217,7 @@ private fun WideLayout(
             labelRevealProgress = labelRevealProgress,
             onItemSelected = onItemSelected,
             menuIcon = if (expanded) Icons.AutoMirrored.Filled.MenuOpen else Icons.Filled.Menu,
+            menuIconPadding = MaterialTheme.spacing.s4,
             menuContentDescription = if (expanded) "Collapse navigation" else "Expand navigation",
             onMenuClick = onToggle,
         )
@@ -246,6 +249,7 @@ private fun RailPanel(
     showLabels: Boolean,
     onItemSelected: (NavigationItemUi) -> Unit,
     menuIcon: ImageVector,
+    menuIconPadding: Dp,
     menuContentDescription: String,
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -261,12 +265,11 @@ private fun RailPanel(
                 .fillMaxSize()
                 .padding(vertical = MaterialTheme.spacing.s2),
         ) {
-            // Button pinned to top-left of the panel (= screen top-left corner)
-            // so it never moves as the rail animates its width
+
             IconButton(
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(horizontal = MaterialTheme.spacing.s4),
+                    .padding(horizontal = menuIconPadding),
                 onClick = onMenuClick,
                 shapes = IconButtonDefaults.shapes()
             ) {
@@ -337,8 +340,7 @@ private fun RailItem(
                 imageVector = item.icon,
                 contentDescription = item.contentDescription,
             )
-            // Clip-grow container: layout width animates from 0 → intrinsic width,
-            // revealing the label as the rail expands (no pixel compression)
+
             Row(
                 modifier = Modifier
                     .layout { measurable, constraints ->

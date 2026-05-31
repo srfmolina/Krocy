@@ -67,14 +67,20 @@ private fun StockScreen(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s3)
         ) {
             items(items) { item ->
-                StockItemComp(item)
+                StockItemComp(
+                    modifier = Modifier.padding(MaterialTheme.spacing.s3),
+                    item = item
+                )
             }
         }
     } else {
         @OptIn(ExperimentalFoundationApi::class)
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             itemsIndexed(items) { index, item ->
-                StockItemComp(item)
+                StockItemComp(
+                    modifier = Modifier.padding(MaterialTheme.spacing.s4),
+                    item = item
+                )
                 if (index < items.lastIndex) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 }
