@@ -9,12 +9,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 import com.srfmolina.krocy.ui.presentation.theme.spacing
 
 @Composable
-fun HintCard(
+internal fun HintCard(
     text: String,
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
@@ -29,14 +30,15 @@ fun HintCard(
         Text(
             text = text,
             modifier = Modifier.padding(MaterialTheme.spacing.s2),
-            style = textStyle
+            style = textStyle,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
 
 @PreviewLightDark
 @Composable
-fun HintCardPreview() {
+private fun HintCardPreview() {
     KrocyTheme {
         HintCard(
             text = "5 Packs",
