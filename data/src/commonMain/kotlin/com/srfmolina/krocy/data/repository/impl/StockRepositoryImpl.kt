@@ -6,9 +6,10 @@ import com.srfmolina.krocy.domain.model.stock.StockItem
 import com.srfmolina.krocy.domain.repository.StockRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 internal class StockRepositoryImpl(
     private val dataSource: StockDataSource
@@ -16,13 +17,30 @@ internal class StockRepositoryImpl(
 
     private val _cache = MutableStateFlow<List<StockItem>>(emptyList())
 
+    private val refreshMutex = Mutex()
+    private var loaded = false
+
     override fun getStock(): Flow<List<StockItem>> = _cache
-        .asStateFlow()
-        .onSubscription { refresh() }
+        .onSubscription { ensureLoaded() }
+
+    /** Loads the stock once; later subscribers reuse the cached value. */
+    private suspend fun ensureLoaded() {
+        if (loaded) return
+        refreshMutex.withLock {
+            if (loaded) return
+            refresh()
+        }
+    }
+
+    override suspend fun consume(productId: Int) {
+        dataSource.consume(productId).getOrThrow()
+        refresh()
+    }
 
     private suspend fun refresh() {
         dataSource.getStock()
             .getOrThrow()
             .also { dtos -> _cache.update { dtos.map { it.toDomain() } } }
+        loaded = true
     }
 }

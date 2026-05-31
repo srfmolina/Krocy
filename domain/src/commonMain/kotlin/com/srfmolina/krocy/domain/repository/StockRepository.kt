@@ -5,4 +5,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface StockRepository {
     fun getStock(): Flow<List<StockItem>>
+
+    suspend fun consume(productId: Int)
 }

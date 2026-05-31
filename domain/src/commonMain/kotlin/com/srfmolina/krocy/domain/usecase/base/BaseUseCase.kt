@@ -41,3 +41,26 @@ abstract class ResultFlowUseCaseNoParams<out R> {
 
     protected abstract fun execute(): Flow<R>
 }
+
+/**
+ * Base class for one-shot (suspend) use cases that return Result<R>.
+ *
+ * - Wraps a successful result in Result.success.
+ * - Explicitly rethrows CancellationException to respect
+ *   structured concurrency.
+ * - Any other throwable is emitted as Result.failure.
+ * - The repository may throw freely; this use case models it.
+ */
+abstract class ResultUseCase<in P, out R> {
+
+    suspend operator fun invoke(params: P): Result<R> =
+        try {
+            Result.success(execute(params))
+        } catch (e: CancellationException) {
+            throw e // nunca swallow cancellation
+        } catch (e: Throwable) {
+            Result.failure(e)
+        }
+
+    protected abstract suspend fun execute(params: P): R
+}
