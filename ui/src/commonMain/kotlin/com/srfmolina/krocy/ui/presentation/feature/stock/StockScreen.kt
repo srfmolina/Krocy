@@ -52,12 +52,18 @@ internal fun StockScreen(
         viewModel.launchEvent(Event.Init)
     }
 
-    StockScreen(items = state.items)
+    StockScreen(
+        items = state.items,
+        onConsume = { productId ->
+            viewModel.launchEvent(Event.OnConsume(productId))
+        }
+    )
 }
 
 @Composable
 private fun StockScreen(
-    items: List<StockItemUi>
+    items: List<StockItemUi>,
+    onConsume: (Int) -> Unit
 ) {
     if (MaterialTheme.isCompact) {
         LazyColumn(
@@ -67,7 +73,8 @@ private fun StockScreen(
             items(items) { item ->
                 StockItemComp(
                     modifier = Modifier.padding(MaterialTheme.spacing.s3),
-                    item = item
+                    item = item,
+                    onConsume = onConsume
                 )
             }
         }
@@ -76,7 +83,8 @@ private fun StockScreen(
             itemsIndexed(items) { index, item ->
                 StockItemComp(
                     modifier = Modifier.padding(MaterialTheme.spacing.s4),
-                    item = item
+                    item = item,
+                    onConsume = onConsume
                 )
                 if (index < items.lastIndex) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -92,7 +100,8 @@ private fun StockScreenPreview() {
     KrocyTheme {
         Surface {
             StockScreen(
-                List(15) {
+                onConsume = {},
+                items = List(15) {
                     StockItemUi(
                         id = (1..1000).random(),
                         name = listOf("Apple", "Banana", "Milk", "Bread", "Cheese", "Eggs", "Butter").random(),

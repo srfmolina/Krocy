@@ -1,6 +1,7 @@
 package com.srfmolina.krocy.ui.presentation.feature.stock
 
 import androidx.lifecycle.viewModelScope
+import com.srfmolina.krocy.domain.usecase.stock.ConsumeStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.ObserveStockUseCase
 import com.srfmolina.krocy.ui.base.BaseViewModel
 import com.srfmolina.krocy.ui.base.UiEffect
@@ -15,11 +16,13 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 internal class StockViewModel(
-    private val observeStockUseCase: ObserveStockUseCase
+    private val observeStockUseCase: ObserveStockUseCase,
+    private val consumeStockUseCase: ConsumeStockUseCase
 ) : BaseViewModel<Event, State, Effect>() {
 
     sealed interface Event : UiEvent {
         data object Init : Event
+        data class OnConsume(val productId: Int) : Event
     }
 
     sealed interface Effect : UiEffect
@@ -34,6 +37,7 @@ internal class StockViewModel(
     override suspend fun handleEvent(event: Event) {
         when (event) {
             is Event.Init -> init()
+            is Event.OnConsume -> consume(event.productId)
         }
     }
 
@@ -48,4 +52,8 @@ internal class StockViewModel(
             setState { copy(isLoading = false) }
         }
     }.launchIn(viewModelScope)
+
+    private suspend fun consume(productId: Int) {
+        consumeStockUseCase(productId)  //TODO: consume loading animation
+    }
 }

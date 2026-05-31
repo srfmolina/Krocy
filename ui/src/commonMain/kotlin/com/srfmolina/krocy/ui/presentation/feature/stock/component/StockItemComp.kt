@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +27,7 @@ import com.srfmolina.krocy.ui.presentation.common.HintCard
 import com.srfmolina.krocy.ui.presentation.common.PhotoHolder
 import com.srfmolina.krocy.ui.presentation.common.TheeDotsMenuButton
 import com.srfmolina.krocy.ui.presentation.common.model.ConsumptionDateUi
+import com.srfmolina.krocy.ui.presentation.common.model.LabeledActionUi
 import com.srfmolina.krocy.ui.presentation.feature.stock.model.StockItemUi
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 import com.srfmolina.krocy.ui.presentation.theme.extendedColorScheme
@@ -34,18 +37,32 @@ import com.srfmolina.krocy.ui.presentation.theme.spacing
 @Composable
 internal fun StockItemComp(
     item: StockItemUi,
+    onConsume: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val actions = listOf(
+        LabeledActionUi(
+            label = "Consumir", //TODO
+            contentDescription = "Acción de consumir un producto",
+            icon = Icons.Default.Restaurant,
+            onClick = { onConsume(item.id) }
+        )
+    )
+
     if (MaterialTheme.isCompact) {
-        StockItemCompact(item, modifier)
+        StockItemCompact(item, actions, modifier)
     } else {
-        StockItemRow(item, modifier)
+        StockItemRow(item, actions, modifier)
     }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun StockItemCompact(item: StockItemUi, modifier: Modifier = Modifier) {
+private fun StockItemCompact(
+    item: StockItemUi,
+    actions: List<LabeledActionUi>,
+    modifier: Modifier = Modifier
+) {
 
     Surface {
         Row(
@@ -63,7 +80,7 @@ private fun StockItemCompact(item: StockItemUi, modifier: Modifier = Modifier) {
                 RowOfHints(item)
 
             }
-            TheeDotsMenuButton(actions = emptyList()) //TODO
+            TheeDotsMenuButton(actions = actions)
         }
     }
 }
@@ -135,7 +152,11 @@ private fun RowOfHintsStatic(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun StockItemRow(item: StockItemUi, modifier: Modifier = Modifier) {
+private fun StockItemRow(
+    item: StockItemUi,
+    actions: List<LabeledActionUi>,
+    modifier: Modifier = Modifier
+) {
     Row(
         modifier = modifier
             .fillMaxWidth(),
@@ -149,7 +170,7 @@ private fun StockItemRow(item: StockItemUi, modifier: Modifier = Modifier) {
         // A LazyRow would fill the remaining width and starve the name (see StockItemCompact).
         RowOfHintsStatic(item)
 
-        TheeDotsMenuButton(actions = emptyList()) //TODO
+        TheeDotsMenuButton(actions = actions)
     }
 }
 
@@ -229,6 +250,7 @@ private fun StockItemCompactPreview(
         Surface {
             StockItemCompact(
                 modifier = Modifier.padding(MaterialTheme.spacing.s4),
+                actions = emptyList(),
                 item = StockItemUi(
                     id = 0,
                     name = "Galletas María",
@@ -249,6 +271,7 @@ private fun StockItemRowPreview() {
             Column {
                 StockItemRow(
                     modifier = Modifier.padding(MaterialTheme.spacing.s4),
+                    actions = emptyList(),
                     item = StockItemUi(
                         id = 1, name = "Galletas María",
                         hints = listOf("2 paquetes", "1 abierto"),
@@ -259,6 +282,7 @@ private fun StockItemRowPreview() {
                 HorizontalDivider()
                 StockItemRow(
                     modifier = Modifier.padding(MaterialTheme.spacing.s4),
+                    actions = emptyList(),
                     item = StockItemUi(
                         id = 2, name = "Yogur natural",
                         hints = listOf("8 unidades", "2 abiertos"),
@@ -269,6 +293,7 @@ private fun StockItemRowPreview() {
                 HorizontalDivider()
                 StockItemRow(
                     modifier = Modifier.padding(MaterialTheme.spacing.s4),
+                    actions = emptyList(),
                     item = StockItemUi(
                         id = 3, name = "Leche entera",
                         hints = listOf("3 briks", "1 abierto"),
