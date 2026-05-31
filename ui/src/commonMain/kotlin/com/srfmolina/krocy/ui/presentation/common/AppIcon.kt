@@ -12,7 +12,7 @@ import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-internal fun AppIcon(
+fun AppIcon(
     size: Dp
 ) {
     //TODO

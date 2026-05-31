@@ -19,6 +19,7 @@ fun CurrentStockResponse.toDomain(): StockItem {
     val minStock = product?.minStockAmount ?: 0.0
 
     val hints = buildList {
+        add("${amount.formatAmount()} uds")
         if (amountOpened > 0) add("${amountOpened.toInt()} abierto")
         if (minStock > 0 && amount < minStock) add("bajo stock")
     }
@@ -38,8 +39,7 @@ fun CurrentStockResponse.toDomain(): StockItem {
         id = productId ?: 0,
         name = product?.name.orEmpty(),
         hints = hints,
-        consumptionDate = consumptionDate,
-        quantity = "${amount.formatAmount()} uds"
+        consumptionDate = consumptionDate
     )
 }
 

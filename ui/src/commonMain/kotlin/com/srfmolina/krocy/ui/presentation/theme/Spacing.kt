@@ -17,12 +17,7 @@ data class KrocySpacing(
     val s4: Dp = 16.dp,
     val s6: Dp = 24.dp,
     val s8: Dp = 32.dp,
-    val s10: Dp = 40.dp,
-    val s12: Dp = 48.dp,
-    val s14: Dp = 56.dp,
-    val s18: Dp = 72.dp,
-    val s28: Dp = 112.dp,
-    val s32: Dp = 128.dp,
+    val s12: Dp = 48.dp
 )
 
 val MaterialTheme.spacing: KrocySpacing

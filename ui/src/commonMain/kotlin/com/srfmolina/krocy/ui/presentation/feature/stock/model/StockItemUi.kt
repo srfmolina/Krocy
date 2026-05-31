@@ -6,6 +6,5 @@ internal data class StockItemUi(
     val id: Int,
     val name: String,
     val hints: List<String>,
-    val consumptionDate: ConsumptionDateUi?,
-    val quantity: String
+    val consumptionDate: ConsumptionDateUi?
 )
