@@ -6,5 +6,6 @@ data class StockItem(
     val id: Int,
     val name: String,
     val hints: List<String>,
-    val consumptionDate: ConsumptionDate?
+    val consumptionDate: ConsumptionDate?,
+    val quantity: String
 )

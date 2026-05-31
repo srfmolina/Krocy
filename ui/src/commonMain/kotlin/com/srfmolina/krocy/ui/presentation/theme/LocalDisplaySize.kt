@@ -12,3 +12,9 @@ val MaterialTheme.displaySize: DisplaySizeUi
     @Composable
     @ReadOnlyComposable
     get() = LocalDisplaySize.current
+
+/** Convenience for the most common responsive check. See [DisplaySizeUi.isCompact]. */
+val MaterialTheme.isCompact: Boolean
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalDisplaySize.current.isCompact

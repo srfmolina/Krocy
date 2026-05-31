@@ -13,7 +13,8 @@ internal fun StockItem.toUi(): StockItemUi = StockItemUi(
     id = id,
     name = name,
     hints = hints,
-    consumptionDate = consumptionDate?.toUi()
+    consumptionDate = consumptionDate?.toUi(),
+    quantity = quantity
 )
 
 private fun ConsumptionDate.toUi(): ConsumptionDateUi = ConsumptionDateUi(
