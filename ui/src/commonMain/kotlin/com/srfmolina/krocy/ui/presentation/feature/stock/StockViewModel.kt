@@ -1,8 +1,11 @@
 package com.srfmolina.krocy.ui.presentation.feature.stock
 
 import androidx.lifecycle.viewModelScope
+import com.srfmolina.krocy.domain.usecase.stock.AddStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.ConsumeStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.ObserveStockUseCase
+import com.srfmolina.krocy.domain.usecase.stock.OpenStockUseCase
+import com.srfmolina.krocy.domain.usecase.stock.model.BasicStockUCRequest
 import com.srfmolina.krocy.ui.base.BaseViewModel
 import com.srfmolina.krocy.ui.base.UiEffect
 import com.srfmolina.krocy.ui.base.UiEvent
@@ -17,12 +20,16 @@ import kotlinx.coroutines.flow.onEach
 
 internal class StockViewModel(
     private val observeStockUseCase: ObserveStockUseCase,
-    private val consumeStockUseCase: ConsumeStockUseCase
+    private val consumeStockUseCase: ConsumeStockUseCase,
+    private val addStockUseCase: AddStockUseCase,
+    private val openStockUseCase: OpenStockUseCase
 ) : BaseViewModel<Event, State, Effect>() {
 
     sealed interface Event : UiEvent {
         data object Init : Event
-        data class OnConsume(val productId: Int) : Event
+        data class OnConsumeOne(val productId: Int) : Event
+        data class OnOpenOne(val productId: Int) : Event
+        data class OnAddOne(val productId: Int) : Event
     }
 
     sealed interface Effect : UiEffect
@@ -37,7 +44,9 @@ internal class StockViewModel(
     override suspend fun handleEvent(event: Event) {
         when (event) {
             is Event.Init -> init()
-            is Event.OnConsume -> consume(event.productId)
+            is Event.OnConsumeOne -> consume(event.productId, 1)
+            is Event.OnAddOne -> add(event.productId, 1)
+            is Event.OnOpenOne -> open(event.productId, 1)
         }
     }
 
@@ -53,7 +62,15 @@ internal class StockViewModel(
         }
     }.launchIn(viewModelScope)
 
-    private suspend fun consume(productId: Int) {
-        consumeStockUseCase(productId)  //TODO: consume loading animation
+    private suspend fun consume(productId: Int, amount: Int) {
+        consumeStockUseCase(BasicStockUCRequest(productId, amount))  //TODO: consume loading animation
+    }
+
+    private suspend fun add(productId: Int, amount: Int) {
+        addStockUseCase(BasicStockUCRequest(productId, amount))  //TODO: add loading animation
+    }
+
+    private suspend fun open(productId: Int, amount: Int) {
+        openStockUseCase(BasicStockUCRequest(productId, amount))  //TODO: open loading animation
     }
 }

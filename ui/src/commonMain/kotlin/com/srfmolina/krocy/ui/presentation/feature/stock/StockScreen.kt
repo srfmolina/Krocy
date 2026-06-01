@@ -54,16 +54,18 @@ internal fun StockScreen(
 
     StockScreen(
         items = state.items,
-        onConsume = { productId ->
-            viewModel.launchEvent(Event.OnConsume(productId))
-        }
+        onConsume = { productId -> viewModel.launchEvent(Event.OnConsumeOne(productId)) },
+        onAdd = { productId -> viewModel.launchEvent(Event.OnAddOne(productId)) },
+        onOpen = { productId -> viewModel.launchEvent(Event.OnOpenOne(productId)) }
     )
 }
 
 @Composable
 private fun StockScreen(
     items: List<StockItemUi>,
-    onConsume: (Int) -> Unit
+    onConsume: (Int) -> Unit,
+    onAdd: (Int) -> Unit,
+    onOpen: (Int) -> Unit
 ) {
     if (MaterialTheme.isCompact) {
         LazyColumn(
@@ -74,7 +76,9 @@ private fun StockScreen(
                 StockItemComp(
                     modifier = Modifier.padding(MaterialTheme.spacing.s3),
                     item = item,
-                    onConsume = onConsume
+                    onConsume = onConsume,
+                    onAdd = onAdd,
+                    onOpen = onOpen
                 )
             }
         }
@@ -84,7 +88,9 @@ private fun StockScreen(
                 StockItemComp(
                     modifier = Modifier.padding(MaterialTheme.spacing.s4),
                     item = item,
-                    onConsume = onConsume
+                    onConsume = onConsume,
+                    onAdd = onAdd,
+                    onOpen = onOpen
                 )
                 if (index < items.lastIndex) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -101,17 +107,39 @@ private fun StockScreenPreview() {
         Surface {
             StockScreen(
                 onConsume = {},
+                onAdd = {},
+                onOpen = {},
                 items = List(15) {
                     StockItemUi(
                         id = (1..1000).random(),
-                        name = listOf("Apple", "Banana", "Milk", "Bread", "Cheese", "Eggs", "Butter").random(),
+                        name = listOf(
+                            "Apple",
+                            "Banana",
+                            "Milk",
+                            "Bread",
+                            "Cheese",
+                            "Eggs",
+                            "Butter"
+                        ).random(),
                         hints = List((2..8).random()) {
-                            listOf("fresh", "organic", "frozen", "imported", "local", "gluten-free").random()
+                            listOf(
+                                "fresh",
+                                "organic",
+                                "frozen",
+                                "imported",
+                                "local",
+                                "gluten-free"
+                            ).random()
                         },
                         consumptionDate = if (listOf(true, false).random()) {
                             ConsumptionDateUi(
                                 type = ConsumptionType.entries.random(),
-                                date = listOf("En 2 días", "Hace 1 semana", "En 4 días", "Hace 2 días").random(),
+                                date = listOf(
+                                    "En 2 días",
+                                    "Hace 1 semana",
+                                    "En 4 días",
+                                    "Hace 2 días"
+                                ).random(),
                                 expired = listOf(true, false).random()
                             )
                         } else {

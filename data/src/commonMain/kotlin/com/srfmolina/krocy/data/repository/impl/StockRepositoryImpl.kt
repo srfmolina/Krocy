@@ -32,8 +32,18 @@ internal class StockRepositoryImpl(
         }
     }
 
-    override suspend fun consume(productId: Int) {
-        dataSource.consume(productId).getOrThrow()
+    override suspend fun consume(productId: Int, amount: Int) {
+        dataSource.consume(productId, amount.toDouble()).getOrThrow()
+        refresh()
+    }
+
+    override suspend fun open(productId: Int, amount: Int) {
+        dataSource.open(productId, amount.toDouble()).getOrThrow()
+        refresh()
+    }
+
+    override suspend fun add(productId: Int, amount: Int) {
+        dataSource.add(productId, amount.toDouble()).getOrThrow()
         refresh()
     }
 

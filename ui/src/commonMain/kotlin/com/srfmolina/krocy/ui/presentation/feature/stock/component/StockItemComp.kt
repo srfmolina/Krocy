@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Drafts
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
@@ -38,6 +40,8 @@ import com.srfmolina.krocy.ui.presentation.theme.spacing
 internal fun StockItemComp(
     item: StockItemUi,
     onConsume: (Int) -> Unit,
+    onAdd: (Int) -> Unit,
+    onOpen: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val actions = listOf(
@@ -46,6 +50,18 @@ internal fun StockItemComp(
             contentDescription = "Acción de consumir un producto",
             icon = Icons.Default.Restaurant,
             onClick = { onConsume(item.id) }
+        ),
+        LabeledActionUi(
+            label = "Abrir", //TODO
+            contentDescription = "Acción de consumir un producto",
+            icon = Icons.Default.Drafts,
+            onClick = { onOpen(item.id) }
+        ),
+        LabeledActionUi(
+            label = "Aumentar", //TODO
+            contentDescription = "Acción de aumentar el stock de un producto",
+            icon = Icons.Default.KeyboardArrowUp, //TODO
+            onClick = { onAdd(item.id) }
         )
     )
 
