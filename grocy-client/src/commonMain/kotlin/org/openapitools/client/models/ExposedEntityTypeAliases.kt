@@ -7,4 +7,7 @@ typealias ExposedEntityIncludingUserEntities = ExposedEntity
 typealias ExposedEntityIncludingUserEntitiesNotIncludingNotEditable = ExposedEntityNoEdit
 typealias ExposedEntityNotIncludingNotDeletable = ExposedEntityNoDelete
 typealias ExposedEntityNotIncludingNotEditable = ExposedEntityNoEdit
-typealias ExposedEntityNotIncludingNotListable = ExposedEntityNoListing
+// The generated ExposedEntityNoListing enum is broken: the Grocy spec only lists `api_keys`
+// under it, so it can't represent listable entities like quantity_units. Point this alias at
+// the full ExposedEntity enum (which has every entity value) so objectsEntityGet can list them.
+typealias ExposedEntityNotIncludingNotListable = ExposedEntity

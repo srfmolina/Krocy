@@ -3,6 +3,8 @@ package com.srfmolina.krocy.data.di
 import com.srfmolina.krocy.data.datasource.local.example.KrocyItemDataSource
 import com.srfmolina.krocy.data.datasource.local.example.KrocyItemDataSourceImpl
 import com.srfmolina.krocy.data.datasource.remote.createHttpClient
+import com.srfmolina.krocy.data.datasource.remote.generic.GenericEntityDataSource
+import com.srfmolina.krocy.data.datasource.remote.generic.GenericEntityDataSourceImpl
 import com.srfmolina.krocy.data.datasource.remote.stock.StockDataSource
 import com.srfmolina.krocy.data.datasource.remote.stock.StockDataSourceImpl
 import com.srfmolina.krocy.data.db.KrocyDatabase
@@ -13,6 +15,7 @@ import com.srfmolina.krocy.data.repository.impl.StockRepositoryImpl
 import com.srfmolina.krocy.domain.repository.KrocyItemRepository
 import com.srfmolina.krocy.domain.repository.StockRepository
 import org.koin.dsl.module
+import org.openapitools.client.apis.GenericEntityInteractionsApi
 import org.openapitools.client.apis.StockApi
 
 val dataModule = module {
@@ -22,14 +25,16 @@ val dataModule = module {
 
     single { createHttpClient() }
     single { StockApi(baseUrl = baseUrl) }
+    single { GenericEntityInteractionsApi(baseUrl = baseUrl) }
 
     single<KrocyDatabase> { createDatabase() }
     single<KrocyItemDao>  { get<KrocyDatabase>().krocyItemDao() }
 
     single<KrocyItemDataSource> { KrocyItemDataSourceImpl(get()) }
     single<StockDataSource> { StockDataSourceImpl(get()) }
+    single<GenericEntityDataSource> { GenericEntityDataSourceImpl(get()) }
 
     single<KrocyItemRepository> { KrocyItemRepositoryImpl(get()) }
-    single<StockRepository> { StockRepositoryImpl(get()) }
+    single<StockRepository> { StockRepositoryImpl(get(), get()) }
 
 }

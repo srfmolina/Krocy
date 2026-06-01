@@ -1,5 +1,6 @@
 package com.srfmolina.krocy.data.repository.impl
 
+import com.srfmolina.krocy.data.datasource.remote.generic.GenericEntityDataSource
 import com.srfmolina.krocy.data.datasource.remote.stock.StockDataSource
 import com.srfmolina.krocy.data.mapper.toDomain
 import com.srfmolina.krocy.domain.model.stock.StockItem
@@ -12,7 +13,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 internal class StockRepositoryImpl(
-    private val dataSource: StockDataSource
+    private val stockDataSource: StockDataSource,
+    private val genericEntityDataSource: GenericEntityDataSource
 ) : StockRepository {
 
     private val _cache = MutableStateFlow<List<StockItem>>(emptyList())
@@ -28,29 +30,37 @@ internal class StockRepositoryImpl(
         if (loaded) return
         refreshMutex.withLock {
             if (loaded) return
-            refresh()
+            refreshStock()
         }
     }
 
     override suspend fun consume(productId: Int, amount: Int) {
-        dataSource.consume(productId, amount.toDouble()).getOrThrow()
-        refresh()
+        stockDataSource.consume(productId, amount.toDouble()).getOrThrow()
+        refreshStock()
     }
 
     override suspend fun open(productId: Int, amount: Int) {
-        dataSource.open(productId, amount.toDouble()).getOrThrow()
-        refresh()
+        stockDataSource.open(productId, amount.toDouble()).getOrThrow()
+        refreshStock()
     }
 
     override suspend fun add(productId: Int, amount: Int) {
-        dataSource.add(productId, amount.toDouble()).getOrThrow()
-        refresh()
+        stockDataSource.add(productId, amount.toDouble()).getOrThrow()
+        refreshStock()
     }
 
-    private suspend fun refresh() {
-        dataSource.getStock()
+    private suspend fun refreshStock() {
+        val quantityUnitsDtos = genericEntityDataSource.getQuantityUnits().getOrThrow()
+        stockDataSource.getStock()
             .getOrThrow()
-            .also { dtos -> _cache.update { dtos.map { it.toDomain() } } }
+            .also { stockDtos -> _cache.update { stockDtos.map { stockDto ->
+                val quDto = quantityUnitsDtos.firstOrNull { quData ->
+                    quData.id ==  stockDto.product?.quIdStock
+                }
+                val singularName = quDto?.name ?: "ud"
+                val pluralName = quDto?.namePlural ?: "uds"
+                stockDto.toDomain(quantityNames = Pair(singularName, pluralName))
+            } } }
         loaded = true
     }
 }

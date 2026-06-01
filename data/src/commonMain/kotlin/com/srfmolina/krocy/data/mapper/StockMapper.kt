@@ -13,14 +13,14 @@ import kotlin.time.Clock
 
 private val NEVER_EXPIRES = LocalDate(2999, 12, 31)
 
-fun CurrentStockResponse.toDomain(): StockItem {
+fun CurrentStockResponse.toDomain(quantityNames: Pair<String, String>): StockItem {
     val amount = amount ?: 0.0
     val amountOpened = amountOpened ?: 0.0
     val minStock = product?.minStockAmount ?: 0.0
 
     val hints = buildList {
         if (amountOpened > 0) add("${amountOpened.toInt()} abierto")
-        if (minStock > 0 && amount < minStock) add("bajo stock")
+        if (minStock > 0 && amount < minStock) add("bajo stock") //TODO: harcoded text
     }
 
     val consumptionDate = bestBeforeDate
@@ -34,14 +34,17 @@ fun CurrentStockResponse.toDomain(): StockItem {
             )
         }
 
+    val (singularName, pluralName) = quantityNames
+    val quantityName = if (amount == 1.0) singularName else pluralName
+
     return StockItem(
         id = productId ?: 0,
         name = product?.name.orEmpty(),
         hints = hints,
         consumptionDate = consumptionDate,
-        quantity = "${amount.formatAmount()} uds"
+        quantity = amount.formatAmount(quantityName)
     )
 }
 
-private fun Double.formatAmount(): String =
-    if (this % 1.0 == 0.0) this.toInt().toString() else this.toString()
+private fun Double.formatAmount(quantityName: String): String =
+    if (this % 1.0 == 0.0) "${this.toInt()} $quantityName" else "$this $quantityName"
