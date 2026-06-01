@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddBox
 import androidx.compose.material.icons.filled.Drafts
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
@@ -60,7 +60,7 @@ internal fun StockItemComp(
         LabeledActionUi(
             label = "Aumentar", //TODO
             contentDescription = "Acción de aumentar el stock de un producto",
-            icon = Icons.Default.KeyboardArrowUp, //TODO
+            icon = Icons.Default.AddBox,
             onClick = { onAdd(item.id) }
         )
     )
