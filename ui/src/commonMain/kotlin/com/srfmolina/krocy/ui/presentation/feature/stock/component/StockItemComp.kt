@@ -60,7 +60,7 @@ internal fun StockItemComp(
         ),
         LabeledActionUi(
             label = "Abrir", //TODO
-            contentDescription = "Acción de consumir un producto",
+            contentDescription = "Acción de abrir un producto",
             icon = Icons.Default.Drafts,
             onClick = { onOpen(item.id) }
         ),

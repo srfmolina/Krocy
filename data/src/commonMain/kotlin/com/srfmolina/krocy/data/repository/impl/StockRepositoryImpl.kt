@@ -21,7 +21,7 @@ internal class StockRepositoryImpl(
     private val _cache = MutableStateFlow<List<StockItem>>(emptyList())
 
     private val refreshMutex = Mutex()
-    private var loaded = false
+    @Volatile private var loaded = false
 
     override fun getStock(): Flow<List<StockItem>> = _cache
         .onSubscription { ensureLoaded() }
@@ -37,21 +37,27 @@ internal class StockRepositoryImpl(
 
     override suspend fun consume(productId: Int, amount: Int) {
         stockDataSource.consume(productId, amount.toDouble()).getOrThrow()
-        refreshStock()
+        forceRefreshWithMutex()
     }
 
     override suspend fun open(productId: Int, amount: Int) {
         stockDataSource.open(productId, amount.toDouble()).getOrThrow()
-        refreshStock()
+        forceRefreshWithMutex()
     }
 
     override suspend fun add(productId: Int, amount: Int) {
         stockDataSource.add(productId, amount.toDouble()).getOrThrow()
-        refreshStock()
+        forceRefreshWithMutex()
     }
 
     override suspend fun forceRefresh() {
-        refreshStock()
+        forceRefreshWithMutex()
+    }
+
+    private suspend fun forceRefreshWithMutex() {
+        refreshMutex.withLock {
+            refreshStock()
+        }
     }
 
     private suspend fun refreshStock() {
