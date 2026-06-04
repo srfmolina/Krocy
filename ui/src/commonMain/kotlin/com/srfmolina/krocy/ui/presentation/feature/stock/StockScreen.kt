@@ -1,26 +1,38 @@
 package com.srfmolina.krocy.ui.presentation.feature.stock
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddBox
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.srfmolina.krocy.domain.model.common.ConsumptionType
+import com.srfmolina.krocy.ui.presentation.common.KrocyFabMenu
 import com.srfmolina.krocy.ui.presentation.common.model.ConsumptionDateUi
 import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
+import com.srfmolina.krocy.ui.presentation.common.model.LabeledActionUi
 import com.srfmolina.krocy.ui.presentation.common.skeleton.ProvideSkeleton
 import com.srfmolina.krocy.ui.presentation.common.skeleton.SkeletonTransitionAnimation
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockViewModel.Event
@@ -75,31 +87,84 @@ private fun StockScreen(
     onAdd: (Int) -> Unit,
     onOpen: (Int) -> Unit
 ) {
-    SkeletonTransitionAnimation(
-        isLoading = isLoading
-    ) { loading ->
-        if (loading) {
-            ProvideSkeleton(active = true) {
-                StockList(items = skeletonPlaceholders, onConsume = {}, onAdd = {}, onOpen = {})
-            }
-        } else {
-            ProvideSkeleton(active = loadingItemIds.isNotEmpty(), targetIds = loadingItemIds) {
-                StockList(items = items, onConsume = onConsume, onAdd = onAdd, onOpen = onOpen)
-            }
+    val listState = rememberLazyListState()
+    val fabVisible by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex == 0 || !listState.canScrollForward
         }
     }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        SkeletonTransitionAnimation(
+            isLoading = isLoading
+        ) { loading ->
+            if (loading) {
+                ProvideSkeleton(active = true) {
+                    StockList(items = skeletonPlaceholders, onConsume = {}, onAdd = {}, onOpen = {})
+                }
+            } else {
+                ProvideSkeleton(active = loadingItemIds.isNotEmpty(), targetIds = loadingItemIds) {
+                    StockList(
+                        items = items,
+                        listState = listState,
+                        contentPadding = PaddingValues(bottom = MaterialTheme.spacing.s28),
+                        onConsume = onConsume,
+                        onAdd = onAdd,
+                        onOpen = onOpen
+                    )
+                }
+            }
+        }
+
+        KrocyFabMenu(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(MaterialTheme.spacing.s4),
+            visible = !isLoading && fabVisible,
+            actions = stockFabActions()
+        )
+    }
 }
+
+/**
+ * Placeholder actions for the stock FAB menu. The real stock actions are not implemented yet, so
+ * these are wired as no-ops; once available they become [StockViewModel.Event]s forwarded here.
+ */
+private fun stockFabActions(): List<LabeledActionUi> = listOf(
+    LabeledActionUi(
+        label = "Añadir producto", // TODO
+        contentDescription = "Añadir producto", // TODO
+        icon = Icons.Filled.AddBox,
+        onClick = {}
+    ),
+    LabeledActionUi(
+        label = "Escanear código", // TODO
+        contentDescription = "Escanear código", // TODO
+        icon = Icons.Filled.QrCodeScanner,
+        onClick = {}
+    ),
+    LabeledActionUi(
+        label = "Compra rápida", // TODO
+        contentDescription = "Compra rápida", // TODO
+        icon = Icons.Filled.ShoppingCart,
+        onClick = {}
+    )
+)
 
 @Composable
 private fun StockList(
     items: List<StockItemUi>,
     onConsume: (Int) -> Unit,
     onAdd: (Int) -> Unit,
-    onOpen: (Int) -> Unit
+    onOpen: (Int) -> Unit,
+    listState: LazyListState = rememberLazyListState(),
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     if (MaterialTheme.isCompact) {
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize().padding(horizontal = MaterialTheme.spacing.s4),
+            contentPadding = contentPadding,
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s3)
         ) {
             items(items) { item ->
@@ -113,7 +178,11 @@ private fun StockList(
             }
         }
     } else {
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = contentPadding
+        ) {
             itemsIndexed(items) { index, item ->
                 StockItemComp(
                     modifier = Modifier.padding(MaterialTheme.spacing.s4),
