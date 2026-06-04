@@ -7,5 +7,6 @@ internal data class StockItemUi(
     val name: String,
     val hints: List<String>,
     val consumptionDate: ConsumptionDateUi?,
-    val quantity: String
+    val quantity: String,
+    val pictureUrl: String?
 )

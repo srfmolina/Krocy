@@ -41,6 +41,9 @@ kotlin {
 
             implementation(libs.compose.material3.adaptive)
 
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
+
             implementation(project(":data"))
             implementation(project(":domain"))
         }
@@ -53,11 +56,13 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.koin.android)
+            implementation(libs.ktor.client.okhttp)
         }
 
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+            implementation(libs.ktor.client.cio)
         }
     }
 }

@@ -1,7 +1,12 @@
 package com.srfmolina.krocy.ui.presentation.feature.stock
 
 import androidx.lifecycle.viewModelScope
+import com.srfmolina.krocy.domain.usecase.stock.AddStockUseCase
+import com.srfmolina.krocy.domain.usecase.stock.ConsumeStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.ObserveStockUseCase
+import com.srfmolina.krocy.domain.usecase.stock.OpenStockUseCase
+import com.srfmolina.krocy.domain.usecase.stock.RefreshStockUseCase
+import com.srfmolina.krocy.domain.usecase.stock.model.BasicStockUCRequest
 import com.srfmolina.krocy.ui.base.BaseViewModel
 import com.srfmolina.krocy.ui.base.UiEffect
 import com.srfmolina.krocy.ui.base.UiEvent
@@ -15,17 +20,26 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 internal class StockViewModel(
-    private val observeStockUseCase: ObserveStockUseCase
+    private val observeStockUseCase: ObserveStockUseCase,
+    private val consumeStockUseCase: ConsumeStockUseCase,
+    private val addStockUseCase: AddStockUseCase,
+    private val openStockUseCase: OpenStockUseCase,
+    private val refreshStockUseCase: RefreshStockUseCase
 ) : BaseViewModel<Event, State, Effect>() {
 
     sealed interface Event : UiEvent {
         data object Init : Event
+        data object OnRefresh : Event
+        data class OnConsumeOne(val productId: Int) : Event
+        data class OnOpenOne(val productId: Int) : Event
+        data class OnAddOne(val productId: Int) : Event
     }
 
     sealed interface Effect : UiEffect
 
     data class State(
         val isLoading: Boolean = true,
+        val loadingItemIds: Set<Int> = emptySet(),
         val items: List<StockItemUi> = emptyList()
     ) : UiState
 
@@ -34,6 +48,10 @@ internal class StockViewModel(
     override suspend fun handleEvent(event: Event) {
         when (event) {
             is Event.Init -> init()
+            is Event.OnConsumeOne -> consume(event.productId, 1)
+            is Event.OnAddOne -> add(event.productId, 1)
+            is Event.OnOpenOne -> open(event.productId, 1)
+            is Event.OnRefresh -> refresh()
         }
     }
 
@@ -48,4 +66,31 @@ internal class StockViewModel(
             setState { copy(isLoading = false) }
         }
     }.launchIn(viewModelScope)
+
+    private suspend fun consume(productId: Int, amount: Int) {
+        setState { copy(loadingItemIds = loadingItemIds + productId) }
+        val result = consumeStockUseCase(BasicStockUCRequest(productId, amount))
+        setState { copy(loadingItemIds = loadingItemIds - productId) }
+        result.onFailure { /* TODO: surface error effect */ }
+    }
+
+    private suspend fun add(productId: Int, amount: Int) {
+        setState { copy(loadingItemIds = loadingItemIds + productId) }
+        val result = addStockUseCase(BasicStockUCRequest(productId, amount))
+        setState { copy(loadingItemIds = loadingItemIds - productId) }
+        result.onFailure { /* TODO: surface error effect */ }
+    }
+
+    private suspend fun open(productId: Int, amount: Int) {
+        setState { copy(loadingItemIds = loadingItemIds + productId) }
+        val result = openStockUseCase(BasicStockUCRequest(productId, amount))
+        setState { copy(loadingItemIds = loadingItemIds - productId) }
+        result.onFailure { /* TODO: surface error effect */ }
+    }
+
+    private suspend fun refresh() {
+        setState { copy(isLoading = true) }
+        refreshStockUseCase()
+        setState { copy(isLoading = false) }
+    }
 }

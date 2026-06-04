@@ -3,6 +3,7 @@ package com.srfmolina.krocy.ui.presentation.navigation
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
+import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.feature.login.navigation.loginScreen
 import com.srfmolina.krocy.ui.presentation.feature.splash.navigation.splashScreen
 import com.srfmolina.krocy.ui.presentation.feature.stock.navigation.stockScreen
@@ -13,6 +14,7 @@ import kotlinx.serialization.Serializable
 internal fun NavGraphBuilder.appNavGraph(
     navController: NavController,
     onChangeTopBar: (TopBarConfigurationUi) -> Unit,
+    onChangeFab: (FabConfigurationUi) -> Unit,
     onOpenNavRail: () -> Unit
 ){
     navigation<AppRoute>(
@@ -30,6 +32,7 @@ internal fun NavGraphBuilder.appNavGraph(
 
         stockScreen(
             onChangeTopBar = onChangeTopBar,
+            onChangeFab = onChangeFab,
             onOpenNavRail = onOpenNavRail
         )
     }
