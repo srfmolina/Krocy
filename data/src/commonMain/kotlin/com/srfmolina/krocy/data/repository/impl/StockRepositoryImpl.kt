@@ -50,6 +50,10 @@ internal class StockRepositoryImpl(
         refreshStock()
     }
 
+    override suspend fun forceRefresh() {
+        refreshStock()
+    }
+
     private suspend fun refreshStock() {
         val quantityUnitsDtos = genericEntityDataSource.getQuantityUnits().getOrThrow()
         stockDataSource.getStock()

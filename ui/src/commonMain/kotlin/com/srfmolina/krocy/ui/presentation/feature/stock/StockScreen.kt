@@ -11,10 +11,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddBox
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -73,7 +71,8 @@ internal fun StockScreen(
         items = state.items,
         onConsume = { productId -> viewModel.launchEvent(Event.OnConsumeOne(productId)) },
         onAdd = { productId -> viewModel.launchEvent(Event.OnAddOne(productId)) },
-        onOpen = { productId -> viewModel.launchEvent(Event.OnOpenOne(productId)) }
+        onOpen = { productId -> viewModel.launchEvent(Event.OnOpenOne(productId)) },
+        onRefresh = { viewModel.launchEvent(Event.OnRefresh) }
     )
 }
 
@@ -85,7 +84,8 @@ private fun StockScreen(
     items: List<StockItemUi>,
     onConsume: (Int) -> Unit,
     onAdd: (Int) -> Unit,
-    onOpen: (Int) -> Unit
+    onOpen: (Int) -> Unit,
+    onRefresh: () -> Unit
 ) {
     val listState = rememberLazyListState()
     val fabVisible by remember {
@@ -121,35 +121,17 @@ private fun StockScreen(
                 .align(Alignment.BottomEnd)
                 .padding(MaterialTheme.spacing.s4),
             visible = !isLoading && fabVisible,
-            actions = stockFabActions()
+            actions = listOf(
+                LabeledActionUi(
+                    label = "Actualizar",
+                    contentDescription = "Acción de refrescar datos",
+                    icon = Icons.Default.Refresh,
+                    onClick = onRefresh
+                )
+            )
         )
     }
 }
-
-/**
- * Placeholder actions for the stock FAB menu. The real stock actions are not implemented yet, so
- * these are wired as no-ops; once available they become [StockViewModel.Event]s forwarded here.
- */
-private fun stockFabActions(): List<LabeledActionUi> = listOf(
-    LabeledActionUi(
-        label = "Añadir producto", // TODO
-        contentDescription = "Añadir producto", // TODO
-        icon = Icons.Filled.AddBox,
-        onClick = {}
-    ),
-    LabeledActionUi(
-        label = "Escanear código", // TODO
-        contentDescription = "Escanear código", // TODO
-        icon = Icons.Filled.QrCodeScanner,
-        onClick = {}
-    ),
-    LabeledActionUi(
-        label = "Compra rápida", // TODO
-        contentDescription = "Compra rápida", // TODO
-        icon = Icons.Filled.ShoppingCart,
-        onClick = {}
-    )
-)
 
 @Composable
 private fun StockList(
@@ -224,6 +206,7 @@ private fun StockScreenPreview() {
                 onConsume = {},
                 onAdd = {},
                 onOpen = {},
+                onRefresh = {},
                 items = List(15) {
                     StockItemUi(
                         id = (1..1000).random(),
@@ -280,6 +263,7 @@ private fun StockScreenSkeletonPreview() {
                 onConsume = {},
                 onAdd = {},
                 onOpen = {},
+                onRefresh = {},
                 items = emptyList()
             )
         }

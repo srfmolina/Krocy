@@ -64,3 +64,17 @@ abstract class ResultUseCase<in P, out R> {
 
     protected abstract suspend fun execute(params: P): R
 }
+
+abstract class ResultUseCaseNoParams<out R> {
+
+    suspend operator fun invoke(): Result<R> =
+        try {
+            Result.success(execute())
+        } catch (e: CancellationException) {
+            throw e // nunca swallow cancellation
+        } catch (e: Throwable) {
+            Result.failure(e)
+        }
+
+    protected abstract suspend fun execute(): R
+}

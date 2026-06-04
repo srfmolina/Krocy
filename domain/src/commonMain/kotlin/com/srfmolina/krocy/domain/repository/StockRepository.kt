@@ -11,4 +11,6 @@ interface StockRepository {
     suspend fun open(productId: Int, amount: Int)
 
     suspend fun add(productId: Int, amount: Int)
+
+    suspend fun forceRefresh()
 }

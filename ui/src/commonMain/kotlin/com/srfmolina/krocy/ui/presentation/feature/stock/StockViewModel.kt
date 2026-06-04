@@ -5,6 +5,7 @@ import com.srfmolina.krocy.domain.usecase.stock.AddStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.ConsumeStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.ObserveStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.OpenStockUseCase
+import com.srfmolina.krocy.domain.usecase.stock.RefreshStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.model.BasicStockUCRequest
 import com.srfmolina.krocy.ui.base.BaseViewModel
 import com.srfmolina.krocy.ui.base.UiEffect
@@ -22,11 +23,13 @@ internal class StockViewModel(
     private val observeStockUseCase: ObserveStockUseCase,
     private val consumeStockUseCase: ConsumeStockUseCase,
     private val addStockUseCase: AddStockUseCase,
-    private val openStockUseCase: OpenStockUseCase
+    private val openStockUseCase: OpenStockUseCase,
+    private val refreshStockUseCase: RefreshStockUseCase
 ) : BaseViewModel<Event, State, Effect>() {
 
     sealed interface Event : UiEvent {
         data object Init : Event
+        data object OnRefresh : Event
         data class OnConsumeOne(val productId: Int) : Event
         data class OnOpenOne(val productId: Int) : Event
         data class OnAddOne(val productId: Int) : Event
@@ -48,6 +51,7 @@ internal class StockViewModel(
             is Event.OnConsumeOne -> consume(event.productId, 1)
             is Event.OnAddOne -> add(event.productId, 1)
             is Event.OnOpenOne -> open(event.productId, 1)
+            is Event.OnRefresh -> refresh()
         }
     }
 
@@ -82,5 +86,11 @@ internal class StockViewModel(
         val result = openStockUseCase(BasicStockUCRequest(productId, amount))
         setState { copy(loadingItemIds = loadingItemIds - productId) }
         result.onFailure { /* TODO: surface error effect */ }
+    }
+
+    private suspend fun refresh() {
+        setState { copy(isLoading = true) }
+        refreshStockUseCase()
+        setState { copy(isLoading = false) }
     }
 }
