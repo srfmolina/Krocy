@@ -1,12 +1,16 @@
 package com.srfmolina.krocy.ui.presentation.feature.stock.component
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddBox
 import androidx.compose.material.icons.filled.Drafts
@@ -30,6 +34,9 @@ import com.srfmolina.krocy.ui.presentation.common.PhotoHolder
 import com.srfmolina.krocy.ui.presentation.common.TheeDotsMenuButton
 import com.srfmolina.krocy.ui.presentation.common.model.ConsumptionDateUi
 import com.srfmolina.krocy.ui.presentation.common.model.LabeledActionUi
+import com.srfmolina.krocy.ui.presentation.common.skeleton.LocalSkeletonState
+import com.srfmolina.krocy.ui.presentation.common.skeleton.ProvideSkeleton
+import com.srfmolina.krocy.ui.presentation.common.skeleton.skeleton
 import com.srfmolina.krocy.ui.presentation.feature.stock.model.StockItemUi
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 import com.srfmolina.krocy.ui.presentation.theme.extendedColorScheme
@@ -86,7 +93,10 @@ private fun StockItemCompact(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s4)
         ) {
-            PhotoHolder(size = MaterialTheme.spacing.s18) //TODO
+            PhotoHolder(
+                size = MaterialTheme.spacing.s18,
+                modifier = Modifier.skeleton(RoundedCornerShape(MaterialTheme.spacing.s3))
+            ) //TODO
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s1)
@@ -96,7 +106,7 @@ private fun StockItemCompact(
                 RowOfHints(item)
 
             }
-            TheeDotsMenuButton(actions = actions)
+            StockItemMenu(actions)
         }
     }
 }
@@ -108,11 +118,25 @@ private fun StockItemName(
 ) {
     Text(
         text = name,
-        modifier = modifier,
+        modifier = modifier.skeleton(),
         style = MaterialTheme.typography.titleMedium,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis
     )
+}
+
+/**
+ * Three-dots overflow menu, or its skeleton placeholder while [LocalSkeletonState] is active.
+ * The real button is interactive, so during loading we swap in an inert circular placeholder
+ * rather than masking a live button.
+ */
+@Composable
+private fun StockItemMenu(actions: List<LabeledActionUi>) {
+    if (LocalSkeletonState.current.isActive) {
+        Box(Modifier.size(MaterialTheme.spacing.s12).skeleton(CircleShape))
+    } else {
+        TheeDotsMenuButton(actions = actions)
+    }
 }
 
 @Composable
@@ -128,13 +152,15 @@ private fun RowOfHints(
         item {
             HintCard(
                 text = item.quantity,
-                containerColor = MaterialTheme.colorScheme.primaryContainer
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.skeleton()
             )
         }
 
         items(item.hints) { hint ->
             HintCard(
                 text = hint,
+                modifier = Modifier.skeleton()
             )
         }
     }
@@ -156,11 +182,12 @@ private fun RowOfHintsStatic(
 
         HintCard(
             text = item.quantity,
-            containerColor = MaterialTheme.colorScheme.primaryContainer
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.skeleton()
         )
 
         item.hints.forEach { hint ->
-            HintCard(text = hint)
+            HintCard(text = hint, modifier = Modifier.skeleton())
         }
     }
 }
@@ -179,14 +206,17 @@ private fun StockItemRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s4)
     ) {
-        PhotoHolder(size = MaterialTheme.spacing.s12) //TODO
+        PhotoHolder(
+            size = MaterialTheme.spacing.s12,
+            modifier = Modifier.skeleton(RoundedCornerShape(MaterialTheme.spacing.s3))
+        ) //TODO
         StockItemName(item.name, modifier = Modifier.weight(1f))
 
         // Content-sized so the weighted name above pushes it to the right edge.
         // A LazyRow would fill the remaining width and starve the name (see StockItemCompact).
         RowOfHintsStatic(item)
 
-        TheeDotsMenuButton(actions = actions)
+        StockItemMenu(actions)
     }
 }
 
@@ -196,6 +226,7 @@ private fun ExpiryChip(consumptionDate: ConsumptionDateUi) {
     HintCard(
         text = consumptionDate.date,
         containerColor = containerColor,
+        modifier = Modifier.skeleton()
     )
 
 }
@@ -317,6 +348,42 @@ private fun StockItemRowPreview() {
                         quantity = "2 uds"
                     )
                 )
+            }
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun StockItemSkeletonPreview() {
+    KrocyTheme {
+        Surface {
+            ProvideSkeleton(active = true) {
+                Column {
+                    StockItemCompact(
+                        modifier = Modifier.padding(MaterialTheme.spacing.s4),
+                        actions = emptyList(),
+                        item = StockItemUi(
+                            id = 0,
+                            name = "Galletas María",
+                            hints = listOf("1 abierto"),
+                            consumptionDate = ConsumptionDateUi(ConsumptionType.PREFERENCE, "En 2 días", expired = false),
+                            quantity = "3 Packs"
+                        )
+                    )
+                    HorizontalDivider()
+                    StockItemRow(
+                        modifier = Modifier.padding(MaterialTheme.spacing.s4),
+                        actions = emptyList(),
+                        item = StockItemUi(
+                            id = 1,
+                            name = "Yogur natural",
+                            hints = listOf("8 unidades", "2 abiertos"),
+                            consumptionDate = ConsumptionDateUi(ConsumptionType.EXPIRATION, "En 2 días", expired = false),
+                            quantity = "3 uds"
+                        )
+                    )
+                }
             }
         }
     }

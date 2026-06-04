@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -20,6 +21,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.srfmolina.krocy.domain.model.common.ConsumptionType
 import com.srfmolina.krocy.ui.presentation.common.model.ConsumptionDateUi
 import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
+import com.srfmolina.krocy.ui.presentation.common.skeleton.ProvideSkeleton
+import com.srfmolina.krocy.ui.presentation.common.skeleton.SkeletonTransitionAnimation
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockViewModel.Event
 import com.srfmolina.krocy.ui.presentation.feature.stock.component.StockItemComp
 import com.srfmolina.krocy.ui.presentation.feature.stock.model.StockItemUi
@@ -53,6 +56,7 @@ internal fun StockScreen(
     }
 
     StockScreen(
+        isLoading = state.isLoading,
         items = state.items,
         onConsume = { productId -> viewModel.launchEvent(Event.OnConsumeOne(productId)) },
         onAdd = { productId -> viewModel.launchEvent(Event.OnAddOne(productId)) },
@@ -60,8 +64,30 @@ internal fun StockScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun StockScreen(
+    isLoading: Boolean,
+    items: List<StockItemUi>,
+    onConsume: (Int) -> Unit,
+    onAdd: (Int) -> Unit,
+    onOpen: (Int) -> Unit
+) {
+    SkeletonTransitionAnimation(
+        isLoading = isLoading
+    ) { loading ->
+        if (loading) {
+            ProvideSkeleton(active = true) {
+                StockList(items = skeletonPlaceholders, onConsume = {}, onAdd = {}, onOpen = {})
+            }
+        } else {
+            StockList(items = items, onConsume = onConsume, onAdd = onAdd, onOpen = onOpen)
+        }
+    }
+}
+
+@Composable
+private fun StockList(
     items: List<StockItemUi>,
     onConsume: (Int) -> Unit,
     onAdd: (Int) -> Unit,
@@ -100,12 +126,27 @@ private fun StockScreen(
     }
 }
 
+/**
+ * Representative dummy items used only to drive the loading skeleton's layout (varied name lengths,
+ * hint counts and an expiry chip), so the placeholder matches the real list's shape.
+ */
+private val skeletonPlaceholders: List<StockItemUi> = listOf(
+    StockItemUi(0, "Galletas María", listOf("1 abierto"), ConsumptionDateUi(ConsumptionType.PREFERENCE, "En 2 días", false), "3 Packs"),
+    StockItemUi(1, "Yogur natural", listOf("8 unidades", "2 abiertos"), ConsumptionDateUi(ConsumptionType.EXPIRATION, "En 2 días", false), "3 uds"),
+    StockItemUi(2, "Leche entera", listOf("3 briks"), ConsumptionDateUi(ConsumptionType.EXPIRATION, "Hace 1 día", true), "2 uds"),
+    StockItemUi(3, "Pan de molde", emptyList(), null, "1 paquete"),
+    StockItemUi(4, "Queso curado", listOf("1 abierto"), ConsumptionDateUi(ConsumptionType.PREFERENCE, "En 12 días", false), "250 g"),
+    StockItemUi(5, "Huevos camperos", listOf("6 unidades"), null, "1 docena"),
+    StockItemUi(6, "Mantequilla", emptyList(), ConsumptionDateUi(ConsumptionType.EXPIRATION, "En 5 días", false), "1 ud"),
+)
+
 @PreviewLightDark
 @Composable
 private fun StockScreenPreview() {
     KrocyTheme {
         Surface {
             StockScreen(
+                isLoading = false,
                 onConsume = {},
                 onAdd = {},
                 onOpen = {},
@@ -148,6 +189,22 @@ private fun StockScreenPreview() {
                         quantity = "3 Packs"
                     )
                 }
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun StockScreenSkeletonPreview() {
+    KrocyTheme {
+        Surface {
+            StockScreen(
+                isLoading = true,
+                onConsume = {},
+                onAdd = {},
+                onOpen = {},
+                items = emptyList()
             )
         }
     }
