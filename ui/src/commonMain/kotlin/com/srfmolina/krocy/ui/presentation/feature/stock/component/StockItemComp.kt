@@ -95,18 +95,18 @@ private fun StockItemCompact(
         ) {
             PhotoHolder(
                 size = MaterialTheme.spacing.s18,
-                modifier = Modifier.skeleton(RoundedCornerShape(MaterialTheme.spacing.s3))
+                modifier = Modifier.skeleton(RoundedCornerShape(MaterialTheme.spacing.s3), id = item.id)
             ) //TODO
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s1)
             ) {
-                StockItemName(item.name)
+                StockItemName(item.name, item.id)
 
                 RowOfHints(item)
 
             }
-            StockItemMenu(actions)
+            StockItemMenu(actions, id = item.id)
         }
     }
 }
@@ -114,11 +114,12 @@ private fun StockItemCompact(
 @Composable
 private fun StockItemName(
     name: String,
+    id: Int,
     modifier: Modifier = Modifier
 ) {
     Text(
         text = name,
-        modifier = modifier.skeleton(),
+        modifier = modifier.skeleton(id = id),
         style = MaterialTheme.typography.titleMedium,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis
@@ -131,9 +132,9 @@ private fun StockItemName(
  * rather than masking a live button.
  */
 @Composable
-private fun StockItemMenu(actions: List<LabeledActionUi>) {
+private fun StockItemMenu(actions: List<LabeledActionUi>, id: Int) {
     if (LocalSkeletonState.current.isActive) {
-        Box(Modifier.size(MaterialTheme.spacing.s12).skeleton(CircleShape))
+        Box(Modifier.size(MaterialTheme.spacing.s12).skeleton(CircleShape, id = id))
     } else {
         TheeDotsMenuButton(actions = actions)
     }
@@ -147,20 +148,20 @@ private fun RowOfHints(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2)
     ) {
-        item.consumptionDate?.let { item { ExpiryChip(item.consumptionDate) } }
+        item.consumptionDate?.let { item { ExpiryChip(item.consumptionDate, id = item.id) } }
 
         item {
             HintCard(
                 text = item.quantity,
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.skeleton()
+                modifier = Modifier.skeleton(id = item.id)
             )
         }
 
         items(item.hints) { hint ->
             HintCard(
                 text = hint,
-                modifier = Modifier.skeleton()
+                modifier = Modifier.skeleton(id = item.id)
             )
         }
     }
@@ -178,16 +179,16 @@ private fun RowOfHintsStatic(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2)
     ) {
-        item.consumptionDate?.let { ExpiryChip(it) }
+        item.consumptionDate?.let { ExpiryChip(it, id = item.id) }
 
         HintCard(
             text = item.quantity,
             containerColor = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.skeleton()
+            modifier = Modifier.skeleton(id = item.id)
         )
 
         item.hints.forEach { hint ->
-            HintCard(text = hint, modifier = Modifier.skeleton())
+            HintCard(text = hint, modifier = Modifier.skeleton(id = item.id))
         }
     }
 }
@@ -208,25 +209,25 @@ private fun StockItemRow(
     ) {
         PhotoHolder(
             size = MaterialTheme.spacing.s12,
-            modifier = Modifier.skeleton(RoundedCornerShape(MaterialTheme.spacing.s3))
+            modifier = Modifier.skeleton(RoundedCornerShape(MaterialTheme.spacing.s3), id = item.id)
         ) //TODO
-        StockItemName(item.name, modifier = Modifier.weight(1f))
+        StockItemName(modifier = Modifier.weight(1f), name = item.name, id = item.id)
 
         // Content-sized so the weighted name above pushes it to the right edge.
         // A LazyRow would fill the remaining width and starve the name (see StockItemCompact).
         RowOfHintsStatic(item)
 
-        StockItemMenu(actions)
+        StockItemMenu(actions, id = item.id)
     }
 }
 
 @Composable
-private fun ExpiryChip(consumptionDate: ConsumptionDateUi) {
+private fun ExpiryChip(consumptionDate: ConsumptionDateUi, id: Int) {
     val containerColor = expiryHintColor(consumptionDate)
     HintCard(
         text = consumptionDate.date,
         containerColor = containerColor,
-        modifier = Modifier.skeleton()
+        modifier = Modifier.skeleton(id = id)
     )
 
 }

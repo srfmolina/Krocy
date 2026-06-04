@@ -57,6 +57,7 @@ internal fun StockScreen(
 
     StockScreen(
         isLoading = state.isLoading,
+        isLoadingItem = state.isLoadingItem,
         items = state.items,
         onConsume = { productId -> viewModel.launchEvent(Event.OnConsumeOne(productId)) },
         onAdd = { productId -> viewModel.launchEvent(Event.OnAddOne(productId)) },
@@ -68,6 +69,7 @@ internal fun StockScreen(
 @Composable
 private fun StockScreen(
     isLoading: Boolean,
+    isLoadingItem: Int?,
     items: List<StockItemUi>,
     onConsume: (Int) -> Unit,
     onAdd: (Int) -> Unit,
@@ -81,7 +83,9 @@ private fun StockScreen(
                 StockList(items = skeletonPlaceholders, onConsume = {}, onAdd = {}, onOpen = {})
             }
         } else {
-            StockList(items = items, onConsume = onConsume, onAdd = onAdd, onOpen = onOpen)
+            ProvideSkeleton(active = isLoadingItem != null, targetIds = isLoadingItem?.let {listOf(isLoadingItem)}) {
+                StockList(items = items, onConsume = onConsume, onAdd = onAdd, onOpen = onOpen)
+            }
         }
     }
 }
@@ -147,6 +151,7 @@ private fun StockScreenPreview() {
         Surface {
             StockScreen(
                 isLoading = false,
+                isLoadingItem = null,
                 onConsume = {},
                 onAdd = {},
                 onOpen = {},
@@ -201,6 +206,7 @@ private fun StockScreenSkeletonPreview() {
         Surface {
             StockScreen(
                 isLoading = true,
+                isLoadingItem = null,
                 onConsume = {},
                 onAdd = {},
                 onOpen = {},

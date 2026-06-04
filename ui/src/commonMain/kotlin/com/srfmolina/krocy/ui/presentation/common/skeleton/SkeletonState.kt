@@ -24,6 +24,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 @Immutable
 class SkeletonState(
     val isActive: Boolean,
+    val targetIds: List<Int>? = null,
     val progress: State<Float>?
 )
 
@@ -36,6 +37,7 @@ val LocalSkeletonState = staticCompositionLocalOf { SkeletonState(isActive = fal
 @Composable
 fun ProvideSkeleton(
     active: Boolean,
+    targetIds: List<Int>? = null,
     content: @Composable () -> Unit
 ) {
     val skeletonState = if (active) {
@@ -52,7 +54,7 @@ fun ProvideSkeleton(
             ),
             label = "shimmer"
         )
-        remember(progress) { SkeletonState(isActive = true, progress = progress) }
+        remember(progress) { SkeletonState(isActive = true, progress = progress, targetIds = targetIds) }
     } else {
         SkeletonState(isActive = false, progress = null)
     }

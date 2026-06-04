@@ -27,9 +27,11 @@ import androidx.compose.ui.layout.positionInWindow
  * @param shape outline of the placeholder block (defaults to a pill, see [SkeletonDefaults.Shape]).
  */
 @Composable
-fun Modifier.skeleton(shape: Shape = SkeletonDefaults.Shape): Modifier {
+fun Modifier.skeleton(shape: Shape = SkeletonDefaults.Shape, id: Int? = null): Modifier {
     val state = LocalSkeletonState.current
     val progress = state.progress
+    val targetedLoading = state.targetIds != null
+    if (targetedLoading && !state.targetIds.contains(id)) return this
     if (!state.isActive || progress == null) return this
 
     val base = SkeletonDefaults.baseColor
