@@ -95,8 +95,10 @@ private fun StockItemCompact(
         ) {
             PhotoHolder(
                 size = MaterialTheme.spacing.s18,
+                imageUrl = item.pictureUrl,
+                contentDescription = item.name,
                 modifier = Modifier.skeleton(RoundedCornerShape(MaterialTheme.spacing.s3), id = item.id)
-            ) //TODO
+            )
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s1)
@@ -209,8 +211,10 @@ private fun StockItemRow(
     ) {
         PhotoHolder(
             size = MaterialTheme.spacing.s12,
+            imageUrl = item.pictureUrl,
+            contentDescription = item.name,
             modifier = Modifier.skeleton(RoundedCornerShape(MaterialTheme.spacing.s3), id = item.id)
-        ) //TODO
+        )
         StockItemName(modifier = Modifier.weight(1f), name = item.name, id = item.id)
 
         // Content-sized so the weighted name above pushes it to the right edge.
@@ -304,7 +308,8 @@ private fun StockItemCompactPreview(
                     name = "Galletas María",
                     hints = item.hints,
                     consumptionDate = item.consumptionDate,
-                    quantity = "3 Packs"
+                    quantity = "3 Packs",
+                    pictureUrl = null
                 )
             )
         }
@@ -324,7 +329,8 @@ private fun StockItemRowPreview() {
                         id = 1, name = "Galletas María",
                         hints = listOf("2 paquetes", "1 abierto"),
                         consumptionDate = ConsumptionDateUi(ConsumptionType.PREFERENCE, "En 12 días", expired = false),
-                        quantity = "2 paquetes"
+                        quantity = "2 paquetes",
+                        pictureUrl = null
                     )
                 )
                 HorizontalDivider()
@@ -335,7 +341,8 @@ private fun StockItemRowPreview() {
                         id = 2, name = "Yogur natural",
                         hints = listOf("8 unidades", "2 abiertos"),
                         consumptionDate = ConsumptionDateUi(ConsumptionType.EXPIRATION, "En 2 días", expired = false),
-                        quantity = "3 uds"
+                        quantity = "3 uds",
+                        pictureUrl = null
                     )
                 )
                 HorizontalDivider()
@@ -346,7 +353,8 @@ private fun StockItemRowPreview() {
                         id = 3, name = "Leche entera",
                         hints = listOf("3 briks", "1 abierto"),
                         consumptionDate = ConsumptionDateUi(ConsumptionType.EXPIRATION, "Hace 1 día", expired = true),
-                        quantity = "2 uds"
+                        quantity = "2 uds",
+                        pictureUrl = null
                     )
                 )
             }
@@ -368,8 +376,13 @@ private fun StockItemSkeletonPreview() {
                             id = 0,
                             name = "Galletas María",
                             hints = listOf("1 abierto"),
-                            consumptionDate = ConsumptionDateUi(ConsumptionType.PREFERENCE, "En 2 días", expired = false),
-                            quantity = "3 Packs"
+                            consumptionDate = ConsumptionDateUi(
+                                ConsumptionType.PREFERENCE,
+                                "En 2 días",
+                                expired = false
+                            ),
+                            quantity = "3 Packs",
+                            pictureUrl = null
                         )
                     )
                     HorizontalDivider()
@@ -381,7 +394,8 @@ private fun StockItemSkeletonPreview() {
                             name = "Yogur natural",
                             hints = listOf("8 unidades", "2 abiertos"),
                             consumptionDate = ConsumptionDateUi(ConsumptionType.EXPIRATION, "En 2 días", expired = false),
-                            quantity = "3 uds"
+                            quantity = "3 uds",
+                            pictureUrl = null
                         )
                     )
                 }

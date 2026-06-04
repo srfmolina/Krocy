@@ -204,13 +204,13 @@ private fun StockList(
  * hint counts and an expiry chip), so the placeholder matches the real list's shape.
  */
 private val skeletonPlaceholders: List<StockItemUi> = listOf(
-    StockItemUi(0, "Galletas María", listOf("1 abierto"), ConsumptionDateUi(ConsumptionType.PREFERENCE, "En 2 días", false), "3 Packs"),
-    StockItemUi(1, "Yogur natural", listOf("8 unidades", "2 abiertos"), ConsumptionDateUi(ConsumptionType.EXPIRATION, "En 2 días", false), "3 uds"),
-    StockItemUi(2, "Leche entera", listOf("3 briks"), ConsumptionDateUi(ConsumptionType.EXPIRATION, "Hace 1 día", true), "2 uds"),
-    StockItemUi(3, "Pan de molde", emptyList(), null, "1 paquete"),
-    StockItemUi(4, "Queso curado", listOf("1 abierto"), ConsumptionDateUi(ConsumptionType.PREFERENCE, "En 12 días", false), "250 g"),
-    StockItemUi(5, "Huevos camperos", listOf("6 unidades"), null, "1 docena"),
-    StockItemUi(6, "Mantequilla", emptyList(), ConsumptionDateUi(ConsumptionType.EXPIRATION, "En 5 días", false), "1 ud"),
+    StockItemUi(0, "Galletas María", listOf("1 abierto"), ConsumptionDateUi(ConsumptionType.PREFERENCE, "En 2 días", false), "3 Packs", null),
+    StockItemUi(1, "Yogur natural", listOf("8 unidades", "2 abiertos"), ConsumptionDateUi(ConsumptionType.EXPIRATION, "En 2 días", false), "3 uds", null),
+    StockItemUi(2, "Leche entera", listOf("3 briks"), ConsumptionDateUi(ConsumptionType.EXPIRATION, "Hace 1 día", true), "2 uds", null),
+    StockItemUi(3, "Pan de molde", emptyList(), null, "1 paquete", null),
+    StockItemUi(4, "Queso curado", listOf("1 abierto"), ConsumptionDateUi(ConsumptionType.PREFERENCE, "En 12 días", false), "250 g", null),
+    StockItemUi(5, "Huevos camperos", listOf("6 unidades"), null, "1 docena", null),
+    StockItemUi(6, "Mantequilla", emptyList(), ConsumptionDateUi(ConsumptionType.EXPIRATION, "En 5 días", false), "1 ud", null),
 )
 
 @PreviewLightDark
@@ -260,7 +260,8 @@ private fun StockScreenPreview() {
                         } else {
                             null
                         },
-                        quantity = "3 Packs"
+                        quantity = "3 Packs",
+                        pictureUrl = null
                     )
                 }
             )

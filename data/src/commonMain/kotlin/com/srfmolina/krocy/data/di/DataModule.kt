@@ -35,6 +35,6 @@ val dataModule = module {
     single<GenericEntityDataSource> { GenericEntityDataSourceImpl(get()) }
 
     single<KrocyItemRepository> { KrocyItemRepositoryImpl(get()) }
-    single<StockRepository> { StockRepositoryImpl(get(), get()) }
+    single<StockRepository> { StockRepositoryImpl(get(), get(), baseUrl) }
 
 }

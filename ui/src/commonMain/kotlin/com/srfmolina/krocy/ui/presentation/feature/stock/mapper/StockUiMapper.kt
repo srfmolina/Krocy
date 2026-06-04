@@ -14,7 +14,8 @@ internal fun StockItem.toUi(): StockItemUi = StockItemUi(
     name = name,
     hints = hints,
     consumptionDate = consumptionDate?.toUi(),
-    quantity = quantity
+    quantity = quantity,
+    pictureUrl = pictureUrl
 )
 
 private fun ConsumptionDate.toUi(): ConsumptionDateUi = ConsumptionDateUi(

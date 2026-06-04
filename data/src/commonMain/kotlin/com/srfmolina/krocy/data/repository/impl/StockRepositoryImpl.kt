@@ -14,7 +14,8 @@ import kotlinx.coroutines.sync.withLock
 
 internal class StockRepositoryImpl(
     private val stockDataSource: StockDataSource,
-    private val genericEntityDataSource: GenericEntityDataSource
+    private val genericEntityDataSource: GenericEntityDataSource,
+    private val baseUrl: String
 ) : StockRepository {
 
     private val _cache = MutableStateFlow<List<StockItem>>(emptyList())
@@ -59,7 +60,7 @@ internal class StockRepositoryImpl(
                 }
                 val singularName = quDto?.name ?: "ud"
                 val pluralName = quDto?.namePlural ?: "uds"
-                stockDto.toDomain(quantityNames = Pair(singularName, pluralName))
+                stockDto.toDomain(quantityNames = Pair(singularName, pluralName), baseUrl = baseUrl)
             } } }
         loaded = true
     }
