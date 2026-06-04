@@ -133,7 +133,7 @@ private fun StockItemName(
  */
 @Composable
 private fun StockItemMenu(actions: List<LabeledActionUi>, id: Int) {
-    if (LocalSkeletonState.current.isActive) {
+    if (LocalSkeletonState.current.targets(id)) {
         Box(Modifier.size(MaterialTheme.spacing.s12).skeleton(CircleShape, id = id))
     } else {
         TheeDotsMenuButton(actions = actions)

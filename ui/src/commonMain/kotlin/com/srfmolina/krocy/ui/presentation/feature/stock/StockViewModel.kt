@@ -36,7 +36,7 @@ internal class StockViewModel(
 
     data class State(
         val isLoading: Boolean = true,
-        val isLoadingItem: Int? = null,
+        val loadingItemIds: Set<Int> = emptySet(),
         val items: List<StockItemUi> = emptyList()
     ) : UiState
 
@@ -57,24 +57,30 @@ internal class StockViewModel(
 
     private fun getStock() = observeStockUseCase().onEach { result ->
         result.onSuccess { items ->
-            setState { copy(isLoading = false, isLoadingItem = null, items = items.map { it.toUi() }) }
+            setState { copy(isLoading = false, items = items.map { it.toUi() }) }
         }.onFailure {
-            setState { copy(isLoading = false, isLoadingItem = null) }
+            setState { copy(isLoading = false) }
         }
     }.launchIn(viewModelScope)
 
     private suspend fun consume(productId: Int, amount: Int) {
-        setState { copy(isLoadingItem = productId) }
-        consumeStockUseCase(BasicStockUCRequest(productId, amount))  //TODO: consume loading animation
+        setState { copy(loadingItemIds = loadingItemIds + productId) }
+        val result = consumeStockUseCase(BasicStockUCRequest(productId, amount))
+        setState { copy(loadingItemIds = loadingItemIds - productId) }
+        result.onFailure { /* TODO: surface error effect */ }
     }
 
     private suspend fun add(productId: Int, amount: Int) {
-        setState { copy(isLoadingItem = productId) }
-        addStockUseCase(BasicStockUCRequest(productId, amount))  //TODO: add loading animation
+        setState { copy(loadingItemIds = loadingItemIds + productId) }
+        val result = addStockUseCase(BasicStockUCRequest(productId, amount))
+        setState { copy(loadingItemIds = loadingItemIds - productId) }
+        result.onFailure { /* TODO: surface error effect */ }
     }
 
     private suspend fun open(productId: Int, amount: Int) {
-        setState { copy(isLoadingItem = productId) }
-        openStockUseCase(BasicStockUCRequest(productId, amount))  //TODO: open loading animation
+        setState { copy(loadingItemIds = loadingItemIds + productId) }
+        val result = openStockUseCase(BasicStockUCRequest(productId, amount))
+        setState { copy(loadingItemIds = loadingItemIds - productId) }
+        result.onFailure { /* TODO: surface error effect */ }
     }
 }

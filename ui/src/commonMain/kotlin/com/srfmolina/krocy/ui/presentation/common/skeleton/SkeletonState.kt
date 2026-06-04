@@ -24,9 +24,15 @@ import androidx.compose.runtime.staticCompositionLocalOf
 @Immutable
 class SkeletonState(
     val isActive: Boolean,
-    val targetIds: List<Int>? = null,
-    val progress: State<Float>?
-)
+    val progress: State<Float>?,
+    val targetIds: Set<Int>? = null
+) {
+    /**
+     * True when a node identified by [id] should render its skeleton placeholder: the skeleton must
+     * be active, and either untargeted ([targetIds] null = every node) or this [id] is targeted.
+     */
+    fun targets(id: Int?): Boolean = isActive && (targetIds == null || id in targetIds)
+}
 
 val LocalSkeletonState = staticCompositionLocalOf { SkeletonState(isActive = false, progress = null) }
 
@@ -37,7 +43,7 @@ val LocalSkeletonState = staticCompositionLocalOf { SkeletonState(isActive = fal
 @Composable
 fun ProvideSkeleton(
     active: Boolean,
-    targetIds: List<Int>? = null,
+    targetIds: Set<Int>? = null,
     content: @Composable () -> Unit
 ) {
     val skeletonState = if (active) {
@@ -54,7 +60,9 @@ fun ProvideSkeleton(
             ),
             label = "shimmer"
         )
-        remember(progress) { SkeletonState(isActive = true, progress = progress, targetIds = targetIds) }
+        remember(progress, targetIds) {
+            SkeletonState(isActive = true, progress = progress, targetIds = targetIds)
+        }
     } else {
         SkeletonState(isActive = false, progress = null)
     }

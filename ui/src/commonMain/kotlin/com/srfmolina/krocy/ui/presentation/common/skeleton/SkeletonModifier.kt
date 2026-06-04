@@ -30,9 +30,7 @@ import androidx.compose.ui.layout.positionInWindow
 fun Modifier.skeleton(shape: Shape = SkeletonDefaults.Shape, id: Int? = null): Modifier {
     val state = LocalSkeletonState.current
     val progress = state.progress
-    val targetedLoading = state.targetIds != null
-    if (targetedLoading && !state.targetIds.contains(id)) return this
-    if (!state.isActive || progress == null) return this
+    if (!state.targets(id) || progress == null) return this
 
     val base = SkeletonDefaults.baseColor
     val highlight = SkeletonDefaults.highlightColor
