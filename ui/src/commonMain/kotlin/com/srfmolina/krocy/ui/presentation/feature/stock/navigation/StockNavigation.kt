@@ -6,6 +6,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockScreen
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationItemUi
 import com.srfmolina.krocy.ui.presentation.navigation.StockRoute
@@ -17,11 +18,13 @@ internal fun NavController.navigateToStock(
 
 internal fun NavGraphBuilder.stockScreen(
     onChangeTopBar: (TopBarConfigurationUi) -> Unit,
+    onChangeFab: (FabConfigurationUi) -> Unit,
     onOpenNavRail: () -> Unit
 ) {
     composable<StockRoute> {
         StockScreen(
             onChangeTopBar = onChangeTopBar,
+            onChangeFab =onChangeFab,
             onOpenNavRail = onOpenNavRail
         )
     }

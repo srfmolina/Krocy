@@ -1,7 +1,6 @@
 package com.srfmolina.krocy.ui.presentation.feature.stock
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -22,13 +21,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.srfmolina.krocy.domain.model.common.ConsumptionType
-import com.srfmolina.krocy.ui.presentation.common.KrocyFabMenu
 import com.srfmolina.krocy.ui.presentation.common.model.ConsumptionDateUi
+import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
 import com.srfmolina.krocy.ui.presentation.common.model.LabeledActionUi
 import com.srfmolina.krocy.ui.presentation.common.skeleton.ProvideSkeleton
@@ -47,10 +45,17 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 internal fun StockScreen(
     onChangeTopBar: (TopBarConfigurationUi) -> Unit,
+    onChangeFab: (FabConfigurationUi) -> Unit,
     onOpenNavRail: () -> Unit
 ) {
     val viewModel: StockViewModel = koinViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
+    val fabVisible by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex == 0 || !listState.canScrollForward
+        }
+    }
 
     LaunchedEffect(Unit) {
         onChangeTopBar(TopBarConfigurationUi(
@@ -65,14 +70,28 @@ internal fun StockScreen(
         viewModel.launchEvent(Event.Init)
     }
 
+    LaunchedEffect(state.isLoading, fabVisible) {
+        onChangeFab(FabConfigurationUi(
+            isVisible = !state.isLoading && fabVisible,
+            actions = listOf(
+                LabeledActionUi(
+                    label = "Actualizar",
+                    contentDescription = "Acción de refrescar datos",
+                    icon = Icons.Default.Refresh,
+                    onClick = { viewModel.launchEvent(Event.OnRefresh) }
+                )
+            )
+        ))
+    }
+
     StockScreen(
         isLoading = state.isLoading,
         loadingItemIds = state.loadingItemIds,
+        listState = listState,
         items = state.items,
         onConsume = { productId -> viewModel.launchEvent(Event.OnConsumeOne(productId)) },
         onAdd = { productId -> viewModel.launchEvent(Event.OnAddOne(productId)) },
         onOpen = { productId -> viewModel.launchEvent(Event.OnOpenOne(productId)) },
-        onRefresh = { viewModel.launchEvent(Event.OnRefresh) }
     )
 }
 
@@ -81,55 +100,31 @@ internal fun StockScreen(
 private fun StockScreen(
     isLoading: Boolean,
     loadingItemIds: Set<Int>,
+    listState: LazyListState,
     items: List<StockItemUi>,
     onConsume: (Int) -> Unit,
     onAdd: (Int) -> Unit,
     onOpen: (Int) -> Unit,
-    onRefresh: () -> Unit
 ) {
-    val listState = rememberLazyListState()
-    val fabVisible by remember {
-        derivedStateOf {
-            listState.firstVisibleItemIndex == 0 || !listState.canScrollForward
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        SkeletonTransitionAnimation(
-            isLoading = isLoading
-        ) { loading ->
-            if (loading) {
-                ProvideSkeleton(active = true) {
-                    StockList(items = skeletonPlaceholders, onConsume = {}, onAdd = {}, onOpen = {})
-                }
-            } else {
-                ProvideSkeleton(active = loadingItemIds.isNotEmpty(), targetIds = loadingItemIds) {
-                    StockList(
-                        items = items,
-                        listState = listState,
-                        contentPadding = PaddingValues(bottom = MaterialTheme.spacing.s28),
-                        onConsume = onConsume,
-                        onAdd = onAdd,
-                        onOpen = onOpen
-                    )
-                }
+    SkeletonTransitionAnimation(
+        isLoading = isLoading
+    ) { loading ->
+        if (loading) {
+            ProvideSkeleton(active = true) {
+                StockList(items = skeletonPlaceholders, onConsume = {}, onAdd = {}, onOpen = {})
+            }
+        } else {
+            ProvideSkeleton(active = loadingItemIds.isNotEmpty(), targetIds = loadingItemIds) {
+                StockList(
+                    items = items,
+                    listState = listState,
+                    contentPadding = PaddingValues(bottom = MaterialTheme.spacing.s28),
+                    onConsume = onConsume,
+                    onAdd = onAdd,
+                    onOpen = onOpen
+                )
             }
         }
-
-        KrocyFabMenu(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(MaterialTheme.spacing.s4),
-            visible = !isLoading && fabVisible,
-            actions = listOf(
-                LabeledActionUi(
-                    label = "Actualizar",
-                    contentDescription = "Acción de refrescar datos",
-                    icon = Icons.Default.Refresh,
-                    onClick = onRefresh
-                )
-            )
-        )
     }
 }
 
@@ -206,7 +201,6 @@ private fun StockScreenPreview() {
                 onConsume = {},
                 onAdd = {},
                 onOpen = {},
-                onRefresh = {},
                 items = List(15) {
                     StockItemUi(
                         id = (1..1000).random(),
@@ -246,7 +240,8 @@ private fun StockScreenPreview() {
                         quantity = "3 Packs",
                         pictureUrl = null
                     )
-                }
+                },
+                listState = rememberLazyListState()
             )
         }
     }
@@ -263,8 +258,8 @@ private fun StockScreenSkeletonPreview() {
                 onConsume = {},
                 onAdd = {},
                 onOpen = {},
-                onRefresh = {},
-                items = emptyList()
+                items = emptyList(),
+                listState = rememberLazyListState()
             )
         }
     }

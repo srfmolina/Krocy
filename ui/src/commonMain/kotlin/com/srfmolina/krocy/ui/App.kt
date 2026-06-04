@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
@@ -11,12 +12,15 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.navOptions
 import com.srfmolina.krocy.ui.AppViewModel.Effect
 import com.srfmolina.krocy.ui.AppViewModel.Event
+import com.srfmolina.krocy.ui.presentation.common.KrocyFabMenu
+import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.feature.welcome.navigation.navigateToWelcome
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationComponent
 import com.srfmolina.krocy.ui.presentation.navigation.SplashRoute
@@ -25,8 +29,10 @@ import com.srfmolina.krocy.ui.presentation.navigation.component.rail.model.appRa
 import com.srfmolina.krocy.ui.presentation.navigation.component.rail.model.currentRailRoute
 import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.MediumTopBar
 import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.SmallTopBar
+import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarTypeUi
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
+import com.srfmolina.krocy.ui.presentation.theme.spacing
 import kotlinx.coroutines.flow.first
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -74,10 +80,32 @@ fun App() {
                 compactExpanded = state.isNavRailOpen,
                 onCompactDismiss = { viewModel.launchEvent(Event.OnChangeNavRailStatus(false)) },
             ) {
-                MainContent(scrollBehavior, state, viewModel, navControllerState, onOpenNavRail = { viewModel.launchEvent(Event.OnChangeNavRailStatus(true)) })
+                MainContent(
+                    scrollBehavior,
+                    state,
+                    navControllerState,
+                    onOpenNavRail = { viewModel.launchEvent(Event.OnChangeNavRailStatus(true)) },
+                    onChangeTopBar = { config ->
+                        viewModel.launchEvent(Event.OnTopBarChange(config))
+                    },
+                    onChangeFab = { config ->
+                        viewModel.launchEvent(Event.OnFabChange(config))
+                    }
+                )
             }
         } else {
-            MainContent(scrollBehavior, state, viewModel, navControllerState, onOpenNavRail = { viewModel.launchEvent(Event.OnChangeNavRailStatus(true)) })
+            MainContent(
+                scrollBehavior,
+                state,
+                navControllerState,
+                onOpenNavRail = { viewModel.launchEvent(Event.OnChangeNavRailStatus(true)) },
+                onChangeTopBar = { config ->
+                    viewModel.launchEvent(Event.OnTopBarChange(config))
+                },
+                onChangeFab = { config ->
+                    viewModel.launchEvent(Event.OnFabChange(config))
+                }
+            )
         }
     }
 }
@@ -87,9 +115,10 @@ fun App() {
 private fun MainContent(
     scrollBehavior: TopAppBarScrollBehavior?,
     vmState: AppViewModel.State,
-    viewModel: AppViewModel,
     state: AppState,
     onOpenNavRail: () -> Unit,
+    onChangeTopBar: (TopBarConfigurationUi) -> Unit,
+    onChangeFab: (FabConfigurationUi) -> Unit
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize().then(
@@ -127,11 +156,20 @@ private fun MainContent(
         ) {
             NavigationComponent(
                 navController = state.navController,
-                onChangeTopBar = { config ->
-                    viewModel.launchEvent(Event.OnTopBarChange(config))
-                },
+                onChangeTopBar = onChangeTopBar,
+                onChangeFab = onChangeFab,
                 onOpenNavRail = onOpenNavRail
             )
+
+            vmState.fabConfig?.let {
+                KrocyFabMenu(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(MaterialTheme.spacing.s4),
+                    visible = it.isVisible,
+                    actions = it.actions
+                )
+            }
         }
     }
 }
