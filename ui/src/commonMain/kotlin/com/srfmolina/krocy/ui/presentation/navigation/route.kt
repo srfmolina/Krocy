@@ -15,3 +15,6 @@ data object LoginRoute: KrocyRoute
 
 @Serializable
 data object StockRoute: KrocyRoute
+
+@Serializable
+data object CreateProductRoute: KrocyRoute

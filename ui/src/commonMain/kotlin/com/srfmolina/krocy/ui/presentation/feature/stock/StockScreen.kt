@@ -1,6 +1,7 @@
 package com.srfmolina.krocy.ui.presentation.feature.stock
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -10,17 +11,21 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddBox
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,6 +44,8 @@ import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.Top
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 import com.srfmolina.krocy.ui.presentation.theme.isCompact
 import com.srfmolina.krocy.ui.presentation.theme.spacing
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import org.koin.compose.viewmodel.koinViewModel
 
 
@@ -46,10 +53,15 @@ import org.koin.compose.viewmodel.koinViewModel
 internal fun StockScreen(
     onChangeTopBar: (TopBarConfigurationUi) -> Unit,
     onChangeFab: (FabConfigurationUi) -> Unit,
-    onOpenNavRail: () -> Unit
+    onOpenNavRail: () -> Unit,
+    onNavigateToCreateProduct: () -> Unit,
+    createdProductNameFlow: StateFlow<String?> = remember { MutableStateFlow(null) },
+    onCreatedProductNameConsumed: () -> Unit = {},
 ) {
     val viewModel: StockViewModel = koinViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val createdProductName by createdProductNameFlow.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
     val fabVisible by remember {
         derivedStateOf {
@@ -75,6 +87,12 @@ internal fun StockScreen(
             isVisible = !state.isLoading && fabVisible,
             actions = listOf(
                 LabeledActionUi(
+                    label = "Añadir producto",
+                    contentDescription = "Crear un nuevo producto",
+                    icon = Icons.Filled.AddBox,
+                    onClick = onNavigateToCreateProduct
+                ),
+                LabeledActionUi(
                     label = "Actualizar",
                     contentDescription = "Acción de refrescar datos",
                     icon = Icons.Default.Refresh,
@@ -84,15 +102,31 @@ internal fun StockScreen(
         ))
     }
 
-    StockScreen(
-        isLoading = state.isLoading,
-        loadingItemIds = state.loadingItemIds,
-        listState = listState,
-        items = state.items,
-        onConsume = { productId -> viewModel.launchEvent(Event.OnConsumeOne(productId)) },
-        onAdd = { productId -> viewModel.launchEvent(Event.OnAddOne(productId)) },
-        onOpen = { productId -> viewModel.launchEvent(Event.OnOpenOne(productId)) },
-    )
+    LaunchedEffect(createdProductName) {
+        createdProductName?.let { name ->
+            snackbarHostState.showSnackbar("\"$name\" creado")
+            onCreatedProductNameConsumed()
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        StockScreen(
+            isLoading = state.isLoading,
+            loadingItemIds = state.loadingItemIds,
+            listState = listState,
+            items = state.items,
+            onConsume = { productId -> viewModel.launchEvent(Event.OnConsumeOne(productId)) },
+            onAdd = { productId -> viewModel.launchEvent(Event.OnAddOne(productId)) },
+            onOpen = { productId -> viewModel.launchEvent(Event.OnOpenOne(productId)) },
+        )
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(MaterialTheme.spacing.s4),
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
