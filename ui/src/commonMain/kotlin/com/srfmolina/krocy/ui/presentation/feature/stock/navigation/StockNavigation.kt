@@ -7,6 +7,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
+import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockScreen
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationItemUi
 import com.srfmolina.krocy.ui.presentation.navigation.StockRoute
@@ -23,7 +24,8 @@ internal fun NavGraphBuilder.stockScreen(
     onChangeTopBar: (TopBarConfigurationUi) -> Unit,
     onChangeFab: (FabConfigurationUi) -> Unit,
     onOpenNavRail: () -> Unit,
-    onNavigateToCreateProduct: () -> Unit
+    onNavigateToCreateProduct: () -> Unit,
+    onShowSnackbar: (SnackbarConfigurationUi) -> Unit
 ) {
     composable<StockRoute> { entry ->
         val savedStateHandle = entry.savedStateHandle
@@ -32,6 +34,7 @@ internal fun NavGraphBuilder.stockScreen(
             onChangeFab = onChangeFab,
             onOpenNavRail = onOpenNavRail,
             onNavigateToCreateProduct = onNavigateToCreateProduct,
+            onShowSnackbar = onShowSnackbar,
             createdProductNameFlow = savedStateHandle.getStateFlow<String?>(CREATED_PRODUCT_NAME_KEY, null),
             onCreatedProductNameConsumed = { savedStateHandle[CREATED_PRODUCT_NAME_KEY] = null }
         )

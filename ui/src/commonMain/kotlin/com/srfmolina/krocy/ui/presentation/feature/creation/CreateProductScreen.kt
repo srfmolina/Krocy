@@ -28,8 +28,6 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,6 +46,8 @@ import com.srfmolina.krocy.ui.presentation.common.KrocyDropdownField
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
 import com.srfmolina.krocy.ui.presentation.common.model.SelectableOptionUi
+import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
+import com.srfmolina.krocy.ui.presentation.common.model.SnackbarTypeUi
 import com.srfmolina.krocy.ui.presentation.feature.creation.CreateProductViewModel.Effect
 import com.srfmolina.krocy.ui.presentation.feature.creation.CreateProductViewModel.Event
 import com.srfmolina.krocy.ui.presentation.feature.creation.CreateProductViewModel.State
@@ -64,10 +64,10 @@ internal fun CreateProductScreen(
     onProductCreated: (String) -> Unit,
     onChangeTopBar: (TopBarConfigurationUi) -> Unit,
     onChangeFab: (FabConfigurationUi) -> Unit,
+    onShowSnackbar: (SnackbarConfigurationUi) -> Unit,
 ) {
     val viewModel: CreateProductViewModel = koinViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         onChangeTopBar(
@@ -90,14 +90,15 @@ internal fun CreateProductScreen(
         viewModel.effect.collect { effect ->
             when (effect) {
                 is Effect.ProductCreated -> onProductCreated(effect.name)
-                is Effect.ShowError -> snackbarHostState.showSnackbar(effect.message)
+                is Effect.ShowError -> onShowSnackbar(
+                    SnackbarConfigurationUi(message = effect.message, type = SnackbarTypeUi.ERROR)
+                )
             }
         }
     }
 
     CreateProductContent(
         state = state,
-        snackbarHostState = snackbarHostState,
         onRetry = { viewModel.launchEvent(Event.OnRetryLoadOptions) },
         onNameChange = { viewModel.launchEvent(Event.OnNameChange(it)) },
         onDescriptionChange = { viewModel.launchEvent(Event.OnDescriptionChange(it)) },
@@ -113,7 +114,6 @@ internal fun CreateProductScreen(
 @Composable
 private fun CreateProductContent(
     state: State,
-    snackbarHostState: SnackbarHostState,
     onRetry: () -> Unit,
     onNameChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
@@ -124,28 +124,19 @@ private fun CreateProductContent(
     onMinStockChange: (String) -> Unit,
     onSubmit: () -> Unit,
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        when {
-            state.isLoadingOptions -> LoadingOptions()
-            state.optionsError -> OptionsError(onRetry = onRetry)
-            else -> CreateProductForm(
-                state = state,
-                onNameChange = onNameChange,
-                onDescriptionChange = onDescriptionChange,
-                onStockUnitSelected = onStockUnitSelected,
-                onPurchaseUnitSelected = onPurchaseUnitSelected,
-                onLocationSelected = onLocationSelected,
-                onProductGroupSelected = onProductGroupSelected,
-                onMinStockChange = onMinStockChange,
-                onSubmit = onSubmit,
-            )
-        }
-
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(MaterialTheme.spacing.s4),
+    when {
+        state.isLoadingOptions -> LoadingOptions()
+        state.optionsError -> OptionsError(onRetry = onRetry)
+        else -> CreateProductForm(
+            state = state,
+            onNameChange = onNameChange,
+            onDescriptionChange = onDescriptionChange,
+            onStockUnitSelected = onStockUnitSelected,
+            onPurchaseUnitSelected = onPurchaseUnitSelected,
+            onLocationSelected = onLocationSelected,
+            onProductGroupSelected = onProductGroupSelected,
+            onMinStockChange = onMinStockChange,
+            onSubmit = onSubmit,
         )
     }
 }
@@ -347,7 +338,6 @@ private fun CreateProductFormPreview() {
                     purchaseUnitId = 2,
                     locationId = 11,
                 ),
-                snackbarHostState = remember { SnackbarHostState() },
                 onRetry = {},
                 onNameChange = {},
                 onDescriptionChange = {},
@@ -369,7 +359,6 @@ private fun CreateProductLoadingPreview() {
         Surface {
             CreateProductContent(
                 state = State(isLoadingOptions = true),
-                snackbarHostState = remember { SnackbarHostState() },
                 onRetry = {},
                 onNameChange = {},
                 onDescriptionChange = {},
@@ -391,7 +380,6 @@ private fun CreateProductErrorPreview() {
         Surface {
             CreateProductContent(
                 state = State(isLoadingOptions = false, optionsError = true),
-                snackbarHostState = remember { SnackbarHostState() },
                 onRetry = {},
                 onNameChange = {},
                 onDescriptionChange = {},

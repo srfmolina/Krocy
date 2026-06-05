@@ -1,7 +1,6 @@
 package com.srfmolina.krocy.ui.presentation.feature.stock
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -17,15 +16,12 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,6 +30,7 @@ import com.srfmolina.krocy.ui.presentation.common.model.ConsumptionDateUi
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
 import com.srfmolina.krocy.ui.presentation.common.model.LabeledActionUi
+import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.skeleton.ProvideSkeleton
 import com.srfmolina.krocy.ui.presentation.common.skeleton.SkeletonTransitionAnimation
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockViewModel.Event
@@ -55,13 +52,13 @@ internal fun StockScreen(
     onChangeFab: (FabConfigurationUi) -> Unit,
     onOpenNavRail: () -> Unit,
     onNavigateToCreateProduct: () -> Unit,
+    onShowSnackbar: (SnackbarConfigurationUi) -> Unit,
     createdProductNameFlow: StateFlow<String?> = remember { MutableStateFlow(null) },
     onCreatedProductNameConsumed: () -> Unit = {},
 ) {
     val viewModel: StockViewModel = koinViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val createdProductName by createdProductNameFlow.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
     val fabVisible by remember {
         derivedStateOf {
@@ -104,29 +101,20 @@ internal fun StockScreen(
 
     LaunchedEffect(createdProductName) {
         createdProductName?.let { name ->
-            snackbarHostState.showSnackbar("\"$name\" creado")
+            onShowSnackbar(SnackbarConfigurationUi(message = "\"$name\" creado"))
             onCreatedProductNameConsumed()
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        StockScreen(
-            isLoading = state.isLoading,
-            loadingItemIds = state.loadingItemIds,
-            listState = listState,
-            items = state.items,
-            onConsume = { productId -> viewModel.launchEvent(Event.OnConsumeOne(productId)) },
-            onAdd = { productId -> viewModel.launchEvent(Event.OnAddOne(productId)) },
-            onOpen = { productId -> viewModel.launchEvent(Event.OnOpenOne(productId)) },
-        )
-
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(MaterialTheme.spacing.s4),
-        )
-    }
+    StockScreen(
+        isLoading = state.isLoading,
+        loadingItemIds = state.loadingItemIds,
+        listState = listState,
+        items = state.items,
+        onConsume = { productId -> viewModel.launchEvent(Event.OnConsumeOne(productId)) },
+        onAdd = { productId -> viewModel.launchEvent(Event.OnAddOne(productId)) },
+        onOpen = { productId -> viewModel.launchEvent(Event.OnOpenOne(productId)) },
+    )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)

@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
+import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.feature.creation.CreateProductScreen
 import com.srfmolina.krocy.ui.presentation.feature.stock.navigation.CREATED_PRODUCT_NAME_KEY
 import com.srfmolina.krocy.ui.presentation.navigation.CreateProductRoute
@@ -18,6 +19,7 @@ internal fun NavGraphBuilder.createProductScreen(
     navController: NavController,
     onChangeTopBar: (TopBarConfigurationUi) -> Unit,
     onChangeFab: (FabConfigurationUi) -> Unit,
+    onShowSnackbar: (SnackbarConfigurationUi) -> Unit,
 ) {
     composable<CreateProductRoute> {
         CreateProductScreen(
@@ -29,6 +31,7 @@ internal fun NavGraphBuilder.createProductScreen(
             },
             onChangeTopBar = onChangeTopBar,
             onChangeFab = onChangeFab,
+            onShowSnackbar = onShowSnackbar,
         )
     }
 }
