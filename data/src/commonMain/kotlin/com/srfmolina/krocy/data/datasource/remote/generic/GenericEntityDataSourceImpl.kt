@@ -8,4 +8,19 @@ internal class GenericEntityDataSourceImpl(private val api: GenericEntityInterac
     override suspend fun getQuantityUnits(): Result<List<ObjectsEntityGet200ResponseInner>> = runCatching {
         api.objectsEntityGet(entity = ExposedEntity.quantity_units).body()
     }
+
+    override suspend fun getLocations(): Result<List<ObjectsEntityGet200ResponseInner>> = runCatching {
+        api.objectsEntityGet(entity = ExposedEntity.locations).body()
+    }
+
+    override suspend fun getProductGroups(): Result<List<ObjectsEntityGet200ResponseInner>> = runCatching {
+        api.objectsEntityGet(entity = ExposedEntity.product_groups).body()
+    }
+
+    override suspend fun createProduct(body: ObjectsEntityGet200ResponseInner): Result<Int> = runCatching {
+        api.objectsEntityPost(
+            entity = ExposedEntity.products,
+            objectsEntityGet200ResponseInner = body
+        ).body().createdObjectId ?: error("Grocy did not return a created object id")
+    }
 }
