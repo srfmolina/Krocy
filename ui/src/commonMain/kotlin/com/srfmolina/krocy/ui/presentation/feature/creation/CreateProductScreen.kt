@@ -42,12 +42,15 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.srfmolina.krocy.ui.presentation.common.FormSection
-import com.srfmolina.krocy.ui.presentation.common.KrocyDropdownField
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
 import com.srfmolina.krocy.ui.presentation.common.model.SelectableOptionUi
 import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.SnackbarTypeUi
+import com.srfmolina.krocy.ui.presentation.common.selector.OptionSelector
+import com.srfmolina.krocy.ui.presentation.common.selector.group.ProductGroupSelectorViewModel
+import com.srfmolina.krocy.ui.presentation.common.selector.location.LocationSelectorViewModel
+import com.srfmolina.krocy.ui.presentation.common.selector.stock.unit.StockUnitSelectorViewModel
 import com.srfmolina.krocy.ui.presentation.feature.creation.CreateProductViewModel.Effect
 import com.srfmolina.krocy.ui.presentation.feature.creation.CreateProductViewModel.Event
 import com.srfmolina.krocy.ui.presentation.feature.creation.CreateProductViewModel.State
@@ -83,7 +86,6 @@ internal fun CreateProductScreen(
         )
         // The create screen has its own bottom button, so hide the global FAB carried over from Stock.
         onChangeFab(FabConfigurationUi(isVisible = false, actions = emptyList()))
-        viewModel.launchEvent(Event.Init)
     }
 
     LaunchedEffect(Unit) {
@@ -99,7 +101,7 @@ internal fun CreateProductScreen(
 
     CreateProductContent(
         state = state,
-        onRetry = { viewModel.launchEvent(Event.OnRetryLoadOptions) },
+        onRetry = { TODO("Not yet implemented") },
         onNameChange = { viewModel.launchEvent(Event.OnNameChange(it)) },
         onDescriptionChange = { viewModel.launchEvent(Event.OnDescriptionChange(it)) },
         onStockUnitSelected = { it?.let { id -> viewModel.launchEvent(Event.OnStockUnitSelected(id)) } },
@@ -124,21 +126,18 @@ private fun CreateProductContent(
     onMinStockChange: (String) -> Unit,
     onSubmit: () -> Unit,
 ) {
-    when {
-        state.isLoadingOptions -> LoadingOptions()
-        state.optionsError -> OptionsError(onRetry = onRetry)
-        else -> CreateProductForm(
-            state = state,
-            onNameChange = onNameChange,
-            onDescriptionChange = onDescriptionChange,
-            onStockUnitSelected = onStockUnitSelected,
-            onPurchaseUnitSelected = onPurchaseUnitSelected,
-            onLocationSelected = onLocationSelected,
-            onProductGroupSelected = onProductGroupSelected,
-            onMinStockChange = onMinStockChange,
-            onSubmit = onSubmit,
-        )
-    }
+    CreateProductForm(
+        state = state,
+        onNameChange = onNameChange,
+        onDescriptionChange = onDescriptionChange,
+        onStockUnitSelected = onStockUnitSelected,
+        onPurchaseUnitSelected = onPurchaseUnitSelected,
+        onLocationSelected = onLocationSelected,
+        onProductGroupSelected = onProductGroupSelected,
+        onMinStockChange = onMinStockChange,
+        onSubmit = onSubmit,
+    )
+
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -184,6 +183,11 @@ private fun CreateProductForm(
     onMinStockChange: (String) -> Unit,
     onSubmit: () -> Unit,
 ) {
+
+    val stockUnitSelectorViewModel: StockUnitSelectorViewModel = koinViewModel()
+    val locationSelectorViewModel: LocationSelectorViewModel = koinViewModel()
+    val productGroupSelectorViewModel: ProductGroupSelectorViewModel = koinViewModel()
+
     val contentModifier = if (MaterialTheme.isCompact) {
         Modifier.fillMaxWidth()
     } else {
@@ -231,41 +235,37 @@ private fun CreateProductForm(
 
                 FormSection(title = "Unidades") {
                     Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s3)) {
-                        KrocyDropdownField(
+                        OptionSelector(
+                            viewModel = stockUnitSelectorViewModel,
                             label = "Stock",
-                            options = state.quantityUnits,
-                            selectedId = state.stockUnitId,
-                            onSelected = onStockUnitSelected,
-                            required = true,
+                            selectedId = state.selectedStockUnitId,
+                            onOptionSelected = onStockUnitSelected,
                             modifier = Modifier.weight(1f),
                         )
-                        KrocyDropdownField(
-                            label = "Compra",
-                            options = state.quantityUnits,
-                            selectedId = state.purchaseUnitId,
-                            onSelected = onPurchaseUnitSelected,
-                            required = true,
+                        OptionSelector(
+                            viewModel = stockUnitSelectorViewModel,
+                            label = "Purchase",
+                            selectedId = state.selectedPurchaseUnitId,
+                            onOptionSelected = onPurchaseUnitSelected,
                             modifier = Modifier.weight(1f),
                         )
                     }
                 }
 
                 FormSection(title = "Almacenamiento") {
-                    KrocyDropdownField(
+                    OptionSelector(
+                        viewModel = locationSelectorViewModel,
                         label = "Ubicación",
-                        options = state.locations,
-                        selectedId = state.locationId,
-                        onSelected = onLocationSelected,
-                        required = true,
+                        selectedId = state.selectedLocationId,
                         modifier = Modifier.fillMaxWidth(),
+                        onOptionSelected = onLocationSelected,
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s3)) {
-                        KrocyDropdownField(
+                        OptionSelector(
+                            viewModel = productGroupSelectorViewModel,
                             label = "Grupo",
-                            options = state.productGroups,
-                            selectedId = state.productGroupId,
-                            onSelected = onProductGroupSelected,
-                            includeNoneOption = true,
+                            selectedId = state.selectedProductGroupId,
+                            onOptionSelected = onProductGroupSelected,
                             modifier = Modifier.weight(1f),
                         )
                         OutlinedTextField(
@@ -329,14 +329,13 @@ private fun CreateProductFormPreview() {
         Surface {
             CreateProductContent(
                 state = State(
-                    isLoadingOptions = false,
                     quantityUnits = previewUnits,
                     locations = previewLocations,
                     productGroups = previewGroups,
                     name = "Leche entera",
-                    stockUnitId = 1,
-                    purchaseUnitId = 2,
-                    locationId = 11,
+                    selectedStockUnitId = 1,
+                    selectedPurchaseUnitId = 2,
+                    selectedLocationId = 11,
                 ),
                 onRetry = {},
                 onNameChange = {},
@@ -358,7 +357,7 @@ private fun CreateProductLoadingPreview() {
     KrocyTheme {
         Surface {
             CreateProductContent(
-                state = State(isLoadingOptions = true),
+                state = State(),
                 onRetry = {},
                 onNameChange = {},
                 onDescriptionChange = {},
@@ -379,7 +378,7 @@ private fun CreateProductErrorPreview() {
     KrocyTheme {
         Surface {
             CreateProductContent(
-                state = State(isLoadingOptions = false, optionsError = true),
+                state = State(),
                 onRetry = {},
                 onNameChange = {},
                 onDescriptionChange = {},
