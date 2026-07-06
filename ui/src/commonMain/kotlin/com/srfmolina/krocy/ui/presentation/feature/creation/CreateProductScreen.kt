@@ -2,7 +2,10 @@ package com.srfmolina.krocy.ui.presentation.feature.creation
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,10 +45,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.srfmolina.krocy.ui.presentation.common.CollapsibleFormSection
 import com.srfmolina.krocy.ui.presentation.common.FormSection
+import com.srfmolina.krocy.ui.presentation.common.UnitEquationCard
+import com.srfmolina.krocy.ui.presentation.common.UnitEquationInputCard
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
 import com.srfmolina.krocy.ui.presentation.common.model.OptionsUi
+import com.srfmolina.krocy.ui.presentation.common.model.QuConversionUi
 import com.srfmolina.krocy.ui.presentation.common.model.SelectableOptionUi
 import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.SnackbarTypeUi
@@ -90,7 +98,17 @@ internal fun CreateProductScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is Effect.ProductCreated -> onProductCreated(effect.name)
+                is Effect.ProductCreated -> {
+                    if (effect.conversionWarning) {
+                        onShowSnackbar(
+                            SnackbarConfigurationUi(
+                                message = "Producto creado, pero no se pudo crear la conversión de unidades. Añádela en Grocy.",
+                                type = SnackbarTypeUi.WARNING,
+                            )
+                        )
+                    }
+                    onProductCreated(effect.name)
+                }
                 is Effect.ShowError -> onShowSnackbar(
                     SnackbarConfigurationUi(message = effect.message, type = SnackbarTypeUi.ERROR)
                 )
@@ -98,47 +116,18 @@ internal fun CreateProductScreen(
         }
     }
 
-    CreateProductContent(
-        state = state,
-        onRetry = { viewModel.launchEvent(Event.OnRetryLoadOptions) },
-        onNameChange = { viewModel.launchEvent(Event.OnNameChange(it)) },
-        onDescriptionChange = { viewModel.launchEvent(Event.OnDescriptionChange(it)) },
-        onStockUnitSelected = { it?.let { id -> viewModel.launchEvent(Event.OnStockUnitSelected(id)) } },
-        onPurchaseUnitSelected = { it?.let { id -> viewModel.launchEvent(Event.OnPurchaseUnitSelected(id)) } },
-        onLocationSelected = { it?.let { id -> viewModel.launchEvent(Event.OnLocationSelected(id)) } },
-        onProductGroupSelected = { viewModel.launchEvent(Event.OnProductGroupSelected(it)) },
-        onMinStockChange = { viewModel.launchEvent(Event.OnMinStockChange(it)) },
-        onSubmit = { viewModel.launchEvent(Event.OnSubmit) },
-    )
+    CreateProductContent(state = state, onEvent = viewModel::launchEvent)
 }
 
 @Composable
 private fun CreateProductContent(
     state: State,
-    onRetry: () -> Unit,
-    onNameChange: (String) -> Unit,
-    onDescriptionChange: (String) -> Unit,
-    onStockUnitSelected: (Int?) -> Unit,
-    onPurchaseUnitSelected: (Int?) -> Unit,
-    onLocationSelected: (Int?) -> Unit,
-    onProductGroupSelected: (Int?) -> Unit,
-    onMinStockChange: (String) -> Unit,
-    onSubmit: () -> Unit,
+    onEvent: (Event) -> Unit,
 ) {
     when {
         state.isLoadingOptions -> LoadingOptions()
-        state.optionsError -> OptionsError(onRetry = onRetry)
-        else -> CreateProductForm(
-            state = state,
-            onNameChange = onNameChange,
-            onDescriptionChange = onDescriptionChange,
-            onStockUnitSelected = onStockUnitSelected,
-            onPurchaseUnitSelected = onPurchaseUnitSelected,
-            onLocationSelected = onLocationSelected,
-            onProductGroupSelected = onProductGroupSelected,
-            onMinStockChange = onMinStockChange,
-            onSubmit = onSubmit,
-        )
+        state.optionsError -> OptionsError(onRetry = { onEvent(Event.OnRetryLoadOptions) })
+        else -> CreateProductForm(state = state, onEvent = onEvent)
     }
 }
 
@@ -176,14 +165,7 @@ private fun OptionsError(onRetry: () -> Unit) {
 @Composable
 private fun CreateProductForm(
     state: State,
-    onNameChange: (String) -> Unit,
-    onDescriptionChange: (String) -> Unit,
-    onStockUnitSelected: (Int?) -> Unit,
-    onPurchaseUnitSelected: (Int?) -> Unit,
-    onLocationSelected: (Int?) -> Unit,
-    onProductGroupSelected: (Int?) -> Unit,
-    onMinStockChange: (String) -> Unit,
-    onSubmit: () -> Unit,
+    onEvent: (Event) -> Unit,
 ) {
     val contentModifier = if (MaterialTheme.isCompact) {
         Modifier.fillMaxWidth()
@@ -209,7 +191,7 @@ private fun CreateProductForm(
                 FormSection(title = "Identidad") {
                     OutlinedTextField(
                         value = state.name,
-                        onValueChange = onNameChange,
+                        onValueChange = { onEvent(Event.OnNameChange(it)) },
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Nombre *") },
                         singleLine = true,
@@ -222,7 +204,7 @@ private fun CreateProductForm(
                     )
                     OutlinedTextField(
                         value = state.description,
-                        onValueChange = onDescriptionChange,
+                        onValueChange = { onEvent(Event.OnDescriptionChange(it)) },
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Descripción") },
                         minLines = 3,
@@ -236,7 +218,7 @@ private fun CreateProductForm(
                             label = "Stock",
                             options = state.quantityUnits,
                             selectedId = state.stockUnitId,
-                            onOptionSelected = onStockUnitSelected,
+                            onOptionSelected = { it?.let { id -> onEvent(Event.OnStockUnitSelected(id)) } },
                             required = true,
                             modifier = Modifier.weight(1f),
                         )
@@ -244,10 +226,17 @@ private fun CreateProductForm(
                             label = "Compra",
                             options = state.quantityUnits,
                             selectedId = state.purchaseUnitId,
-                            onOptionSelected = onPurchaseUnitSelected,
+                            onOptionSelected = { it?.let { id -> onEvent(Event.OnPurchaseUnitSelected(id)) } },
                             required = true,
                             modifier = Modifier.weight(1f),
                         )
+                    }
+                    AnimatedVisibility(
+                        visible = state.unitsDiffer,
+                        enter = expandVertically() + fadeIn(),
+                        exit = shrinkVertically() + fadeOut(),
+                    ) {
+                        ConversionCard(state = state, onEvent = onEvent)
                     }
                 }
 
@@ -256,7 +245,7 @@ private fun CreateProductForm(
                         label = "Ubicación",
                         options = state.locations,
                         selectedId = state.locationId,
-                        onOptionSelected = onLocationSelected,
+                        onOptionSelected = { it?.let { id -> onEvent(Event.OnLocationSelected(id)) } },
                         required = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -265,13 +254,13 @@ private fun CreateProductForm(
                             label = "Grupo",
                             options = state.productGroups,
                             selectedId = state.productGroupId,
-                            onOptionSelected = onProductGroupSelected,
+                            onOptionSelected = { onEvent(Event.OnProductGroupSelected(it)) },
                             includeNoneOption = true,
                             modifier = Modifier.weight(1f),
                         )
                         OutlinedTextField(
                             value = state.minStockAmount,
-                            onValueChange = onMinStockChange,
+                            onValueChange = { onEvent(Event.OnMinStockChange(it)) },
                             modifier = Modifier.weight(1f),
                             label = { Text("Stock mínimo") },
                             singleLine = true,
@@ -286,25 +275,119 @@ private fun CreateProductForm(
                     }
                 }
 
-                Button(
-                    onClick = onSubmit,
-                    shapes = ButtonDefaults.shapes(),
-                    enabled = state.isValid && !state.isSubmitting,
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                CollapsibleFormSection(
+                    title = "Avanzado",
+                    expanded = state.advancedExpanded,
+                    onToggle = { onEvent(Event.OnToggleAdvanced) },
                 ) {
-                    if (state.isSubmitting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
+                    Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s3)) {
+                        OutlinedTextField(
+                            value = state.defaultBestBeforeDays,
+                            onValueChange = { onEvent(Event.OnBestBeforeDaysChange(it)) },
+                            modifier = Modifier.weight(1f),
+                            label = { Text("Caducidad por defecto (días)") },
+                            singleLine = true,
+                            isError = !state.bestBeforeDaysValid,
+                            supportingText = if (!state.bestBeforeDaysValid) {
+                                { Text("Número no válido") }
+                            } else {
+                                null
+                            },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         )
-                    } else {
-                        Text("Crear producto")
+                        OutlinedTextField(
+                            value = state.defaultBestBeforeDaysAfterOpen,
+                            onValueChange = { onEvent(Event.OnBestBeforeDaysAfterOpenChange(it)) },
+                            modifier = Modifier.weight(1f),
+                            label = { Text("Caducidad tras abrir (días)") },
+                            singleLine = true,
+                            isError = !state.bestBeforeDaysAfterOpenValid,
+                            supportingText = if (!state.bestBeforeDaysAfterOpenValid) {
+                                { Text("Número no válido") }
+                            } else {
+                                null
+                            },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "No congelar",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            Text(
+                                text = "Avisar si este producto se mueve a un congelador",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Switch(
+                            checked = state.shouldNotBeFrozen,
+                            onCheckedChange = { onEvent(Event.OnShouldNotBeFrozenChange(it)) },
+                        )
+                    }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2)) {
+                    Button(
+                        onClick = { onEvent(Event.OnSubmit) },
+                        shapes = ButtonDefaults.shapes(),
+                        enabled = state.isValid && !state.isSubmitting,
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                    ) {
+                        if (state.isSubmitting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        } else {
+                            Text("Crear producto")
+                        }
+                    }
+                    if (!state.isValid) {
+                        Text(
+                            text = "Falta: ${state.missingFields.joinToString()}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = MaterialTheme.spacing.s1),
+                        )
                     }
                 }
 
                 Spacer(Modifier.height(MaterialTheme.spacing.s8))
             }
         }
+    }
+}
+
+@Composable
+private fun ConversionCard(
+    state: State,
+    onEvent: (Event) -> Unit,
+) {
+    val from = state.purchaseUnitName.orEmpty()
+    val to = state.stockUnitName.orEmpty()
+    val existing = state.existingConversionFactor
+    if (existing != null) {
+        UnitEquationCard(
+            fromUnitName = from,
+            toUnitName = to,
+            factor = existing,
+            caption = "Conversión global existente",
+        )
+    } else {
+        UnitEquationInputCard(
+            fromUnitName = from,
+            toUnitName = to,
+            value = state.conversionFactor,
+            onValueChange = { onEvent(Event.OnConversionFactorChange(it)) },
+            caption = "Se creará una conversión para este producto",
+            isError = state.conversionFactor.isNotBlank() && !state.conversionFactorValid,
+        )
     }
 }
 
@@ -332,30 +415,68 @@ private val previewGroups = OptionsUi(
     isLoading = false,
 )
 
+private fun previewState() = State(
+    quantityUnits = previewUnits,
+    locations = previewLocations,
+    productGroups = previewGroups,
+    conversionsLoading = false,
+    name = "Leche entera",
+    stockUnitId = 1,
+    purchaseUnitId = 1,
+    locationId = 11,
+)
+
 @PreviewLightDark
 @Composable
 private fun CreateProductFormPreview() {
     KrocyTheme {
         Surface {
+            CreateProductContent(state = previewState(), onEvent = {})
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun CreateProductFormNewConversionPreview() {
+    KrocyTheme {
+        Surface {
             CreateProductContent(
-                state = State(
-                    quantityUnits = previewUnits,
-                    locations = previewLocations,
-                    productGroups = previewGroups,
-                    name = "Leche entera",
-                    stockUnitId = 1,
+                state = previewState().copy(purchaseUnitId = 2, conversionFactor = "6"),
+                onEvent = {},
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun CreateProductFormExistingConversionPreview() {
+    KrocyTheme {
+        Surface {
+            CreateProductContent(
+                state = previewState().copy(
                     purchaseUnitId = 2,
-                    locationId = 11,
+                    conversions = listOf(QuConversionUi(fromQuId = 2, toQuId = 1, factor = 6.0)),
                 ),
-                onRetry = {},
-                onNameChange = {},
-                onDescriptionChange = {},
-                onStockUnitSelected = {},
-                onPurchaseUnitSelected = {},
-                onLocationSelected = {},
-                onProductGroupSelected = {},
-                onMinStockChange = {},
-                onSubmit = {},
+                onEvent = {},
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun CreateProductFormAdvancedPreview() {
+    KrocyTheme {
+        Surface {
+            CreateProductContent(
+                state = previewState().copy(
+                    advancedExpanded = true,
+                    defaultBestBeforeDays = "7",
+                    shouldNotBeFrozen = true,
+                ),
+                onEvent = {},
             )
         }
     }
@@ -366,18 +487,7 @@ private fun CreateProductFormPreview() {
 private fun CreateProductLoadingPreview() {
     KrocyTheme {
         Surface {
-            CreateProductContent(
-                state = State(),
-                onRetry = {},
-                onNameChange = {},
-                onDescriptionChange = {},
-                onStockUnitSelected = {},
-                onPurchaseUnitSelected = {},
-                onLocationSelected = {},
-                onProductGroupSelected = {},
-                onMinStockChange = {},
-                onSubmit = {},
-            )
+            CreateProductContent(state = State(), onEvent = {})
         }
     }
 }
@@ -392,16 +502,10 @@ private fun CreateProductErrorPreview() {
                     quantityUnits = OptionsUi(isLoading = false, isError = true),
                     locations = OptionsUi(isLoading = false, isError = true),
                     productGroups = OptionsUi(isLoading = false, isError = true),
+                    conversionsLoading = false,
+                    conversionsError = true,
                 ),
-                onRetry = {},
-                onNameChange = {},
-                onDescriptionChange = {},
-                onStockUnitSelected = {},
-                onPurchaseUnitSelected = {},
-                onLocationSelected = {},
-                onProductGroupSelected = {},
-                onMinStockChange = {},
-                onSubmit = {},
+                onEvent = {},
             )
         }
     }
