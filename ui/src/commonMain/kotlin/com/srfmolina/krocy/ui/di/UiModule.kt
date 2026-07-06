@@ -2,8 +2,10 @@ package com.srfmolina.krocy.ui.di
 
 import com.srfmolina.krocy.domain.usecase.masterdata.GetLocationsUseCase
 import com.srfmolina.krocy.domain.usecase.masterdata.GetProductGroupsUseCase
+import com.srfmolina.krocy.domain.usecase.masterdata.GetQuConversionsUseCase
 import com.srfmolina.krocy.domain.usecase.masterdata.GetQuantityUnitsUseCase
 import com.srfmolina.krocy.domain.usecase.product.CreateProductUseCase
+import com.srfmolina.krocy.domain.usecase.product.CreateQuConversionUseCase
 import com.srfmolina.krocy.domain.usecase.stock.AddStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.ConsumeStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.ObserveStockUseCase
@@ -23,9 +25,11 @@ val uiModule = module {
     singleOf(::OpenStockUseCase)
     singleOf(::RefreshStockUseCase)
     singleOf(::CreateProductUseCase)
+    singleOf(::CreateQuConversionUseCase)
     singleOf(::GetQuantityUnitsUseCase)
     singleOf(::GetLocationsUseCase)
     singleOf(::GetProductGroupsUseCase)
+    singleOf(::GetQuConversionsUseCase)
 
     viewModelOf(::AppViewModel)
     viewModelOf(::StockViewModel)
