@@ -1,4 +1,4 @@
-package com.srfmolina.krocy.ui.presentation.feature.creation.mapper
+package com.srfmolina.krocy.ui.presentation.common.mapper
 
 import com.srfmolina.krocy.domain.model.masterdata.Location
 import com.srfmolina.krocy.domain.model.masterdata.ProductGroup
