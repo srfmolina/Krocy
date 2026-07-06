@@ -8,4 +8,7 @@ data class NewProduct(
     val description: String? = null,
     val minStockAmount: Double? = null,
     val productGroupId: Int? = null,
+    val defaultBestBeforeDays: Int? = null,
+    val defaultBestBeforeDaysAfterOpen: Int? = null,
+    val shouldNotBeFrozen: Boolean = false,
 )
