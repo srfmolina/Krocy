@@ -8,6 +8,7 @@ import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.runtime.Composable
 import com.srfmolina.krocy.ui.presentation.common.model.LabeledActionUi
 import com.srfmolina.krocy.ui.presentation.common.model.SnackbarTypeUi
+import com.srfmolina.krocy.ui.presentation.theme.extendedColorScheme
 
 /**
  * Carries the snackbar [type] and optional [action] through [androidx.compose.material3.SnackbarHostState.showSnackbar]
@@ -26,7 +27,8 @@ internal class KrocySnackbarVisuals(
 
 /**
  * Renders a snackbar whose colors depend on the [SnackbarTypeUi] carried by [KrocySnackbarVisuals]:
- * ERROR uses the soft error container, INFO falls back to the Material3 defaults.
+ * ERROR uses the soft error container, WARNING the extended warning container, INFO falls back to
+ * the Material3 defaults.
  */
 @Composable
 internal fun KrocySnackbar(snackbarData: SnackbarData) {
@@ -37,6 +39,13 @@ internal fun KrocySnackbar(snackbarData: SnackbarData) {
             containerColor = MaterialTheme.colorScheme.errorContainer,
             contentColor = MaterialTheme.colorScheme.onErrorContainer,
             actionColor = MaterialTheme.colorScheme.error,
+        )
+
+        SnackbarTypeUi.WARNING -> Snackbar(
+            snackbarData = snackbarData,
+            containerColor = MaterialTheme.extendedColorScheme.warning.colorContainer,
+            contentColor = MaterialTheme.extendedColorScheme.warning.onColorContainer,
+            actionColor = MaterialTheme.extendedColorScheme.warning.color,
         )
 
         SnackbarTypeUi.INFO -> Snackbar(snackbarData = snackbarData)
