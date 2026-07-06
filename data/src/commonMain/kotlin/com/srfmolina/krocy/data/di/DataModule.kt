@@ -2,6 +2,8 @@ package com.srfmolina.krocy.data.di
 
 import com.srfmolina.krocy.data.datasource.local.example.KrocyItemDataSource
 import com.srfmolina.krocy.data.datasource.local.example.KrocyItemDataSourceImpl
+import com.srfmolina.krocy.data.datasource.remote.conversion.QuConversionDataSource
+import com.srfmolina.krocy.data.datasource.remote.conversion.QuConversionDataSourceImpl
 import com.srfmolina.krocy.data.datasource.remote.createHttpClient
 import com.srfmolina.krocy.data.datasource.remote.generic.GenericEntityDataSource
 import com.srfmolina.krocy.data.datasource.remote.generic.GenericEntityDataSourceImpl
@@ -37,10 +39,11 @@ val dataModule = module {
     single<KrocyItemDataSource> { KrocyItemDataSourceImpl(get()) }
     single<StockDataSource> { StockDataSourceImpl(get()) }
     single<GenericEntityDataSource> { GenericEntityDataSourceImpl(get()) }
+    single<QuConversionDataSource> { QuConversionDataSourceImpl(get(), baseUrl) }
 
     single<KrocyItemRepository> { KrocyItemRepositoryImpl(get()) }
     single<StockRepository> { StockRepositoryImpl(get(), get(), baseUrl) }
-    single<MasterRepository> { MasterRepositoryImpl(get()) }
-    single<ProductRepository> { ProductRepositoryImpl(get()) }
+    single<MasterRepository> { MasterRepositoryImpl(get(), get()) }
+    single<ProductRepository> { ProductRepositoryImpl(get(), get()) }
 
 }
