@@ -24,8 +24,6 @@ import com.srfmolina.krocy.ui.presentation.common.model.SelectableOptionUi
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 import com.srfmolina.krocy.ui.presentation.theme.spacing
 
-private const val NONE_OPTION_ID = Int.MIN_VALUE
-
 /**
  * A read-only Material 3 [ExposedDropdownMenuBox] backed by [SelectableOptionUi]s.
  *

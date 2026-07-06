@@ -334,7 +334,7 @@ private fun CreateProductForm(
 
                 Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2)) {
                     Button(
-                        onClick = { onEvent(Event.OnSubmit) },
+                        onClick = { onEvent(Event.OnSubmit(state)) },
                         shapes = ButtonDefaults.shapes(),
                         enabled = state.isValid && !state.isSubmitting,
                         modifier = Modifier.fillMaxWidth().height(56.dp),

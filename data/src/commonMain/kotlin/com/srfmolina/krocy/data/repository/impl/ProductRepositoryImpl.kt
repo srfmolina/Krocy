@@ -22,7 +22,11 @@ internal class ProductRepositoryImpl(
     override suspend fun createQuConversion(conversion: NewQuConversion): Int {
         val existingId = quConversionDataSource.getQuConversionsForProduct(conversion.productId)
             .getOrThrow()
-            .firstOrNull { it.fromQuId == conversion.fromQuId && it.toQuId == conversion.toQuId }
+            .firstOrNull {
+                it.productId == conversion.productId &&
+                    it.fromQuId == conversion.fromQuId &&
+                    it.toQuId == conversion.toQuId
+            }
             ?.id
 
         return if (existingId != null) {

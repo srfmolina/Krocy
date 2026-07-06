@@ -21,6 +21,7 @@ class ProductRepositoryImplTest {
 
     private class ConversionsStub(
         private val existing: List<QuConversionDto>,
+        private val serverFiltersByProduct: Boolean = true,
     ) : QuConversionDataSource {
         var updatedId: Int? = null
         var updatedBody: QuConversionDto? = null
@@ -29,7 +30,9 @@ class ProductRepositoryImplTest {
         override suspend fun getQuConversions() = Result.success(existing)
 
         override suspend fun getQuConversionsForProduct(productId: Int) =
-            Result.success(existing.filter { it.productId == productId })
+            Result.success(
+                if (serverFiltersByProduct) existing.filter { it.productId == productId } else existing
+            )
 
         override suspend fun createQuConversion(body: QuConversionDto): Result<Int> {
             createdBody = body
@@ -72,5 +75,24 @@ class ProductRepositoryImplTest {
         assertEquals(21, id)
         assertEquals(3.0, stub.createdBody?.factor)
         assertNull(stub.updatedId)
+    }
+
+    @Test
+    fun `never updates another product's or a global conversion even if the server filter fails`() = runBlocking {
+        // Same unit pair, but a global row (null productId) and another product's row.
+        val stub = ConversionsStub(
+            listOf(
+                QuConversionDto(id = 5, productId = null, fromQuId = 3, toQuId = 6, factor = 2.0),
+                QuConversionDto(id = 6, productId = 99, fromQuId = 3, toQuId = 6, factor = 4.0),
+            ),
+            serverFiltersByProduct = false,
+        )
+        val repo = ProductRepositoryImpl(genericStub, stub)
+
+        val id = repo.createQuConversion(NewQuConversion(productId = 37, fromQuId = 3, toQuId = 6, factor = 3.0))
+
+        assertEquals(21, id)
+        assertNull(stub.updatedId)
+        assertEquals(3.0, stub.createdBody?.factor)
     }
 }

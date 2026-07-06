@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 import com.srfmolina.krocy.ui.presentation.theme.spacing
+import kotlin.math.round
 
 /**
  * A tonal "1 X = n Y" equation card for quantity-unit conversions. Read-only variant:
@@ -124,8 +125,11 @@ private fun EquationOperator() {
     )
 }
 
-private fun formatFactor(value: Double): String =
-    if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()
+// Inverted reverse conversions (1.0 / factor) produce repeating decimals; cap the display.
+private fun formatFactor(value: Double): String {
+    val rounded = round(value * 1000) / 1000
+    return if (rounded % 1.0 == 0.0) rounded.toInt().toString() else rounded.toString()
+}
 
 @PreviewLightDark
 @Composable

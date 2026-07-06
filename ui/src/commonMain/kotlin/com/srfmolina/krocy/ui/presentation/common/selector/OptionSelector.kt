@@ -16,7 +16,7 @@ import com.srfmolina.krocy.ui.presentation.theme.spacing
 
 /**
  * A dropdown selector backed by async-loaded [OptionsUi]. Stateless: the owning
- * screen's ViewModel loads the options (see [OptionsUi.load]) and holds the
+ * screen's ViewModel loads the options into an [OptionsUi] and holds the
  * selection, so the same component works with any data source.
  *
  * The field is disabled while the options are loading or failed to load.

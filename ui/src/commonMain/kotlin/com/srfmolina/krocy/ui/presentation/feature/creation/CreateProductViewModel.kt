@@ -22,6 +22,7 @@ import com.srfmolina.krocy.ui.presentation.feature.creation.CreateProductViewMod
 import com.srfmolina.krocy.ui.presentation.feature.creation.CreateProductViewModel.State
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Mutex
 
 internal class CreateProductViewModel(
     private val createProductUseCase: CreateProductUseCase,
@@ -31,6 +32,8 @@ internal class CreateProductViewModel(
     private val getProductGroupsUseCase: GetProductGroupsUseCase,
     private val getQuConversionsUseCase: GetQuConversionsUseCase,
 ) : BaseViewModel<Event, State, Effect>() {
+
+    private val submitLock = Mutex()
 
     sealed interface Event : UiEvent {
         data object Init : Event
@@ -47,7 +50,7 @@ internal class CreateProductViewModel(
         data class OnBestBeforeDaysAfterOpenChange(val value: String) : Event
         data class OnShouldNotBeFrozenChange(val value: Boolean) : Event
         data object OnToggleAdvanced : Event
-        data object OnSubmit : Event
+        data class OnSubmit(val form: State) : Event
     }
 
     sealed interface Effect : UiEffect {
@@ -168,7 +171,7 @@ internal class CreateProductViewModel(
             }
             is Event.OnShouldNotBeFrozenChange -> setState { copy(shouldNotBeFrozen = event.value) }
             is Event.OnToggleAdvanced -> setState { copy(advancedExpanded = !advancedExpanded) }
-            is Event.OnSubmit -> submit()
+            is Event.OnSubmit -> submit(event.form)
         }
     }
 
@@ -206,49 +209,54 @@ internal class CreateProductViewModel(
         }
     }
 
-    private suspend fun submit() {
-        val current = currentState
-        if (!current.isValid) {
-            setState { copy(showNameError = name.isBlank()) }
+    private suspend fun submit(form: State) {
+        if (!form.isValid) {
+            setState { copy(showNameError = form.name.isBlank()) }
             return
         }
 
-        setState { copy(isSubmitting = true) }
-        val productId = createProductUseCase(
-            NewProduct(
-                name = current.name.trim(),
-                quIdStock = current.stockUnitId!!,
-                quIdPurchase = current.purchaseUnitId!!,
-                locationId = current.locationId!!,
-                description = current.description.ifBlank { null },
-                minStockAmount = current.minStockAmount.toDoubleOrNull(),
-                productGroupId = current.productGroupId,
-                defaultBestBeforeDays = current.defaultBestBeforeDays.toIntOrNull(),
-                defaultBestBeforeDaysAfterOpen = current.defaultBestBeforeDaysAfterOpen.toIntOrNull(),
-                shouldNotBeFrozen = current.shouldNotBeFrozen,
-            )
-        ).getOrNull()
-
-        if (productId == null) {
-            setState { copy(isSubmitting = false) }
-            launchEffect(Effect.ShowError("No se pudo crear el producto"))
-            return
-        }
-
-        var conversionWarning = false
-        if (current.needsConversionFactor) {
-            val result = createQuConversionUseCase(
-                NewQuConversion(
-                    productId = productId,
-                    fromQuId = current.purchaseUnitId,
-                    toQuId = current.stockUnitId,
-                    factor = current.conversionFactor.toDouble(),
+        // Events are not serialized (each runs in its own coroutine), so a second OnSubmit
+        // dispatched before recomposition disables the button must be rejected here.
+        if (!submitLock.tryLock()) return
+        try {
+            setState { copy(isSubmitting = true) }
+            val productId = createProductUseCase(
+                NewProduct(
+                    name = form.name.trim(),
+                    quIdStock = form.stockUnitId!!,
+                    quIdPurchase = form.purchaseUnitId!!,
+                    locationId = form.locationId!!,
+                    description = form.description.ifBlank { null },
+                    minStockAmount = form.minStockAmount.toDoubleOrNull(),
+                    productGroupId = form.productGroupId,
+                    defaultBestBeforeDays = form.defaultBestBeforeDays.toIntOrNull(),
+                    defaultBestBeforeDaysAfterOpen = form.defaultBestBeforeDaysAfterOpen.toIntOrNull(),
+                    shouldNotBeFrozen = form.shouldNotBeFrozen,
                 )
-            )
-            conversionWarning = result.isFailure
-        }
+            ).getOrNull()
 
-        setState { copy(isSubmitting = false) }
-        launchEffect(Effect.ProductCreated(current.name.trim(), conversionWarning))
+            if (productId == null) {
+                launchEffect(Effect.ShowError("No se pudo crear el producto"))
+                return
+            }
+
+            var conversionWarning = false
+            if (form.needsConversionFactor) {
+                val result = createQuConversionUseCase(
+                    NewQuConversion(
+                        productId = productId,
+                        fromQuId = form.purchaseUnitId,
+                        toQuId = form.stockUnitId,
+                        factor = form.conversionFactor.toDouble(),
+                    )
+                )
+                conversionWarning = result.isFailure
+            }
+
+            launchEffect(Effect.ProductCreated(form.name.trim(), conversionWarning))
+        } finally {
+            setState { copy(isSubmitting = false) }
+            submitLock.unlock()
+        }
     }
 }
