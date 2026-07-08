@@ -4,6 +4,9 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
+import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
+import com.srfmolina.krocy.ui.presentation.feature.creation.navigation.createProductScreen
+import com.srfmolina.krocy.ui.presentation.feature.creation.navigation.navigateToCreateProduct
 import com.srfmolina.krocy.ui.presentation.feature.login.navigation.loginScreen
 import com.srfmolina.krocy.ui.presentation.feature.splash.navigation.splashScreen
 import com.srfmolina.krocy.ui.presentation.feature.stock.navigation.stockScreen
@@ -15,7 +18,8 @@ internal fun NavGraphBuilder.appNavGraph(
     navController: NavController,
     onChangeTopBar: (TopBarConfigurationUi) -> Unit,
     onChangeFab: (FabConfigurationUi) -> Unit,
-    onOpenNavRail: () -> Unit
+    onOpenNavRail: () -> Unit,
+    onShowSnackbar: (SnackbarConfigurationUi) -> Unit
 ){
     navigation<AppRoute>(
         startDestination = SplashRoute
@@ -33,7 +37,16 @@ internal fun NavGraphBuilder.appNavGraph(
         stockScreen(
             onChangeTopBar = onChangeTopBar,
             onChangeFab = onChangeFab,
-            onOpenNavRail = onOpenNavRail
+            onOpenNavRail = onOpenNavRail,
+            onNavigateToCreateProduct = { navController.navigateToCreateProduct() },
+            onShowSnackbar = onShowSnackbar
+        )
+
+        createProductScreen(
+            navController = navController,
+            onChangeTopBar = onChangeTopBar,
+            onChangeFab = onChangeFab,
+            onShowSnackbar = onShowSnackbar
         )
     }
 }

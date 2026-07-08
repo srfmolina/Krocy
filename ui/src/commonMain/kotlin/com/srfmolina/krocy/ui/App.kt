@@ -6,21 +6,31 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
 import com.srfmolina.krocy.ui.AppViewModel.Effect
 import com.srfmolina.krocy.ui.AppViewModel.Event
 import com.srfmolina.krocy.ui.presentation.common.KrocyFabMenu
+import com.srfmolina.krocy.ui.presentation.common.KrocySnackbar
+import com.srfmolina.krocy.ui.presentation.common.KrocySnackbarVisuals
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
+import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.feature.welcome.navigation.navigateToWelcome
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationComponent
 import com.srfmolina.krocy.ui.presentation.navigation.SplashRoute
@@ -34,6 +44,7 @@ import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.Top
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 import com.srfmolina.krocy.ui.presentation.theme.spacing
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,7 +53,19 @@ fun App() {
 
     val viewModel: AppViewModel = koinViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val navControllerState = rememberNavControllerState()
+    val navController = rememberNavController()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    val onShowSnackbar: (SnackbarConfigurationUi) -> Unit = { config ->
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss() // replace any visible one
+            val result = snackbarHostState.showSnackbar(
+                KrocySnackbarVisuals(config.message, config.type, config.action)
+            )
+            if (result == SnackbarResult.ActionPerformed) config.action?.onClick?.invoke()
+        }
+    }
 
     val scrollBehavior = when (state.topBarConfig?.type) {
         TopBarTypeUi.SMALL -> TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -50,7 +73,7 @@ fun App() {
         null -> null
     }
 
-    val currentRailRoute = navControllerState.navController.currentRailRoute()
+    val currentRailRoute = navController.currentRailRoute()
 
     KrocyTheme {
 
@@ -58,11 +81,11 @@ fun App() {
             viewModel.launchEvent(Event.Init)
         }
 
-        LaunchedEffect(navControllerState.navController) {
-            navControllerState.navController.currentBackStackEntryFlow.first() // The graph must be ready before we navigate...
+        LaunchedEffect(navController) {
+            navController.currentBackStackEntryFlow.first() // The graph must be ready before we navigate...
             viewModel.effect.collect { effect ->
                 when (effect) {
-                    is Effect.NavigateToWelcome -> navControllerState.navController.navigateToWelcome(
+                    is Effect.NavigateToWelcome -> navController.navigateToWelcome(
                         navOptions = navOptions {
                             popUpTo<SplashRoute> {
                                 inclusive = true
@@ -75,36 +98,40 @@ fun App() {
 
         if (currentRailRoute != null) {
             KrocyNavigationRail(
-                items = navControllerState.navController.appRailItems(),
+                items = navController.appRailItems(),
                 selectedRoute = currentRailRoute,
                 compactExpanded = state.isNavRailOpen,
                 onCompactDismiss = { viewModel.launchEvent(Event.OnChangeNavRailStatus(false)) },
             ) {
                 MainContent(
-                    scrollBehavior,
-                    state,
-                    navControllerState,
+                    scrollBehavior = scrollBehavior,
+                    state = state,
+                    navController = navController,
+                    snackbarHostState = snackbarHostState,
                     onOpenNavRail = { viewModel.launchEvent(Event.OnChangeNavRailStatus(true)) },
                     onChangeTopBar = { config ->
                         viewModel.launchEvent(Event.OnTopBarChange(config))
                     },
                     onChangeFab = { config ->
                         viewModel.launchEvent(Event.OnFabChange(config))
-                    }
+                    },
+                    onShowSnackbar = onShowSnackbar
                 )
             }
         } else {
             MainContent(
-                scrollBehavior,
-                state,
-                navControllerState,
+                scrollBehavior = scrollBehavior,
+                state = state,
+                navController = navController,
+                snackbarHostState = snackbarHostState,
                 onOpenNavRail = { viewModel.launchEvent(Event.OnChangeNavRailStatus(true)) },
                 onChangeTopBar = { config ->
                     viewModel.launchEvent(Event.OnTopBarChange(config))
                 },
                 onChangeFab = { config ->
                     viewModel.launchEvent(Event.OnFabChange(config))
-                }
+                },
+                onShowSnackbar = onShowSnackbar
             )
         }
     }
@@ -114,11 +141,13 @@ fun App() {
 @OptIn(ExperimentalMaterial3Api::class)
 private fun MainContent(
     scrollBehavior: TopAppBarScrollBehavior?,
-    vmState: AppViewModel.State,
-    state: AppState,
+    state: AppViewModel.State,
+    navController: NavHostController,
+    snackbarHostState: SnackbarHostState,
     onOpenNavRail: () -> Unit,
     onChangeTopBar: (TopBarConfigurationUi) -> Unit,
-    onChangeFab: (FabConfigurationUi) -> Unit
+    onChangeFab: (FabConfigurationUi) -> Unit,
+    onShowSnackbar: (SnackbarConfigurationUi) -> Unit
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize().then(
@@ -126,7 +155,7 @@ private fun MainContent(
                 Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
             } ?: Modifier
         ),
-        topBar = vmState.topBarConfig?.let { config ->
+        topBar = state.topBarConfig?.let { config ->
             {
                 scrollBehavior?.let {
                     when (config.type) {
@@ -146,7 +175,16 @@ private fun MainContent(
                     }
                 }
             }
-        } ?: {}
+        } ?: {},
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .padding(MaterialTheme.spacing.s4),
+            ) { data ->
+                KrocySnackbar(data)
+            }
+        }
     ) { innerPadding ->
 
         Box(
@@ -155,13 +193,14 @@ private fun MainContent(
                 .fillMaxSize()
         ) {
             NavigationComponent(
-                navController = state.navController,
+                navController = navController,
                 onChangeTopBar = onChangeTopBar,
                 onChangeFab = onChangeFab,
-                onOpenNavRail = onOpenNavRail
+                onOpenNavRail = onOpenNavRail,
+                onShowSnackbar = onShowSnackbar
             )
 
-            vmState.fabConfig?.let {
+            state.fabConfig?.let {
                 KrocyFabMenu(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)

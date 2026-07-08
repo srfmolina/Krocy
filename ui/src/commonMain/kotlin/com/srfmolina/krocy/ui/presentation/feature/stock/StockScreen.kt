@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddBox
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -29,6 +30,7 @@ import com.srfmolina.krocy.ui.presentation.common.model.ConsumptionDateUi
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
 import com.srfmolina.krocy.ui.presentation.common.model.LabeledActionUi
+import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.skeleton.ProvideSkeleton
 import com.srfmolina.krocy.ui.presentation.common.skeleton.SkeletonTransitionAnimation
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockViewModel.Event
@@ -39,6 +41,8 @@ import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.Top
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 import com.srfmolina.krocy.ui.presentation.theme.isCompact
 import com.srfmolina.krocy.ui.presentation.theme.spacing
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import org.koin.compose.viewmodel.koinViewModel
 
 
@@ -46,10 +50,15 @@ import org.koin.compose.viewmodel.koinViewModel
 internal fun StockScreen(
     onChangeTopBar: (TopBarConfigurationUi) -> Unit,
     onChangeFab: (FabConfigurationUi) -> Unit,
-    onOpenNavRail: () -> Unit
+    onOpenNavRail: () -> Unit,
+    onNavigateToCreateProduct: () -> Unit,
+    onShowSnackbar: (SnackbarConfigurationUi) -> Unit,
+    createdProductNameFlow: StateFlow<String?> = remember { MutableStateFlow(null) },
+    onCreatedProductNameConsumed: () -> Unit = {},
 ) {
     val viewModel: StockViewModel = koinViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val createdProductName by createdProductNameFlow.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val fabVisible by remember {
         derivedStateOf {
@@ -75,6 +84,12 @@ internal fun StockScreen(
             isVisible = !state.isLoading && fabVisible,
             actions = listOf(
                 LabeledActionUi(
+                    label = "Añadir producto",
+                    contentDescription = "Crear un nuevo producto",
+                    icon = Icons.Filled.AddBox,
+                    onClick = onNavigateToCreateProduct
+                ),
+                LabeledActionUi(
                     label = "Actualizar",
                     contentDescription = "Acción de refrescar datos",
                     icon = Icons.Default.Refresh,
@@ -82,6 +97,13 @@ internal fun StockScreen(
                 )
             )
         ))
+    }
+
+    LaunchedEffect(createdProductName) {
+        createdProductName?.let { name ->
+            onShowSnackbar(SnackbarConfigurationUi(message = "\"$name\" creado"))
+            onCreatedProductNameConsumed()
+        }
     }
 
     StockScreen(

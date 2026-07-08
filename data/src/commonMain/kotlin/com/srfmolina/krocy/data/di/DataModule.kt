@@ -2,6 +2,8 @@ package com.srfmolina.krocy.data.di
 
 import com.srfmolina.krocy.data.datasource.local.example.KrocyItemDataSource
 import com.srfmolina.krocy.data.datasource.local.example.KrocyItemDataSourceImpl
+import com.srfmolina.krocy.data.datasource.remote.conversion.QuConversionDataSource
+import com.srfmolina.krocy.data.datasource.remote.conversion.QuConversionDataSourceImpl
 import com.srfmolina.krocy.data.datasource.remote.createHttpClient
 import com.srfmolina.krocy.data.datasource.remote.generic.GenericEntityDataSource
 import com.srfmolina.krocy.data.datasource.remote.generic.GenericEntityDataSourceImpl
@@ -11,8 +13,12 @@ import com.srfmolina.krocy.data.db.KrocyDatabase
 import com.srfmolina.krocy.data.db.createDatabase
 import com.srfmolina.krocy.data.db.dao.KrocyItemDao
 import com.srfmolina.krocy.data.repository.impl.KrocyItemRepositoryImpl
+import com.srfmolina.krocy.data.repository.impl.MasterRepositoryImpl
+import com.srfmolina.krocy.data.repository.impl.ProductRepositoryImpl
 import com.srfmolina.krocy.data.repository.impl.StockRepositoryImpl
 import com.srfmolina.krocy.domain.repository.KrocyItemRepository
+import com.srfmolina.krocy.domain.repository.MasterRepository
+import com.srfmolina.krocy.domain.repository.ProductRepository
 import com.srfmolina.krocy.domain.repository.StockRepository
 import org.koin.dsl.module
 import org.openapitools.client.apis.GenericEntityInteractionsApi
@@ -33,8 +39,11 @@ val dataModule = module {
     single<KrocyItemDataSource> { KrocyItemDataSourceImpl(get()) }
     single<StockDataSource> { StockDataSourceImpl(get()) }
     single<GenericEntityDataSource> { GenericEntityDataSourceImpl(get()) }
+    single<QuConversionDataSource> { QuConversionDataSourceImpl(get(), baseUrl) }
 
     single<KrocyItemRepository> { KrocyItemRepositoryImpl(get()) }
     single<StockRepository> { StockRepositoryImpl(get(), get(), baseUrl) }
+    single<MasterRepository> { MasterRepositoryImpl(get(), get()) }
+    single<ProductRepository> { ProductRepositoryImpl(get(), get()) }
 
 }

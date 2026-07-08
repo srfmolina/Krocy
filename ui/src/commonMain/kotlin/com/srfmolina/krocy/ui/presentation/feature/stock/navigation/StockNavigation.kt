@@ -7,10 +7,14 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
+import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockScreen
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationItemUi
 import com.srfmolina.krocy.ui.presentation.navigation.StockRoute
 import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarConfigurationUi
+
+/** Navigation result key set by the create-product screen so Stock can confirm the creation. */
+internal const val CREATED_PRODUCT_NAME_KEY = "created_product_name"
 
 internal fun NavController.navigateToStock(
     navOptions: NavOptions? = null
@@ -19,13 +23,20 @@ internal fun NavController.navigateToStock(
 internal fun NavGraphBuilder.stockScreen(
     onChangeTopBar: (TopBarConfigurationUi) -> Unit,
     onChangeFab: (FabConfigurationUi) -> Unit,
-    onOpenNavRail: () -> Unit
+    onOpenNavRail: () -> Unit,
+    onNavigateToCreateProduct: () -> Unit,
+    onShowSnackbar: (SnackbarConfigurationUi) -> Unit
 ) {
-    composable<StockRoute> {
+    composable<StockRoute> { entry ->
+        val savedStateHandle = entry.savedStateHandle
         StockScreen(
             onChangeTopBar = onChangeTopBar,
-            onChangeFab =onChangeFab,
-            onOpenNavRail = onOpenNavRail
+            onChangeFab = onChangeFab,
+            onOpenNavRail = onOpenNavRail,
+            onNavigateToCreateProduct = onNavigateToCreateProduct,
+            onShowSnackbar = onShowSnackbar,
+            createdProductNameFlow = savedStateHandle.getStateFlow<String?>(CREATED_PRODUCT_NAME_KEY, null),
+            onCreatedProductNameConsumed = { savedStateHandle[CREATED_PRODUCT_NAME_KEY] = null }
         )
     }
 }
