@@ -36,18 +36,14 @@ kotlin {
             implementation(project.dependencies.platform(libs.koin.bom))
             implementation(libs.koin.core)
 
+            // Only io.ktor.http URL building is used directly; HTTP calls go through :grocy-client.
             implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.serialization.kotlinx.json)
-            implementation(libs.ktor.client.logging)
         }
         androidMain.dependencies {
             implementation(libs.koin.android)
-            implementation(libs.ktor.client.okhttp)
         }
         jvmMain.dependencies {
             implementation(libs.kotlinx.coroutinesSwing)
-            implementation(libs.ktor.client.cio)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -60,9 +56,6 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
-    }
-    buildFeatures {
-        buildConfig = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
