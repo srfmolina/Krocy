@@ -25,3 +25,9 @@
 # Workaround for broken Grocy spec: path params reference these schemas but they are never defined
 # in components/schemas, so the generator never creates model files for them.
 src/commonMain/kotlin/org/openapitools/client/models/ExposedEntityTypeAliases.kt
+
+# Workaround for broken Grocy spec: the quantity_unit_conversions entity has no schema in the
+# spec (from_qu_id/to_qu_id/factor appear nowhere in components/schemas), so the generic-entity
+# model cannot carry its fields. These hand-written files provide a typed model and API for it.
+src/commonMain/kotlin/org/openapitools/client/models/QuantityUnitConversion.kt
+src/commonMain/kotlin/org/openapitools/client/apis/QuantityUnitConversionsApi.kt

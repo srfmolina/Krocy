@@ -84,7 +84,7 @@ internal fun StockScreen(
             isVisible = !state.isLoading && fabVisible,
             actions = listOf(
                 LabeledActionUi(
-                    label = "Añadir producto",
+                    label = "Crear nuevo producto",
                     contentDescription = "Crear un nuevo producto",
                     icon = Icons.Filled.AddBox,
                     onClick = onNavigateToCreateProduct

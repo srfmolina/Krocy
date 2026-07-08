@@ -1,10 +1,10 @@
 package com.srfmolina.krocy.data.mapper
 
-import com.srfmolina.krocy.data.datasource.remote.conversion.QuConversionDto
 import com.srfmolina.krocy.domain.model.masterdata.QuConversion
 import com.srfmolina.krocy.domain.model.product.NewQuConversion
+import org.openapitools.client.models.QuantityUnitConversion
 
-internal fun QuConversionDto.toQuConversion(): QuConversion =
+internal fun QuantityUnitConversion.toQuConversion(): QuConversion =
     QuConversion(
         id = id ?: 0,
         productId = productId,
@@ -13,8 +13,8 @@ internal fun QuConversionDto.toQuConversion(): QuConversion =
         factor = factor,
     )
 
-internal fun NewQuConversion.toDto(): QuConversionDto =
-    QuConversionDto(
+internal fun NewQuConversion.toDto(): QuantityUnitConversion =
+    QuantityUnitConversion(
         productId = productId,
         fromQuId = fromQuId,
         toQuId = toQuId,

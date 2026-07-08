@@ -1,12 +1,14 @@
 package com.srfmolina.krocy.data.datasource.remote.conversion
 
-internal interface QuConversionDataSource {
-    suspend fun getQuConversions(): Result<List<QuConversionDto>>
+import org.openapitools.client.models.QuantityUnitConversion
 
-    suspend fun getQuConversionsForProduct(productId: Int): Result<List<QuConversionDto>>
+internal interface QuConversionDataSource {
+    suspend fun getQuConversions(): Result<List<QuantityUnitConversion>>
+
+    suspend fun getQuConversionsForProduct(productId: Int): Result<List<QuantityUnitConversion>>
 
     /** Creates a conversion object and returns its generated id. */
-    suspend fun createQuConversion(body: QuConversionDto): Result<Int>
+    suspend fun createQuConversion(body: QuantityUnitConversion): Result<Int>
 
-    suspend fun updateQuConversion(id: Int, body: QuConversionDto): Result<Unit>
+    suspend fun updateQuConversion(id: Int, body: QuantityUnitConversion): Result<Unit>
 }
