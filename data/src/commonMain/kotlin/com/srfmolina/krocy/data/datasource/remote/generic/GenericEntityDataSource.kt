@@ -11,4 +11,8 @@ internal interface GenericEntityDataSource {
 
     /** Creates a product object and returns its generated id. */
     suspend fun createProduct(body: ObjectsEntityGet200ResponseInner): Result<Int>
+
+    suspend fun getProducts(): Result<List<ObjectsEntityGet200ResponseInner>>
+
+    suspend fun getShoppingLocations(): Result<List<ObjectsEntityGet200ResponseInner>>
 }

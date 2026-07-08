@@ -15,6 +15,8 @@ class MasterRepositoryImplTest {
         override suspend fun getLocations() = Result.success(emptyList<ObjectsEntityGet200ResponseInner>())
         override suspend fun getProductGroups() = Result.success(emptyList<ObjectsEntityGet200ResponseInner>())
         override suspend fun createProduct(body: ObjectsEntityGet200ResponseInner) = Result.success(1)
+        override suspend fun getProducts() = Result.success(emptyList<ObjectsEntityGet200ResponseInner>())
+        override suspend fun getShoppingLocations() = Result.success(emptyList<ObjectsEntityGet200ResponseInner>())
     }
 
     @Test
