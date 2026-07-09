@@ -2,10 +2,9 @@ package com.srfmolina.krocy.data.datasource.remote.shoppinglist
 
 import org.openapitools.client.apis.GenericEntityInteractionsApi
 import org.openapitools.client.apis.StockApi
+import org.openapitools.client.models.CurrentVolatilStockResponseMissingProductsInner
 import org.openapitools.client.models.ExposedEntity
 import org.openapitools.client.models.ObjectsEntityGet200ResponseInner
-import org.openapitools.client.models.StockShoppinglistAddMissingProductsPostRequest
-import org.openapitools.client.models.StockShoppinglistAddProductPostRequest
 
 internal class ShoppingListDataSourceImpl(
     private val stockApi: StockApi,
@@ -27,8 +26,51 @@ internal class ShoppingListDataSourceImpl(
         genericEntityApi.objectsEntityGet(entity = ExposedEntity.shopping_list).body()
     }
 
+    override suspend fun getMissingProducts(): Result<List<CurrentVolatilStockResponseMissingProductsInner>> =
+        runCatching {
+            stockApi.stockVolatileGet().body().missingProducts.orEmpty()
+        }
+
+    override suspend fun createItem(
+        listId: Int,
+        productId: Int,
+        amount: Double,
+        quId: Int?,
+        note: String?,
+    ): Result<Unit> = runCatching {
+        genericEntityApi.objectsEntityPost(
+            entity = ExposedEntity.shopping_list,
+            objectsEntityGet200ResponseInner = ObjectsEntityGet200ResponseInner(
+                shoppingListId = listId,
+                productId = productId,
+                amount = amount,
+                quId = quId,
+                note = note,
+            )
+        ).body()
+        Unit
+    }
+
+    override suspend fun updateItem(
+        itemId: Int,
+        amount: Double,
+        quId: Int?,
+        note: String?,
+    ): Result<Unit> = runCatching {
+        // Partial body: encodeDefaults is off, so unset fields are not serialized
+        // and grocy leaves their columns untouched (see SPEC-DEVIATIONS.md #7).
+        genericEntityApi.objectsEntityObjectIdPut(
+            entity = ExposedEntity.shopping_list,
+            objectId = itemId,
+            objectsEntityGet200ResponseInner = ObjectsEntityGet200ResponseInner(
+                amount = amount,
+                quId = quId,
+                note = note,
+            )
+        ).body()
+    }
+
     override suspend fun setDone(itemId: Int, done: Boolean): Result<Unit> = runCatching {
-        // Partial body: encodeDefaults is off, so only `done` is serialized (see SPEC-DEVIATIONS.md #7).
         genericEntityApi.objectsEntityObjectIdPut(
             entity = ExposedEntity.shopping_list,
             objectId = itemId,
@@ -36,19 +78,10 @@ internal class ShoppingListDataSourceImpl(
         ).body()
     }
 
-    override suspend fun addMissingProducts(listId: Int): Result<Unit> = runCatching {
-        stockApi.stockShoppinglistAddMissingProductsPost(
-            StockShoppinglistAddMissingProductsPostRequest(listId = listId)
-        ).body()
-    }
-
-    override suspend fun addProduct(listId: Int, productId: Int, amount: Double): Result<Unit> = runCatching {
-        stockApi.stockShoppinglistAddProductPost(
-            StockShoppinglistAddProductPostRequest(
-                productId = productId,
-                listId = listId,
-                productAmount = amount,
-            )
+    override suspend fun deleteItem(itemId: Int): Result<Unit> = runCatching {
+        genericEntityApi.objectsEntityObjectIdDelete(
+            entity = ExposedEntity.shopping_list,
+            objectId = itemId,
         ).body()
     }
 }

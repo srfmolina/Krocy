@@ -115,8 +115,10 @@ Path parameters `$ref` five schema names that do not exist in `components/schema
 
 The generator emits imports for the missing models, and the partial enums it does produce
 are wrong: `ExposedEntityNoEdit` lists the *non-editable* entities (so `objectsEntityPost`
-could not create products), and `ExposedEntityNoListing` contains only `api_keys` (so
-`objectsEntityGet` could not list anything useful).
+could not create products), `ExposedEntityNoDelete` lists the *non-deletable* ones (so
+`objectsEntityObjectIdDelete` could not delete shopping-list rows), and
+`ExposedEntityNoListing` contains only `api_keys` (so `objectsEntityGet` could not list
+anything useful).
 
 **Workaround here:** hand-written
 `src/commonMain/kotlin/org/openapitools/client/models/ExposedEntityTypeAliases.kt`

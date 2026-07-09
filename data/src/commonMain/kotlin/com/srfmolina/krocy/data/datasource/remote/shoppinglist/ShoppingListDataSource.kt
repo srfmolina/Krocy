@@ -1,5 +1,6 @@
 package com.srfmolina.krocy.data.datasource.remote.shoppinglist
 
+import org.openapitools.client.models.CurrentVolatilStockResponseMissingProductsInner
 import org.openapitools.client.models.ObjectsEntityGet200ResponseInner
 
 internal interface ShoppingListDataSource {
@@ -11,10 +12,26 @@ internal interface ShoppingListDataSource {
     /** Returns the rows of every shopping list; callers filter by `shopping_list_id`. */
     suspend fun getItems(): Result<List<ObjectsEntityGet200ResponseInner>>
 
+    /** Products currently below their min. stock amount; `amountMissing` is in stock units. */
+    suspend fun getMissingProducts(): Result<List<CurrentVolatilStockResponseMissingProductsInner>>
+
+    suspend fun createItem(
+        listId: Int,
+        productId: Int,
+        amount: Double,
+        quId: Int?,
+        note: String?,
+    ): Result<Unit>
+
+    /** Partial update; null [quId]/[note] leave the row's current values untouched. */
+    suspend fun updateItem(
+        itemId: Int,
+        amount: Double,
+        quId: Int?,
+        note: String? = null,
+    ): Result<Unit>
+
     suspend fun setDone(itemId: Int, done: Boolean): Result<Unit>
 
-    /** Adds products below their min. stock amount to the given list (idempotent). */
-    suspend fun addMissingProducts(listId: Int): Result<Unit>
-
-    suspend fun addProduct(listId: Int, productId: Int, amount: Double): Result<Unit>
+    suspend fun deleteItem(itemId: Int): Result<Unit>
 }
