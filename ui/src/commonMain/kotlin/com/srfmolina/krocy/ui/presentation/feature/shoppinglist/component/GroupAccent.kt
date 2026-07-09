@@ -34,13 +34,13 @@ internal fun groupAccent(groupName: String?): GroupAccent {
         GroupAccent(
             label = Color.hsl(hue, 0.45f, 0.78f),
             outline = Color.hsl(hue, 0.25f, 0.40f),
-            container = Color.hsl(hue, 0.26f, 0.145f),
+            container = Color.hsl(hue, 0.30f, 0.17f),
         )
     } else {
         GroupAccent(
             label = Color.hsl(hue, 0.48f, 0.33f),
             outline = Color.hsl(hue, 0.35f, 0.68f),
-            container = Color.hsl(hue, 0.55f, 0.965f),
+            container = Color.hsl(hue, 0.55f, 0.93f),
         )
     }
 }
