@@ -32,8 +32,10 @@ src/commonMain/kotlin/org/openapitools/client/models/ExposedEntityTypeAliases.kt
 src/commonMain/kotlin/org/openapitools/client/models/QuantityUnitConversion.kt
 src/commonMain/kotlin/org/openapitools/client/apis/QuantityUnitConversionsApi.kt
 
-# Workaround for broken Grocy spec (NOT an ignore pattern — handled by a sed post-fix in
-# regenerate.sh, so it survives regeneration): the spec declares `userfields` as string, but the
-# server sends a JSON object whenever userfields are defined for the entity. All generated models
-# have `userfields` manually retyped to kotlinx.serialization.json.JsonElement?.
-# Guarded by data/src/jvmTest/.../GenericEntityDeserializationTest.kt.
+# Workarounds for broken Grocy spec (NOT ignore patterns — handled by sed post-fixes in
+# regenerate.sh, so they survive regeneration); both guarded by
+# data/src/jvmTest/.../GenericEntityDeserializationTest.kt:
+# - `userfields` is declared as string, but the server sends a JSON object whenever userfields
+#   are defined for the entity. Retyped to kotlinx.serialization.json.JsonElement? in all models.
+# - `has_childs` (ProductDetailsResponse) is a real boolean in responses, which the client's
+#   blanket boolean→Int type-mapping cannot decode. Retyped to JsonElement? as well.

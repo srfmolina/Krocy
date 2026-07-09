@@ -101,7 +101,8 @@ data class ProductDetailsResponse (
     @SerialName(value = "spoil_rate_percent") val spoilRatePercent: kotlin.Double? = null,
 
     /* True when the product is a parent product of others */
-    @SerialName(value = "has_childs") val hasChilds: kotlin.Int? = null,
+    // Manually corrected (see regenerate.sh): the boolean→Int mapping breaks here, the server sends true/false
+    @SerialName(value = "has_childs") val hasChilds: kotlinx.serialization.json.JsonElement? = null,
 
     @SerialName(value = "default_location") val defaultLocation: Location? = null,
 

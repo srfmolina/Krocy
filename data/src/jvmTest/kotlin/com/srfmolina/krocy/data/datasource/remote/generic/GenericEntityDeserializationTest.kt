@@ -2,6 +2,7 @@ package com.srfmolina.krocy.data.datasource.remote.generic
 
 import org.openapitools.client.infrastructure.ApiClient
 import org.openapitools.client.models.ObjectsEntityGet200ResponseInner
+import org.openapitools.client.models.ProductDetailsResponse
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -24,6 +25,36 @@ class GenericEntityDeserializationTest {
         assertEquals(1, parsed.size)
         assertEquals(1, parsed.first().id)
         assertEquals("Cookies", parsed.first().name)
+    }
+
+    @Test
+    fun `parses product details response where has_childs is a real boolean`() {
+        // The client maps spec booleans to Int because grocy sends most of them as 0/1,
+        // but computed fields like has_childs on GET /stock/products/{id} arrive as true/false.
+        val parsed = ApiClient.JSON_DEFAULT.decodeFromString<ProductDetailsResponse>(
+            """{"product":{"id":1,"name":"Cookies","location_id":4,"qu_id_purchase":3,"qu_id_stock":3,""" +
+                """"default_best_before_days":0},"product_barcodes":[],"last_purchased":"2026-07-09",""" +
+                """"stock_amount":2,"quantity_unit_stock":{"id":3,"name":"Pack","name_plural":"Packs","active":1},""" +
+                """"default_quantity_unit_purchase":{"id":3,"name":"Pack","name_plural":"Packs","active":1},""" +
+                """"last_price":5.41,"last_shopping_location_id":1,"next_due_date":"2999-12-31",""" +
+                """"average_shelf_life_days":177868.5,"spoil_rate_percent":0,"is_aggregated_amount":0,""" +
+                """"has_childs":false,"qu_conversion_factor_purchase_to_stock":1}"""
+        )
+
+        assertEquals(1, parsed.product?.id)
+        assertEquals("Pack", parsed.quantityUnitStock?.name)
+        assertEquals(1.0, parsed.quConversionFactorPurchaseToStock)
+        assertEquals(5.41, parsed.lastPrice)
+    }
+
+    @Test
+    fun `parses product details response where has_childs is a 0-or-1 int`() {
+        // Grocy is inconsistent: other installations/fields send booleans as 0/1 ints.
+        val parsed = ApiClient.JSON_DEFAULT.decodeFromString<ProductDetailsResponse>(
+            """{"product":{"id":2,"name":"Milk"},"has_childs":1}"""
+        )
+
+        assertEquals(2, parsed.product?.id)
     }
 
     @Test

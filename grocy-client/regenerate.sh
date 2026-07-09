@@ -48,6 +48,10 @@ echo ">>> Fixing userfields type (spec mistypes it as string; the server sends a
 find "$SCRIPT_DIR/src/commonMain" -name "*.kt" -exec \
   sed -i 's|^    @SerialName(value = "userfields") val userfields: kotlin\.String? = null|    // Manually corrected (see regenerate.sh): spec mistypes userfields as string, server sends a JSON object\n    @SerialName(value = "userfields") val userfields: kotlinx.serialization.json.JsonElement? = null|' {} +
 
+echo ">>> Fixing has_childs type (boolean→Int mapping breaks: the server sends true/false)..."
+find "$SCRIPT_DIR/src/commonMain" -name "*.kt" -exec \
+  sed -i 's|^    @SerialName(value = "has_childs") val hasChilds: kotlin\.Int? = null|    // Manually corrected (see regenerate.sh): the boolean→Int mapping breaks here, the server sends true/false\n    @SerialName(value = "has_childs") val hasChilds: kotlinx.serialization.json.JsonElement? = null|' {} +
+
 echo ">>> Restoring custom files..."
 cp -r "$PROTECTED_DIR/." "$SCRIPT_DIR/"
 rm -rf "$PROTECTED_DIR"
