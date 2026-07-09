@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Regenerates the client from grocy's published OpenAPI spec.
+# The spec, the server, and the generator disagree in several places; every manual
+# workaround below (type-mappings, sed post-fixes, protected hand-written files) is
+# documented in SPEC-DEVIATIONS.md — update it when adding a new one.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

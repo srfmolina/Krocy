@@ -22,6 +22,9 @@
 # Then explicitly reverse the ignore rule for a single file:
 #!docs/README.md
 
+# ALL spec/server/generator deviations and their workarounds are catalogued in
+# SPEC-DEVIATIONS.md (module root) — keep it updated; it feeds a future upstream fix PR.
+
 # Workaround for broken Grocy spec: path params reference these schemas but they are never defined
 # in components/schemas, so the generator never creates model files for them.
 src/commonMain/kotlin/org/openapitools/client/models/ExposedEntityTypeAliases.kt
@@ -32,10 +35,6 @@ src/commonMain/kotlin/org/openapitools/client/models/ExposedEntityTypeAliases.kt
 src/commonMain/kotlin/org/openapitools/client/models/QuantityUnitConversion.kt
 src/commonMain/kotlin/org/openapitools/client/apis/QuantityUnitConversionsApi.kt
 
-# Workarounds for broken Grocy spec (NOT ignore patterns — handled by sed post-fixes in
-# regenerate.sh, so they survive regeneration); both guarded by
-# data/src/jvmTest/.../GenericEntityDeserializationTest.kt:
-# - `userfields` is declared as string, but the server sends a JSON object whenever userfields
-#   are defined for the entity. Retyped to kotlinx.serialization.json.JsonElement? in all models.
-# - `has_childs` (ProductDetailsResponse) is a real boolean in responses, which the client's
-#   blanket boolean→Int type-mapping cannot decode. Retyped to JsonElement? as well.
+# Further workarounds that are NOT ignore patterns (sed post-fixes in regenerate.sh:
+# userfields and has_childs retyped to JsonElement?) are documented in SPEC-DEVIATIONS.md
+# and guarded by data/src/jvmTest/.../GenericEntityDeserializationTest.kt.
