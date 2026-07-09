@@ -26,7 +26,6 @@ package org.openapitools.client.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * 
@@ -98,8 +97,8 @@ data class Product (
     @SerialName(value = "no_own_stock") val noOwnStock: kotlin.Int? = null,
 
     /* Key/value pairs of userfields */
-    // Manually corrected: spec says string, server sends a JSON object when userfields are defined
-    @SerialName(value = "userfields") val userfields: JsonElement? = null,
+    // Manually corrected (see regenerate.sh): spec mistypes userfields as string, server sends a JSON object
+    @SerialName(value = "userfields") val userfields: kotlinx.serialization.json.JsonElement? = null,
 
     @SerialName(value = "should_not_be_frozen") val shouldNotBeFrozen: kotlin.Int? = null,
 

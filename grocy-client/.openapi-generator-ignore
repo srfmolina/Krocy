@@ -31,3 +31,9 @@ src/commonMain/kotlin/org/openapitools/client/models/ExposedEntityTypeAliases.kt
 # model cannot carry its fields. These hand-written files provide a typed model and API for it.
 src/commonMain/kotlin/org/openapitools/client/models/QuantityUnitConversion.kt
 src/commonMain/kotlin/org/openapitools/client/apis/QuantityUnitConversionsApi.kt
+
+# Workaround for broken Grocy spec (NOT an ignore pattern — handled by a sed post-fix in
+# regenerate.sh, so it survives regeneration): the spec declares `userfields` as string, but the
+# server sends a JSON object whenever userfields are defined for the entity. All generated models
+# have `userfields` manually retyped to kotlinx.serialization.json.JsonElement?.
+# Guarded by data/src/jvmTest/.../GenericEntityDeserializationTest.kt.

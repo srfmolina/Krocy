@@ -56,7 +56,8 @@ data class ShoppingListItem (
     @SerialName(value = "row_created_timestamp") val rowCreatedTimestamp: kotlin.String? = null,
 
     /* Key/value pairs of userfields */
-    @SerialName(value = "userfields") val userfields: kotlin.String? = null
+    // Manually corrected (see regenerate.sh): spec mistypes userfields as string, server sends a JSON object
+    @SerialName(value = "userfields") val userfields: kotlinx.serialization.json.JsonElement? = null
 
 ) {
 

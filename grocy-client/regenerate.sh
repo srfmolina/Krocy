@@ -44,6 +44,10 @@ echo ">>> Fixing boolean default values (false/true → 0/1 for kotlin.Int? fiel
 find "$SCRIPT_DIR/src/commonMain" -name "*.kt" -exec \
   sed -i 's/kotlin\.Int? = false/kotlin.Int? = 0/g; s/kotlin\.Int? = true/kotlin.Int? = 1/g' {} +
 
+echo ">>> Fixing userfields type (spec mistypes it as string; the server sends a JSON object)..."
+find "$SCRIPT_DIR/src/commonMain" -name "*.kt" -exec \
+  sed -i 's|^    @SerialName(value = "userfields") val userfields: kotlin\.String? = null|    // Manually corrected (see regenerate.sh): spec mistypes userfields as string, server sends a JSON object\n    @SerialName(value = "userfields") val userfields: kotlinx.serialization.json.JsonElement? = null|' {} +
+
 echo ">>> Restoring custom files..."
 cp -r "$PROTECTED_DIR/." "$SCRIPT_DIR/"
 rm -rf "$PROTECTED_DIR"
