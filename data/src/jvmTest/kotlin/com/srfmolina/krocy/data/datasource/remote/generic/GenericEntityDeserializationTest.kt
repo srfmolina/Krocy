@@ -1,5 +1,6 @@
 package com.srfmolina.krocy.data.datasource.remote.generic
 
+import kotlinx.serialization.json.jsonObject
 import org.openapitools.client.infrastructure.ApiClient
 import org.openapitools.client.models.ObjectsEntityGet200ResponseInner
 import org.openapitools.client.models.ProductDetailsResponse
@@ -55,6 +56,35 @@ class GenericEntityDeserializationTest {
         )
 
         assertEquals(2, parsed.product?.id)
+    }
+
+    @Test
+    fun `parses shopping list rows with done and qu_id`() {
+        // Real payload shape from GET /objects/shopping_list (demo server, 2026-07-09):
+        // the spec omits done and qu_id, added manually here (see SPEC-DEVIATIONS.md #7).
+        val parsed = ApiClient.JSON_DEFAULT.decodeFromString<List<ObjectsEntityGet200ResponseInner>>(
+            """[{"id":10,"product_id":1,"note":null,"amount":5,""" +
+                """"row_created_timestamp":"2026-07-09 19:09:07","shopping_list_id":2,"done":0,"qu_id":3},""" +
+                """{"id":11,"product_id":2,"note":null,"amount":8,""" +
+                """"row_created_timestamp":"2026-07-09 19:09:07","shopping_list_id":2,"done":1,"qu_id":3,""" +
+                """"userfields":null}]"""
+        )
+
+        assertEquals(0, parsed[0].done)
+        assertEquals(1, parsed[1].done)
+        assertEquals(3, parsed[0].quId)
+        assertEquals(2, parsed[0].shoppingListId)
+        assertEquals(5.0, parsed[0].amount)
+    }
+
+    @Test
+    fun `encodes a done-only body for the shopping list PUT`() {
+        // Crossing an item off PUTs a partial body; with encodeDefaults off only the set field
+        // is serialized, so grocy updates just the done column (see SPEC-DEVIATIONS.md #7).
+        val body = ApiClient.JSON_DEFAULT.encodeToString(ObjectsEntityGet200ResponseInner(done = 1))
+
+        val keys = ApiClient.JSON_DEFAULT.parseToJsonElement(body).jsonObject.keys
+        assertEquals(setOf("done"), keys)
     }
 
     @Test

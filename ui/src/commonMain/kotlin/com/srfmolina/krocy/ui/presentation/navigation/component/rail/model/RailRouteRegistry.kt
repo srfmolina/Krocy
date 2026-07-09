@@ -4,13 +4,16 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.srfmolina.krocy.ui.presentation.feature.shoppinglist.navigation.shoppingListNavigationItemUi
 import com.srfmolina.krocy.ui.presentation.feature.stock.navigation.stockNavigationItemUi
 import com.srfmolina.krocy.ui.presentation.navigation.KrocyRoute
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationItemUi
+import com.srfmolina.krocy.ui.presentation.navigation.ShoppingListRoute
 import com.srfmolina.krocy.ui.presentation.navigation.StockRoute
 
 private val railRoutes: List<KrocyRoute> = listOf(
     StockRoute,
+    ShoppingListRoute,
     // Add new top-level destinations here
 )
 
@@ -23,5 +26,6 @@ internal fun NavController.currentRailRoute(): KrocyRoute? {
 
 internal fun NavHostController.appRailItems(): List<NavigationItemUi> = listOf(
     stockNavigationItemUi(),
+    shoppingListNavigationItemUi(),
     // Mirror railRoutes order here
 )

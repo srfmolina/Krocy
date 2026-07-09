@@ -9,6 +9,10 @@ import com.srfmolina.krocy.domain.usecase.product.CreateProductUseCase
 import com.srfmolina.krocy.domain.usecase.product.CreateQuConversionUseCase
 import com.srfmolina.krocy.domain.usecase.product.GetProductPurchaseInfoUseCase
 import com.srfmolina.krocy.domain.usecase.product.GetProductsUseCase
+import com.srfmolina.krocy.domain.usecase.shoppinglist.AddToShoppingListUseCase
+import com.srfmolina.krocy.domain.usecase.shoppinglist.ObserveShoppingListUseCase
+import com.srfmolina.krocy.domain.usecase.shoppinglist.RefreshShoppingListUseCase
+import com.srfmolina.krocy.domain.usecase.shoppinglist.SetEntryDoneUseCase
 import com.srfmolina.krocy.domain.usecase.stock.AddStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.ConsumeStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.ObserveStockUseCase
@@ -18,6 +22,7 @@ import com.srfmolina.krocy.domain.usecase.stock.RefreshStockUseCase
 import com.srfmolina.krocy.ui.AppViewModel
 import com.srfmolina.krocy.ui.presentation.feature.creation.CreateProductViewModel
 import com.srfmolina.krocy.ui.presentation.feature.purchase.PurchaseViewModel
+import com.srfmolina.krocy.ui.presentation.feature.shoppinglist.ShoppingListViewModel
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockViewModel
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -39,9 +44,14 @@ val uiModule = module {
     singleOf(::GetProductsUseCase)
     singleOf(::GetProductPurchaseInfoUseCase)
     singleOf(::GetShoppingLocationsUseCase)
+    singleOf(::ObserveShoppingListUseCase)
+    singleOf(::RefreshShoppingListUseCase)
+    singleOf(::SetEntryDoneUseCase)
+    singleOf(::AddToShoppingListUseCase)
 
     viewModelOf(::AppViewModel)
     viewModelOf(::StockViewModel)
     viewModelOf(::CreateProductViewModel)
     viewModelOf(::PurchaseViewModel)
+    viewModelOf(::ShoppingListViewModel)
 }
