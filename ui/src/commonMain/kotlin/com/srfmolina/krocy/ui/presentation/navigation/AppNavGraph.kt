@@ -8,6 +8,8 @@ import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.feature.creation.navigation.createProductScreen
 import com.srfmolina.krocy.ui.presentation.feature.creation.navigation.navigateToCreateProduct
 import com.srfmolina.krocy.ui.presentation.feature.login.navigation.loginScreen
+import com.srfmolina.krocy.ui.presentation.feature.purchase.navigation.navigateToPurchase
+import com.srfmolina.krocy.ui.presentation.feature.purchase.navigation.purchaseScreen
 import com.srfmolina.krocy.ui.presentation.feature.splash.navigation.splashScreen
 import com.srfmolina.krocy.ui.presentation.feature.stock.navigation.stockScreen
 import com.srfmolina.krocy.ui.presentation.feature.welcome.navigation.welcomeScreen
@@ -39,10 +41,18 @@ internal fun NavGraphBuilder.appNavGraph(
             onChangeFab = onChangeFab,
             onOpenNavRail = onOpenNavRail,
             onNavigateToCreateProduct = { navController.navigateToCreateProduct() },
+            onNavigateToPurchase = { navController.navigateToPurchase() },
             onShowSnackbar = onShowSnackbar
         )
 
         createProductScreen(
+            navController = navController,
+            onChangeTopBar = onChangeTopBar,
+            onChangeFab = onChangeFab,
+            onShowSnackbar = onShowSnackbar
+        )
+
+        purchaseScreen(
             navController = navController,
             onChangeTopBar = onChangeTopBar,
             onChangeFab = onChangeFab,

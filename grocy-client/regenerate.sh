@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Regenerates the client from grocy's published OpenAPI spec.
+# The spec, the server, and the generator disagree in several places; every manual
+# workaround below (type-mappings, sed post-fixes, protected hand-written files) is
+# documented in SPEC-DEVIATIONS.md — update it when adding a new one.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -43,6 +47,14 @@ cp -r "$OUT_DIR/docs"           "$SCRIPT_DIR/docs"
 echo ">>> Fixing boolean default values (false/true → 0/1 for kotlin.Int? fields)..."
 find "$SCRIPT_DIR/src/commonMain" -name "*.kt" -exec \
   sed -i 's/kotlin\.Int? = false/kotlin.Int? = 0/g; s/kotlin\.Int? = true/kotlin.Int? = 1/g' {} +
+
+echo ">>> Fixing userfields type (spec mistypes it as string; the server sends a JSON object)..."
+find "$SCRIPT_DIR/src/commonMain" -name "*.kt" -exec \
+  sed -i 's|^    @SerialName(value = "userfields") val userfields: kotlin\.String? = null|    // Manually corrected (see regenerate.sh): spec mistypes userfields as string, server sends a JSON object\n    @SerialName(value = "userfields") val userfields: kotlinx.serialization.json.JsonElement? = null|' {} +
+
+echo ">>> Fixing has_childs type (boolean→Int mapping breaks: the server sends true/false)..."
+find "$SCRIPT_DIR/src/commonMain" -name "*.kt" -exec \
+  sed -i 's|^    @SerialName(value = "has_childs") val hasChilds: kotlin\.Int? = null|    // Manually corrected (see regenerate.sh): the boolean→Int mapping breaks here, the server sends true/false\n    @SerialName(value = "has_childs") val hasChilds: kotlinx.serialization.json.JsonElement? = null|' {} +
 
 echo ">>> Restoring custom files..."
 cp -r "$PROTECTED_DIR/." "$SCRIPT_DIR/"

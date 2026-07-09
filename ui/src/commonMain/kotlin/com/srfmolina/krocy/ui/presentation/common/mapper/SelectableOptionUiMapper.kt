@@ -3,6 +3,8 @@ package com.srfmolina.krocy.ui.presentation.common.mapper
 import com.srfmolina.krocy.domain.model.masterdata.Location
 import com.srfmolina.krocy.domain.model.masterdata.ProductGroup
 import com.srfmolina.krocy.domain.model.masterdata.QuantityUnit
+import com.srfmolina.krocy.domain.model.masterdata.ShoppingLocation
+import com.srfmolina.krocy.domain.model.product.ProductOption
 import com.srfmolina.krocy.ui.presentation.common.model.SelectableOptionUi
 
 internal fun QuantityUnit.toOption(): SelectableOptionUi = SelectableOptionUi(id = id, label = name)
@@ -10,3 +12,7 @@ internal fun QuantityUnit.toOption(): SelectableOptionUi = SelectableOptionUi(id
 internal fun Location.toOption(): SelectableOptionUi = SelectableOptionUi(id = id, label = name)
 
 internal fun ProductGroup.toOption(): SelectableOptionUi = SelectableOptionUi(id = id, label = name)
+
+internal fun ProductOption.toOption(): SelectableOptionUi = SelectableOptionUi(id = id, label = name)
+
+internal fun ShoppingLocation.toOption(): SelectableOptionUi = SelectableOptionUi(id = id, label = name)

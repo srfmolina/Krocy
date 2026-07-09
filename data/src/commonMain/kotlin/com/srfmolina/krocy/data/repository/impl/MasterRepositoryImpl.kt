@@ -6,10 +6,12 @@ import com.srfmolina.krocy.data.mapper.toLocation
 import com.srfmolina.krocy.data.mapper.toProductGroup
 import com.srfmolina.krocy.data.mapper.toQuConversion
 import com.srfmolina.krocy.data.mapper.toQuantityUnit
+import com.srfmolina.krocy.data.mapper.toShoppingLocation
 import com.srfmolina.krocy.domain.model.masterdata.Location
 import com.srfmolina.krocy.domain.model.masterdata.ProductGroup
 import com.srfmolina.krocy.domain.model.masterdata.QuConversion
 import com.srfmolina.krocy.domain.model.masterdata.QuantityUnit
+import com.srfmolina.krocy.domain.model.masterdata.ShoppingLocation
 import com.srfmolina.krocy.domain.repository.MasterRepository
 
 internal class MasterRepositoryImpl(
@@ -30,4 +32,7 @@ internal class MasterRepositoryImpl(
         quConversionDataSource.getQuConversions().getOrThrow()
             .map { it.toQuConversion() }
             .filter { it.productId == null }
+
+    override suspend fun getShoppingLocations(): List<ShoppingLocation> =
+        genericEntityDataSource.getShoppingLocations().getOrThrow().map { it.toShoppingLocation() }
 }

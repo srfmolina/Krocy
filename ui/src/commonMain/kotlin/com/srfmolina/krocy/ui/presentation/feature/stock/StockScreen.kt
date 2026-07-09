@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddBox
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -52,13 +53,17 @@ internal fun StockScreen(
     onChangeFab: (FabConfigurationUi) -> Unit,
     onOpenNavRail: () -> Unit,
     onNavigateToCreateProduct: () -> Unit,
+    onNavigateToPurchase: () -> Unit,
     onShowSnackbar: (SnackbarConfigurationUi) -> Unit,
     createdProductNameFlow: StateFlow<String?> = remember { MutableStateFlow(null) },
     onCreatedProductNameConsumed: () -> Unit = {},
+    purchasedProductNameFlow: StateFlow<String?> = remember { MutableStateFlow(null) },
+    onPurchasedProductNameConsumed: () -> Unit = {},
 ) {
     val viewModel: StockViewModel = koinViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val createdProductName by createdProductNameFlow.collectAsStateWithLifecycle()
+    val purchasedProductName by purchasedProductNameFlow.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val fabVisible by remember {
         derivedStateOf {
@@ -90,6 +95,12 @@ internal fun StockScreen(
                     onClick = onNavigateToCreateProduct
                 ),
                 LabeledActionUi(
+                    label = "Registrar compra",
+                    contentDescription = "Registrar una compra",
+                    icon = Icons.Filled.ShoppingCart,
+                    onClick = onNavigateToPurchase
+                ),
+                LabeledActionUi(
                     label = "Actualizar",
                     contentDescription = "Acción de refrescar datos",
                     icon = Icons.Default.Refresh,
@@ -103,6 +114,13 @@ internal fun StockScreen(
         createdProductName?.let { name ->
             onShowSnackbar(SnackbarConfigurationUi(message = "\"$name\" creado"))
             onCreatedProductNameConsumed()
+        }
+    }
+
+    LaunchedEffect(purchasedProductName) {
+        purchasedProductName?.let { name ->
+            onShowSnackbar(SnackbarConfigurationUi(message = "Compra registrada: \"$name\""))
+            onPurchasedProductNameConsumed()
         }
     }
 

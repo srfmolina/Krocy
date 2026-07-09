@@ -44,6 +44,6 @@ val dataModule = module {
     single<KrocyItemRepository> { KrocyItemRepositoryImpl(get()) }
     single<StockRepository> { StockRepositoryImpl(get(), get(), baseUrl) }
     single<MasterRepository> { MasterRepositoryImpl(get(), get()) }
-    single<ProductRepository> { ProductRepositoryImpl(get(), get()) }
+    single<ProductRepository> { ProductRepositoryImpl(get(), get(), get()) }
 
 }

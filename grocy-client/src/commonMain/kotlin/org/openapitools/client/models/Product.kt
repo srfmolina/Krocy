@@ -97,7 +97,8 @@ data class Product (
     @SerialName(value = "no_own_stock") val noOwnStock: kotlin.Int? = null,
 
     /* Key/value pairs of userfields */
-    @SerialName(value = "userfields") val userfields: kotlin.String? = null,
+    // Manually corrected (see regenerate.sh): spec mistypes userfields as string, server sends a JSON object
+    @SerialName(value = "userfields") val userfields: kotlinx.serialization.json.JsonElement? = null,
 
     @SerialName(value = "should_not_be_frozen") val shouldNotBeFrozen: kotlin.Int? = null,
 
