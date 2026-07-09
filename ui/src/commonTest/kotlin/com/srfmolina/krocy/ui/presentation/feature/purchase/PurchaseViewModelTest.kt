@@ -25,6 +25,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -54,11 +55,21 @@ class PurchaseViewModelTest {
         override suspend fun getShoppingLocations() = listOf(ShoppingLocation(id = 5, name = "Mercadona"))
     }
 
-    private class ProductRepositoryStub(var info: ProductPurchaseInfo) : ProductRepository {
+    private class ProductRepositoryStub(
+        var info: ProductPurchaseInfo,
+        var throwOnGetProducts: Boolean = false,
+        var throwOnGetPurchaseInfo: Boolean = false,
+    ) : ProductRepository {
         override suspend fun createProduct(product: NewProduct): Int = 1
         override suspend fun createQuConversion(conversion: NewQuConversion): Int = 1
-        override suspend fun getProducts() = listOf(ProductOption(id = 7, name = "Leche"))
-        override suspend fun getProductPurchaseInfo(productId: Int): ProductPurchaseInfo = info
+        override suspend fun getProducts(): List<ProductOption> {
+            if (throwOnGetProducts) error("boom")
+            return listOf(ProductOption(id = 7, name = "Leche"))
+        }
+        override suspend fun getProductPurchaseInfo(productId: Int): ProductPurchaseInfo {
+            if (throwOnGetPurchaseInfo) error("boom")
+            return info
+        }
     }
 
     private class StockRepositoryFake : StockRepository {
@@ -286,5 +297,52 @@ class PurchaseViewModelTest {
 
         assertEquals(1, stockRepo.purchases.size)
         assertFalse(vm.state.value.isSubmitting)
+    }
+
+    @Test
+    fun `submit with an invalid form registers no purchase and emits no effect`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val stockRepo = StockRepositoryFake()
+        val vm = viewModel(stockRepo = stockRepo)
+        vm.launchEvent(Event.Init)
+        advanceUntilIdle()
+
+        val effects = mutableListOf<PurchaseViewModel.Effect>()
+        val collector = launch { vm.effect.collect { effects.add(it) } }
+
+        // No product was selected, so the form is invalid (missing product and due date).
+        vm.launchEvent(Event.OnSubmit(vm.state.value))
+        advanceUntilIdle()
+
+        assertTrue(stockRepo.purchases.isEmpty())
+        assertTrue(effects.isEmpty())
+        collector.cancel()
+    }
+
+    @Test
+    fun `a failing products load surfaces an options error`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val vm = viewModel(productRepo = ProductRepositoryStub(info(), throwOnGetProducts = true))
+
+        vm.launchEvent(Event.Init)
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.optionsError)
+        assertFalse(vm.state.value.isLoadingOptions)
+    }
+
+    @Test
+    fun `a failing purchase info fetch sets infoError`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val vm = viewModel(productRepo = ProductRepositoryStub(info(), throwOnGetPurchaseInfo = true))
+        vm.launchEvent(Event.Init)
+        advanceUntilIdle()
+
+        vm.launchEvent(Event.OnProductSelected(7))
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.infoError)
+        assertFalse(vm.state.value.infoLoading)
+        assertNull(vm.state.value.info)
     }
 }
