@@ -25,6 +25,7 @@ package org.openapitools.client.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * 
@@ -124,7 +125,8 @@ data class ObjectsEntityGet200ResponseInner (
     @SerialName(value = "no_own_stock") val noOwnStock: kotlin.Int? = null,
 
     /* Key/value pairs of userfields */
-    @SerialName(value = "userfields") val userfields: kotlin.String? = null,
+    // Manually corrected: spec says string, server sends a JSON object when userfields are defined
+    @SerialName(value = "userfields") val userfields: JsonElement? = null,
 
     @SerialName(value = "should_not_be_frozen") val shouldNotBeFrozen: kotlin.Int? = null,
 
