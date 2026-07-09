@@ -16,6 +16,9 @@ import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.Top
 /** Navigation result key set by the create-product screen so Stock can confirm the creation. */
 internal const val CREATED_PRODUCT_NAME_KEY = "created_product_name"
 
+/** Navigation result key set by the purchase screen so Stock can confirm the purchase. */
+internal const val PURCHASED_PRODUCT_NAME_KEY = "purchased_product_name"
+
 internal fun NavController.navigateToStock(
     navOptions: NavOptions? = null
 ) = navigate(route = StockRoute, navOptions)
@@ -25,6 +28,7 @@ internal fun NavGraphBuilder.stockScreen(
     onChangeFab: (FabConfigurationUi) -> Unit,
     onOpenNavRail: () -> Unit,
     onNavigateToCreateProduct: () -> Unit,
+    onNavigateToPurchase: () -> Unit,
     onShowSnackbar: (SnackbarConfigurationUi) -> Unit
 ) {
     composable<StockRoute> { entry ->
@@ -34,9 +38,12 @@ internal fun NavGraphBuilder.stockScreen(
             onChangeFab = onChangeFab,
             onOpenNavRail = onOpenNavRail,
             onNavigateToCreateProduct = onNavigateToCreateProduct,
+            onNavigateToPurchase = onNavigateToPurchase,
             onShowSnackbar = onShowSnackbar,
             createdProductNameFlow = savedStateHandle.getStateFlow<String?>(CREATED_PRODUCT_NAME_KEY, null),
-            onCreatedProductNameConsumed = { savedStateHandle[CREATED_PRODUCT_NAME_KEY] = null }
+            onCreatedProductNameConsumed = { savedStateHandle[CREATED_PRODUCT_NAME_KEY] = null },
+            purchasedProductNameFlow = savedStateHandle.getStateFlow<String?>(PURCHASED_PRODUCT_NAME_KEY, null),
+            onPurchasedProductNameConsumed = { savedStateHandle[PURCHASED_PRODUCT_NAME_KEY] = null }
         )
     }
 }
