@@ -44,4 +44,27 @@ class MasterRepositoryImplTest {
         assertEquals(1, result[0].id)
         assertEquals(null, result[0].productId)
     }
+
+    @Test
+    fun `getShoppingLocations maps entity rows`() = runBlocking {
+        val generic = object : GenericEntityDataSource by genericStub {
+            override suspend fun getShoppingLocations() = Result.success(
+                listOf(ObjectsEntityGet200ResponseInner(id = 5, name = "Mercadona"))
+            )
+        }
+        val conversionsStub = object : QuConversionDataSource {
+            override suspend fun getQuConversions() = Result.success(emptyList<QuantityUnitConversion>())
+            override suspend fun getQuConversionsForProduct(productId: Int) =
+                Result.success(emptyList<QuantityUnitConversion>())
+            override suspend fun createQuConversion(body: QuantityUnitConversion) = Result.success(1)
+            override suspend fun updateQuConversion(id: Int, body: QuantityUnitConversion) = Result.success(Unit)
+        }
+        val repo = MasterRepositoryImpl(generic, conversionsStub)
+
+        val stores = repo.getShoppingLocations()
+
+        assertEquals(1, stores.size)
+        assertEquals(5, stores[0].id)
+        assertEquals("Mercadona", stores[0].name)
+    }
 }

@@ -3,6 +3,7 @@ package com.srfmolina.krocy.data.repository.impl
 import com.srfmolina.krocy.data.datasource.remote.generic.GenericEntityDataSource
 import com.srfmolina.krocy.data.datasource.remote.stock.StockDataSource
 import com.srfmolina.krocy.data.mapper.toDomain
+import com.srfmolina.krocy.domain.model.stock.NewPurchase
 import com.srfmolina.krocy.domain.model.stock.StockItem
 import com.srfmolina.krocy.domain.repository.StockRepository
 import kotlinx.coroutines.flow.Flow
@@ -47,6 +48,19 @@ internal class StockRepositoryImpl(
 
     override suspend fun add(productId: Int, amount: Int) {
         stockDataSource.add(productId, amount.toDouble()).getOrThrow()
+        forceRefreshWithMutex()
+    }
+
+    override suspend fun purchase(purchase: NewPurchase) {
+        stockDataSource.purchase(
+            productId = purchase.productId,
+            amount = purchase.amountStockUnits,
+            bestBeforeDate = purchase.dueDate,
+            price = purchase.pricePerStockUnit,
+            locationId = purchase.locationId,
+            shoppingLocationId = purchase.shoppingLocationId,
+            note = purchase.note,
+        ).getOrThrow()
         forceRefreshWithMutex()
     }
 
