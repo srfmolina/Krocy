@@ -59,7 +59,6 @@ internal class ShoppingListViewModel(
         val products: OptionsUi = OptionsUi(),
         val selectedProductId: Int? = null,
         val amount: String = "1",
-        val isSubmitting: Boolean = false,
     ) {
         val amountValid: Boolean
             get() = amount.toDoubleOrNull()?.let { it > 0.0 } == true

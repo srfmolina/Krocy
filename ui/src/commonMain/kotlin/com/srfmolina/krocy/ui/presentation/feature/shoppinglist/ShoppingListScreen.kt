@@ -125,7 +125,7 @@ internal fun ShoppingListScreen(
     // The dialog content reads the ViewModel itself, so the configuration only needs to be
     // re-submitted when visibility or the confirm button's enabled state changes.
     val dialogVisible = state.addDialog != null
-    val dialogConfirmEnabled = state.addDialog?.let { it.isValid && !it.isSubmitting } == true
+    val dialogConfirmEnabled = state.addDialog?.isValid == true
     LaunchedEffect(dialogVisible, dialogConfirmEnabled) {
         onChangeDialog(
             if (!dialogVisible) {
