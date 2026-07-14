@@ -158,7 +158,9 @@ internal class ShoppingListViewModel(
         // dispatched before recomposition disables the button must be rejected here.
         if (!submitLock.tryLock()) return
         try {
-            setState { copy(addDialog = addDialog?.copy(isSubmitting = true)) }
+            // The dialog closes right away; the screen shows the loading skeleton until the
+            // repository's post-add refresh lands in the observed cache.
+            setState { copy(addDialog = null, isLoading = true) }
             addToShoppingListUseCase(
                 AddToShoppingListUCRequest(
                     productId = dialog.selectedProductId!!,
@@ -166,11 +168,13 @@ internal class ShoppingListViewModel(
                 )
             ).fold(
                 onSuccess = {
-                    setState { copy(addDialog = null) }
+                    // observe() normally cleared this already when the refreshed cache emitted;
+                    // this covers an emission deduped by the StateFlow.
+                    setState { copy(isLoading = false) }
                     launchEffect(Effect.ProductAdded(productName))
                 },
                 onFailure = {
-                    setState { copy(addDialog = addDialog?.copy(isSubmitting = false)) }
+                    setState { copy(isLoading = false) }
                     launchEffect(Effect.ShowError("No se pudo añadir el producto"))
                 },
             )

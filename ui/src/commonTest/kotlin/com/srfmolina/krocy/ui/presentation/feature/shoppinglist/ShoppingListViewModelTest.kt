@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlin.test.AfterTest
@@ -223,7 +224,7 @@ class ShoppingListViewModelTest {
     }
 
     @Test
-    fun `submitting the add dialog adds the product and closes it`() = runTest {
+    fun `submitting dismisses the dialog immediately and shows loading until the add completes`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val repo = ShoppingListRepositoryFake(defaultEntries)
         val vm = viewModel(repo)
@@ -239,16 +240,21 @@ class ShoppingListViewModelTest {
         vm.launchEvent(Event.OnAddAmountChange("2"))
         advanceUntilIdle()
         vm.launchEvent(Event.OnAddSubmit)
+        runCurrent() // request still in flight: the fake's addProduct is parked at delay(100)
+
+        assertNull(vm.state.value.addDialog)
+        assertTrue(vm.state.value.isLoading)
+
         advanceUntilIdle()
 
         assertEquals(listOf(7 to 2.0), repo.added)
-        assertNull(vm.state.value.addDialog)
+        assertFalse(vm.state.value.isLoading)
         assertEquals("Queso curado", (effects.single() as Effect.ProductAdded).productName)
         collector.cancel()
     }
 
     @Test
-    fun `a failing add keeps the dialog open and surfaces an error`() = runTest {
+    fun `a failing add stops the loading, keeps the dialog closed and surfaces an error`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val repo = ShoppingListRepositoryFake(defaultEntries, failAdd = true)
         val vm = viewModel(repo)
@@ -265,8 +271,8 @@ class ShoppingListViewModelTest {
         vm.launchEvent(Event.OnAddSubmit)
         advanceUntilIdle()
 
-        val dialog = assertNotNull(vm.state.value.addDialog)
-        assertFalse(dialog.isSubmitting)
+        assertNull(vm.state.value.addDialog)
+        assertFalse(vm.state.value.isLoading)
         assertTrue(effects.single() is Effect.ShowError)
         collector.cancel()
     }
