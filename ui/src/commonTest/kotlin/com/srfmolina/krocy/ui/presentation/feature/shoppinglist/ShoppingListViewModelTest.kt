@@ -69,6 +69,10 @@ class ShoppingListViewModelTest {
             delay(100) // keep the request in flight so a second submit can race it
             if (failAdd) error("boom")
             added += productId to amount
+            // Mirror production: the repository's cache emits the newly added entry before
+            // addProduct returns, which is what actually ends the ViewModel's loading state.
+            entriesFlow.value = entriesFlow.value +
+                ShoppingListEntry(99, productId, "Queso curado", null, amount, "ud", "uds", done = false)
         }
 
         override suspend fun forceRefresh() {
@@ -250,6 +254,9 @@ class ShoppingListViewModelTest {
         assertEquals(listOf(7 to 2.0), repo.added)
         assertFalse(vm.state.value.isLoading)
         assertEquals("Queso curado", (effects.single() as Effect.ProductAdded).productName)
+        // The loading ended via the repository's cache emission delivering the new entry,
+        // not just the defensive fallback in the ViewModel's success branch.
+        assertEquals("Queso curado", vm.entry(99)?.name)
         collector.cancel()
     }
 
