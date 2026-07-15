@@ -24,7 +24,6 @@ import com.srfmolina.krocy.ui.presentation.feature.shoppinglist.model.ShoppingGr
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.sync.Mutex
 
 internal class ShoppingListViewModel(
     private val observeShoppingListUseCase: ObserveShoppingListUseCase,
@@ -34,7 +33,6 @@ internal class ShoppingListViewModel(
     private val getProductsUseCase: GetProductsUseCase,
 ) : BaseViewModel<Event, State, Effect>() {
 
-    private val submitLock = Mutex()
     private var observeJob: Job? = null
 
     sealed interface Event : UiEvent {
@@ -149,36 +147,32 @@ internal class ShoppingListViewModel(
     }
 
     private suspend fun submitAdd() {
+        // Nulling the dialog before any suspension point makes this idempotent: a second
+        // OnAddSubmit dispatched before recomposition disables the button bounces off this
+        // null check, because events run on the confined main dispatcher.
         val dialog = currentState.addDialog ?: return
         if (!dialog.isValid) return
         val productName = dialog.selectedProductName ?: return
 
-        // Events are not serialized (each runs in its own coroutine), so a second OnAddSubmit
-        // dispatched before recomposition disables the button must be rejected here.
-        if (!submitLock.tryLock()) return
-        try {
-            // The dialog closes right away; the screen shows the loading skeleton until the
-            // repository's post-add refresh lands in the observed cache.
-            setState { copy(addDialog = null, isLoading = true) }
-            addToShoppingListUseCase(
-                AddToShoppingListUCRequest(
-                    productId = dialog.selectedProductId!!,
-                    amount = dialog.amount.toDouble(),
-                )
-            ).fold(
-                onSuccess = {
-                    // observe() normally cleared this already when the refreshed cache emitted;
-                    // this covers an emission deduped by the StateFlow.
-                    setState { copy(isLoading = false) }
-                    launchEffect(Effect.ProductAdded(productName))
-                },
-                onFailure = {
-                    setState { copy(isLoading = false) }
-                    launchEffect(Effect.ShowError("No se pudo añadir el producto"))
-                },
+        // The dialog closes right away; the screen shows the loading skeleton until the
+        // repository's post-add refresh lands in the observed cache.
+        setState { copy(addDialog = null, isLoading = true) }
+        addToShoppingListUseCase(
+            AddToShoppingListUCRequest(
+                productId = dialog.selectedProductId!!,
+                amount = dialog.amount.toDouble(),
             )
-        } finally {
-            submitLock.unlock()
-        }
+        ).fold(
+            onSuccess = {
+                // observe() normally cleared this already when the refreshed cache emitted;
+                // this covers an emission deduped by the StateFlow.
+                setState { copy(isLoading = false) }
+                launchEffect(Effect.ProductAdded(productName))
+            },
+            onFailure = {
+                setState { copy(isLoading = false) }
+                launchEffect(Effect.ShowError("No se pudo añadir el producto"))
+            },
+        )
     }
 }

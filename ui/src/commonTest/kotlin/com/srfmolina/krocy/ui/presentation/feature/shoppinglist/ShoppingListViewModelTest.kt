@@ -296,6 +296,8 @@ class ShoppingListViewModelTest {
         advanceUntilIdle()
         vm.launchEvent(Event.OnAddProductSelected(7))
         advanceUntilIdle()
+        // The guard is submitAdd's null check: the first submit nulls the dialog before
+        // any suspension point, so the second one returns early. No lock is involved.
         vm.launchEvent(Event.OnAddSubmit)
         vm.launchEvent(Event.OnAddSubmit)
         advanceUntilIdle()
