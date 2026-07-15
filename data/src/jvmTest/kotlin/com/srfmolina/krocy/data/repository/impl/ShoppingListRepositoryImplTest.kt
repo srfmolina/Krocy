@@ -336,6 +336,19 @@ class ShoppingListRepositoryImplTest {
     }
 
     @Test
+    fun `rows without a server id are not emitted`() = runBlocking {
+        val stub = ShoppingListDataSourceStub(
+            missing = emptyList(),
+            items = mutableListOf(userRow(id = 30, productId = 1, amount = 2.0, quId = 6).copy(id = null)),
+        )
+        val repo = ShoppingListRepositoryImpl(stub, genericStub)
+
+        // A row with no id cannot be crossed off or deleted; emitting it with id 0 would
+        // render a tappable entry whose PUT goes to /objects/shopping_list/0.
+        assertTrue(repo.getShoppingList().first().isEmpty())
+    }
+
+    @Test
     fun `no update is issued when the product has no stock unit and the amount matches`() = runBlocking {
         // Product 2 has no quIdStock; comparing the row's quId against null can never
         // converge (null is omitted from the PUT body), so it must not trigger updates.

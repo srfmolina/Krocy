@@ -37,10 +37,14 @@ internal class ShoppingListRepositoryImpl(
     }
 
     override suspend fun setDone(entryId: Int, done: Boolean) {
-        shoppingListDataSource.setDone(entryId, done).getOrThrow()
-        // Patch the cache in place: a full refetch here would defeat the instant cross-off.
-        _cache.update { entries ->
-            entries.map { if (it.id == entryId) it.copy(done = done) else it }
+        // Serialized with refreshes: otherwise a refresh that fetched its rows before this
+        // PUT would later overwrite the patch below with its stale snapshot.
+        refreshMutex.withLock {
+            shoppingListDataSource.setDone(entryId, done).getOrThrow()
+            // Patch the cache in place: a full refetch here would defeat the instant cross-off.
+            _cache.update { entries ->
+                entries.map { if (it.id == entryId) it.copy(done = done) else it }
+            }
         }
     }
 
@@ -183,19 +187,18 @@ internal class ShoppingListRepositoryImpl(
         val groups = genericEntityDataSource.getProductGroups().getOrThrow().associateBy { it.id }
         val units = genericEntityDataSource.getQuantityUnits().getOrThrow().associateBy { it.id }
 
-        _cache.update {
-            rows.mapNotNull { row ->
-                // Note-only rows (no product) are possible in grocy; the list shows products only.
-                val product = productsById[row.productId] ?: return@mapNotNull null
-                val unit = units[row.quId ?: product.quIdStock]
-                val singularName = unit?.name ?: "ud"
-                val pluralName = unit?.namePlural?.takeIf { it.isNotBlank() } ?: singularName
-                row.toShoppingListEntry(
-                    productName = product.name.orEmpty(),
-                    groupName = groups[product.productGroupId]?.name?.takeIf { it.isNotBlank() },
-                    unitNames = Pair(singularName, pluralName),
-                )
-            }
+        _cache.value = rows.mapNotNull { row ->
+            // Rows that can't be resolved to a product aren't renderable: note-only rows
+            // (other clients allow them) and rows whose product is missing from the fetch.
+            val product = productsById[row.productId] ?: return@mapNotNull null
+            val unit = units[row.quId ?: product.quIdStock]
+            val singularName = unit?.name ?: "ud"
+            val pluralName = unit?.namePlural?.takeIf { it.isNotBlank() } ?: singularName
+            row.toShoppingListEntry(
+                productName = product.name.orEmpty(),
+                groupName = groups[product.productGroupId]?.name?.takeIf { it.isNotBlank() },
+                unitNames = Pair(singularName, pluralName),
+            )
         }
     }
 
