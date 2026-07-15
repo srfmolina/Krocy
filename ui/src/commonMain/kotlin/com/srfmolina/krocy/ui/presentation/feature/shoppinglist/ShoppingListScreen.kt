@@ -228,7 +228,7 @@ private fun ShoppingListGroups(
             contentPadding = contentPadding,
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s6)
         ) {
-            items(groups, key = { it.displayName }) { group ->
+            items(groups, key = { it.key }) { group ->
                 ShoppingGroupCard(
                     group = group,
                     onToggleDone = onToggleDone,
@@ -245,7 +245,7 @@ private fun ShoppingListGroups(
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s4),
             verticalItemSpacing = MaterialTheme.spacing.s4,
         ) {
-            items(groups, key = { it.displayName }) { group ->
+            items(groups, key = { it.key }) { group ->
                 ShoppingGroupCard(
                     group = group,
                     onToggleDone = onToggleDone,

@@ -7,6 +7,9 @@ internal data class ShoppingGroupUi(
 ) {
     val displayName: String get() = name ?: UNGROUPED_DISPLAY_NAME
 
+    /** Stable lazy-list key. [displayName] cannot be the key: a real group named "Otros" would collide with the ungrouped section. */
+    val key: String get() = name ?: "\u0000ungrouped"
+
     val doneCount: Int get() = entries.count { it.done }
 
     val allDone: Boolean get() = entries.isNotEmpty() && doneCount == entries.size
