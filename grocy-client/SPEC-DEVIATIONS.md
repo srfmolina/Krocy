@@ -122,7 +122,10 @@ anything useful).
 
 **Workaround here:** hand-written
 `src/commonMain/kotlin/org/openapitools/client/models/ExposedEntityTypeAliases.kt`
-aliases all five names to the complete `ExposedEntity` enum. Protected via
+aliases four of the five names to the complete `ExposedEntity` enum.
+`ExposedEntityIncludingUserEntitiesNotIncludingNotEditable` deliberately stays on the
+inverted `ExposedEntityNoEdit`: its only consumer (`userfieldsEntityObjectIdPut`) is
+unused here — repoint it when userfields support lands. Protected via
 `.openapi-generator-ignore`.
 
 **Proposed upstream fix:** define those five schemas in `components/schemas` with the
@@ -141,6 +144,13 @@ Protected via `.openapi-generator-ignore`.
 
 **Proposed upstream fix:** add a `QuantityUnitConversion` schema and include its fields in
 the generic-entity response schema.
+
+## 6. Spec fails OpenAPI validation
+
+Generation requires `--skip-validate-spec` (the dangling `$ref`s of item 4 alone break
+validation).
+
+**Proposed upstream fix:** items 4–5; then validation can be re-enabled here.
 
 ## 7. `shopping_list` rows: server sends `done` and `qu_id`; spec omits both
 
@@ -164,14 +174,9 @@ uses it).
 `qu_id` via the recipe-position schema). Reads and the partial-body `PUT` both go through
 `ObjectsEntityGet200ResponseInner`; the client's `Json` leaves `encodeDefaults` off, so
 `ObjectsEntityGet200ResponseInner(done = 1)` encodes exactly `{"done":1}`.
-Regression guard: shopping-list case in
-`data/src/jvmTest/.../datasource/remote/generic/GenericEntityDeserializationTest.kt`.
+Regression guard: the shopping-list cases in
+`data/src/jvmTest/.../datasource/remote/generic/GenericEntityDeserializationTest.kt`
+cover `ObjectsEntityGet200ResponseInner` only. The `ShoppingListItem` additions are for
+spec fidelity — nothing in the app reads that model, and they are untested.
 
 **Proposed upstream fix:** add `done` (and `qu_id`) to the `ShoppingListItem` schema.
-
-## 6. Spec fails OpenAPI validation
-
-Generation requires `--skip-validate-spec` (the dangling `$ref`s of item 4 alone break
-validation).
-
-**Proposed upstream fix:** items 4–5; then validation can be re-enabled here.
