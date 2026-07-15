@@ -26,9 +26,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
 import com.srfmolina.krocy.ui.AppViewModel.Effect
 import com.srfmolina.krocy.ui.AppViewModel.Event
+import com.srfmolina.krocy.ui.presentation.common.KrocyDialog
 import com.srfmolina.krocy.ui.presentation.common.KrocyFabMenu
 import com.srfmolina.krocy.ui.presentation.common.KrocySnackbar
 import com.srfmolina.krocy.ui.presentation.common.KrocySnackbarVisuals
+import com.srfmolina.krocy.ui.presentation.common.model.DialogConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.feature.welcome.navigation.navigateToWelcome
@@ -115,6 +117,9 @@ fun App() {
                     onChangeFab = { config ->
                         viewModel.launchEvent(Event.OnFabChange(config))
                     },
+                    onChangeDialog = { config ->
+                        viewModel.launchEvent(Event.OnDialogChange(config))
+                    },
                     onShowSnackbar = onShowSnackbar
                 )
             }
@@ -130,6 +135,9 @@ fun App() {
                 },
                 onChangeFab = { config ->
                     viewModel.launchEvent(Event.OnFabChange(config))
+                },
+                onChangeDialog = { config ->
+                    viewModel.launchEvent(Event.OnDialogChange(config))
                 },
                 onShowSnackbar = onShowSnackbar
             )
@@ -147,6 +155,7 @@ private fun MainContent(
     onOpenNavRail: () -> Unit,
     onChangeTopBar: (TopBarConfigurationUi) -> Unit,
     onChangeFab: (FabConfigurationUi) -> Unit,
+    onChangeDialog: (DialogConfigurationUi?) -> Unit,
     onShowSnackbar: (SnackbarConfigurationUi) -> Unit
 ) {
     Scaffold(
@@ -196,6 +205,7 @@ private fun MainContent(
                 navController = navController,
                 onChangeTopBar = onChangeTopBar,
                 onChangeFab = onChangeFab,
+                onChangeDialog = onChangeDialog,
                 onOpenNavRail = onOpenNavRail,
                 onShowSnackbar = onShowSnackbar
             )
@@ -209,6 +219,8 @@ private fun MainContent(
                     actions = it.actions
                 )
             }
+
+            state.dialogConfig?.let { KrocyDialog(it) }
         }
     }
 }

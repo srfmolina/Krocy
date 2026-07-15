@@ -7,6 +7,7 @@ import com.srfmolina.krocy.ui.base.BaseViewModel
 import com.srfmolina.krocy.ui.base.UiEffect
 import com.srfmolina.krocy.ui.base.UiEvent
 import com.srfmolina.krocy.ui.base.UiState
+import com.srfmolina.krocy.ui.presentation.common.model.DialogConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarConfigurationUi
 
@@ -17,6 +18,7 @@ internal class AppViewModel : BaseViewModel<Event, State, Effect>() {
         data class OnTopBarChange(val config: TopBarConfigurationUi) : Event
         data class OnChangeNavRailStatus(val open: Boolean) : Event
         data class OnFabChange(val config: FabConfigurationUi) : Event
+        data class OnDialogChange(val config: DialogConfigurationUi?) : Event
     }
 
     sealed interface Effect : UiEffect {
@@ -27,7 +29,8 @@ internal class AppViewModel : BaseViewModel<Event, State, Effect>() {
         val isLoading: Boolean = true,
         val isNavRailOpen: Boolean = false,
         val topBarConfig: TopBarConfigurationUi? = null,
-        val fabConfig: FabConfigurationUi? = null
+        val fabConfig: FabConfigurationUi? = null,
+        val dialogConfig: DialogConfigurationUi? = null
     ) : UiState
 
     override fun createInitialState(): State = State()
@@ -38,6 +41,7 @@ internal class AppViewModel : BaseViewModel<Event, State, Effect>() {
             is Event.OnTopBarChange -> setState { copy(topBarConfig = event.config) }
             is Event.OnChangeNavRailStatus -> setState { copy(isNavRailOpen = event.open) }
             is Event.OnFabChange -> setState { copy(fabConfig = event.config) }
+            is Event.OnDialogChange -> setState { copy(dialogConfig = event.config) }
         }
     }
 

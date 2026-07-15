@@ -56,6 +56,14 @@ echo ">>> Fixing has_childs type (boolean→Int mapping breaks: the server sends
 find "$SCRIPT_DIR/src/commonMain" -name "*.kt" -exec \
   sed -i 's|^    @SerialName(value = "has_childs") val hasChilds: kotlin\.Int? = null|    // Manually corrected (see regenerate.sh): the boolean→Int mapping breaks here, the server sends true/false\n    @SerialName(value = "has_childs") val hasChilds: kotlinx.serialization.json.JsonElement? = null|' {} +
 
+echo ">>> Adding done to shopping_list models (spec omits it; the server sends it as 0/1)..."
+find "$SCRIPT_DIR/src/commonMain" -name "*.kt" -exec \
+  sed -i 's|^    @SerialName(value = "shopping_list_id") val shoppingListId: kotlin\.Int? = null,$|    @SerialName(value = "shopping_list_id") val shoppingListId: kotlin.Int? = null,\n\n    // Manually added (see regenerate.sh): spec omits done on shopping_list rows, the server sends it as 0/1\n    @SerialName(value = "done") val done: kotlin.Int? = null,|' {} +
+
+echo ">>> Adding qu_id to ShoppingListItem (spec omits it; ObjectsEntityGet200ResponseInner already has it)..."
+sed -i 's|^    @SerialName(value = "done") val done: kotlin\.Int? = null,$|    @SerialName(value = "done") val done: kotlin.Int? = null,\n\n    // Manually added (see regenerate.sh): spec omits qu_id on shopping_list rows, the server sends it\n    @SerialName(value = "qu_id") val quId: kotlin.Int? = null,|' \
+  "$SCRIPT_DIR/src/commonMain/kotlin/org/openapitools/client/models/ShoppingListItem.kt"
+
 echo ">>> Restoring custom files..."
 cp -r "$PROTECTED_DIR/." "$SCRIPT_DIR/"
 rm -rf "$PROTECTED_DIR"

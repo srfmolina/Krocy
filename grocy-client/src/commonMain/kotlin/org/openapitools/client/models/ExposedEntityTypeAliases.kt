@@ -5,7 +5,10 @@ package org.openapitools.client.models
 // These typealiases bridge the generated API code to the actual enum classes that exist.
 typealias ExposedEntityIncludingUserEntities = ExposedEntity
 typealias ExposedEntityIncludingUserEntitiesNotIncludingNotEditable = ExposedEntityNoEdit
-typealias ExposedEntityNotIncludingNotDeletable = ExposedEntityNoDelete
+// The generated ExposedEntityNoDelete enum is inverted like ExposedEntityNoEdit below: it lists
+// the *non-deletable* entities (stock, logs, views, ...), so objectsEntityObjectIdDelete couldn't
+// name a deletable entity like shopping_list. Point this alias at the full ExposedEntity enum.
+typealias ExposedEntityNotIncludingNotDeletable = ExposedEntity
 // The generated ExposedEntityNoEdit enum is inverted: it lists the *non-editable* entities
 // (stock, api_keys, views, ...) and has no `products`, so objectsEntityPost/Put couldn't create
 // or edit editable entities. Point this alias at the full ExposedEntity enum (which has every

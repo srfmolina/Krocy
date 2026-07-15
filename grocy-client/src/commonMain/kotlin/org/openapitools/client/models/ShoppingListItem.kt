@@ -46,6 +46,12 @@ data class ShoppingListItem (
 
     @SerialName(value = "shopping_list_id") val shoppingListId: kotlin.Int? = null,
 
+    // Manually added (see regenerate.sh): spec omits done on shopping_list rows, the server sends it as 0/1
+    @SerialName(value = "done") val done: kotlin.Int? = null,
+
+    // Manually added (see regenerate.sh): spec omits qu_id on shopping_list rows, the server sends it
+    @SerialName(value = "qu_id") val quId: kotlin.Int? = null,
+
     @SerialName(value = "product_id") val productId: kotlin.Int? = null,
 
     @SerialName(value = "note") val note: kotlin.String? = null,

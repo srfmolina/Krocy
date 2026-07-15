@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
@@ -48,6 +49,9 @@ import com.srfmolina.krocy.ui.presentation.theme.spacing
  * of [actions]. Each action is described by a [LabeledActionUi]; tapping one closes the menu and
  * invokes its `onClick`.
  *
+ * A single action skips the menu entirely: the FAB shows the action's own icon and pressing it
+ * triggers the action directly.
+ *
  * @param actions the menu entries, rendered top-to-bottom above the toggle button.
  * @param visible whether the collapsed FAB should be shown. The button stays visible while the menu
  *   is expanded regardless of this flag (e.g. to keep it on screen while the list is scrolled).
@@ -59,6 +63,11 @@ internal fun KrocyFabMenu(
     modifier: Modifier = Modifier,
     visible: Boolean = true,
 ) {
+    if (actions.size == 1) {
+        SingleActionFab(action = actions.first(), visible = visible, modifier = modifier)
+        return
+    }
+
     var expanded by rememberSaveable { mutableStateOf(false) }
 
     FloatingActionButtonMenu(
@@ -121,6 +130,28 @@ internal fun KrocyFabMenu(
                 },
                 text = { Text(action.label) }
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun SingleActionFab(
+    action: LabeledActionUi,
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    FloatingActionButton(
+        onClick = action.onClick,
+        modifier = modifier
+            .semantics { contentDescription = action.contentDescription }
+            .animateFloatingActionButton(
+                visible = visible,
+                alignment = Alignment.BottomEnd
+            ),
+    ) {
+        action.icon?.let { icon ->
+            Icon(imageVector = icon, contentDescription = null)
         }
     }
 }

@@ -115,12 +115,17 @@ Path parameters `$ref` five schema names that do not exist in `components/schema
 
 The generator emits imports for the missing models, and the partial enums it does produce
 are wrong: `ExposedEntityNoEdit` lists the *non-editable* entities (so `objectsEntityPost`
-could not create products), and `ExposedEntityNoListing` contains only `api_keys` (so
-`objectsEntityGet` could not list anything useful).
+could not create products), `ExposedEntityNoDelete` lists the *non-deletable* ones (so
+`objectsEntityObjectIdDelete` could not delete shopping-list rows), and
+`ExposedEntityNoListing` contains only `api_keys` (so `objectsEntityGet` could not list
+anything useful).
 
 **Workaround here:** hand-written
 `src/commonMain/kotlin/org/openapitools/client/models/ExposedEntityTypeAliases.kt`
-aliases all five names to the complete `ExposedEntity` enum. Protected via
+aliases four of the five names to the complete `ExposedEntity` enum.
+`ExposedEntityIncludingUserEntitiesNotIncludingNotEditable` deliberately stays on the
+inverted `ExposedEntityNoEdit`: its only consumer (`userfieldsEntityObjectIdPut`) is
+unused here — repoint it when userfields support lands. Protected via
 `.openapi-generator-ignore`.
 
 **Proposed upstream fix:** define those five schemas in `components/schemas` with the
@@ -146,3 +151,32 @@ Generation requires `--skip-validate-spec` (the dangling `$ref`s of item 4 alone
 validation).
 
 **Proposed upstream fix:** items 4–5; then validation can be re-enabled here.
+
+## 7. `shopping_list` rows: server sends `done` and `qu_id`; spec omits both
+
+The `ShoppingListItem` schema (and therefore the merged generic-entity response schema)
+declares only `id`, `shopping_list_id`, `product_id`, `note`, `amount`,
+`row_created_timestamp` and `userfields` — but the server includes two more columns on
+every row, and `done` is the only way to persist a crossed-off state (the grocy web UI
+uses it).
+
+**Evidence (demo server, 2026-07-09):**
+- `GET /api/objects/shopping_list` → rows include `"done": 0` and `"qu_id": 3`
+  (after `POST /api/stock/shoppinglist/add-missing-products`).
+- `PUT /api/objects/shopping_list/{id}` with body `{"done":1}` → 204, and the row
+  reads back `"done": 1` — the round-trip the shopping list screen relies on.
+
+`done` is serialized as a `0`/`1` integer (DB-backed boolean, consistent with item 1).
+
+**Workarounds here:** sed post-fixes in `regenerate.sh` add
+`done: kotlin.Int?` to `ObjectsEntityGet200ResponseInner` and `ShoppingListItem`, and
+`quId: kotlin.Int?` to `ShoppingListItem` (`ObjectsEntityGet200ResponseInner` already has
+`qu_id` via the recipe-position schema). Reads and the partial-body `PUT` both go through
+`ObjectsEntityGet200ResponseInner`; the client's `Json` leaves `encodeDefaults` off, so
+`ObjectsEntityGet200ResponseInner(done = 1)` encodes exactly `{"done":1}`.
+Regression guard: the shopping-list cases in
+`data/src/jvmTest/.../datasource/remote/generic/GenericEntityDeserializationTest.kt`
+cover `ObjectsEntityGet200ResponseInner` only. The `ShoppingListItem` additions are for
+spec fidelity — nothing in the app reads that model, and they are untested.
+
+**Proposed upstream fix:** add `done` (and `qu_id`) to the `ShoppingListItem` schema.

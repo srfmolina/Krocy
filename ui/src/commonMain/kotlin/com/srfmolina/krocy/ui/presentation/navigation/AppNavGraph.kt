@@ -3,6 +3,7 @@ package com.srfmolina.krocy.ui.presentation.navigation
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
+import com.srfmolina.krocy.ui.presentation.common.model.DialogConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.feature.creation.navigation.createProductScreen
@@ -10,6 +11,7 @@ import com.srfmolina.krocy.ui.presentation.feature.creation.navigation.navigateT
 import com.srfmolina.krocy.ui.presentation.feature.login.navigation.loginScreen
 import com.srfmolina.krocy.ui.presentation.feature.purchase.navigation.navigateToPurchase
 import com.srfmolina.krocy.ui.presentation.feature.purchase.navigation.purchaseScreen
+import com.srfmolina.krocy.ui.presentation.feature.shoppinglist.navigation.shoppingListScreen
 import com.srfmolina.krocy.ui.presentation.feature.splash.navigation.splashScreen
 import com.srfmolina.krocy.ui.presentation.feature.stock.navigation.stockScreen
 import com.srfmolina.krocy.ui.presentation.feature.welcome.navigation.welcomeScreen
@@ -20,6 +22,7 @@ internal fun NavGraphBuilder.appNavGraph(
     navController: NavController,
     onChangeTopBar: (TopBarConfigurationUi) -> Unit,
     onChangeFab: (FabConfigurationUi) -> Unit,
+    onChangeDialog: (DialogConfigurationUi?) -> Unit,
     onOpenNavRail: () -> Unit,
     onShowSnackbar: (SnackbarConfigurationUi) -> Unit
 ){
@@ -42,6 +45,14 @@ internal fun NavGraphBuilder.appNavGraph(
             onOpenNavRail = onOpenNavRail,
             onNavigateToCreateProduct = { navController.navigateToCreateProduct() },
             onNavigateToPurchase = { navController.navigateToPurchase() },
+            onShowSnackbar = onShowSnackbar
+        )
+
+        shoppingListScreen(
+            onChangeTopBar = onChangeTopBar,
+            onChangeFab = onChangeFab,
+            onChangeDialog = onChangeDialog,
+            onOpenNavRail = onOpenNavRail,
             onShowSnackbar = onShowSnackbar
         )
 
