@@ -56,6 +56,7 @@ internal class ShoppingListDataSourceImpl(
         amount: Double,
         quId: Int?,
         note: String?,
+        done: Boolean?,
     ): Result<Unit> = runCatching {
         // Partial body: encodeDefaults is off, so unset fields are not serialized
         // and grocy leaves their columns untouched (see SPEC-DEVIATIONS.md #7).
@@ -66,6 +67,7 @@ internal class ShoppingListDataSourceImpl(
                 amount = amount,
                 quId = quId,
                 note = note,
+                done = done?.let { if (it) 1 else 0 },
             )
         ).body()
     }

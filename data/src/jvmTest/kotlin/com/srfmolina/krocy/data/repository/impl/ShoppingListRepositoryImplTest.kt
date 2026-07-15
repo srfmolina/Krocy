@@ -9,6 +9,7 @@ import org.openapitools.client.models.ObjectsEntityGet200ResponseInner
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ShoppingListRepositoryImplTest {
@@ -39,6 +40,7 @@ class ShoppingListRepositoryImplTest {
     ) : ShoppingListDataSource {
         var createdListName: String? = null
         val doneCalls = mutableListOf<Pair<Int, Boolean>>()
+        val updatedIds = mutableListOf<Int>()
         var itemFetches = 0
         private var nextId = 100
 
@@ -80,12 +82,15 @@ class ShoppingListRepositoryImplTest {
             amount: Double,
             quId: Int?,
             note: String?,
+            done: Boolean?,
         ): Result<Unit> {
+            updatedIds += itemId
             val index = items.indexOfFirst { it.id == itemId }
             items[index] = items[index].copy(
                 amount = amount,
                 quId = quId ?: items[index].quId,
                 note = note ?: items[index].note,
+                done = done?.let { if (it) 1 else 0 } ?: items[index].done,
             )
             return Result.success(Unit)
         }
@@ -104,10 +109,20 @@ class ShoppingListRepositoryImplTest {
     private fun missing(productId: Int, amount: Double) =
         CurrentVolatilStockResponseMissingProductsInner(id = productId, amountMissing = amount)
 
+    /** A row the deficit sync owns: carries the krocy:auto marker. */
     private fun autoRow(id: Int, productId: Int, amount: Double, quId: Int?, done: Int = 0) =
         ObjectsEntityGet200ResponseInner(
-            id = id, shoppingListId = 2, productId = productId, amount = amount, quId = quId, done = done,
+            id = id, shoppingListId = 2, productId = productId, amount = amount, quId = quId,
+            done = done, note = "krocy:auto",
         )
+
+    /** A row the sync does not own: added by hand here, in another client, or note-only. */
+    private fun userRow(
+        id: Int, productId: Int?, amount: Double, quId: Int?, done: Int = 0, note: String? = null,
+    ) = ObjectsEntityGet200ResponseInner(
+        id = id, shoppingListId = 2, productId = productId, amount = amount, quId = quId,
+        done = done, note = note,
+    )
 
     @Test
     fun `a deficit without a row is added in stock units and joined with master data`() = runBlocking {
@@ -124,6 +139,7 @@ class ShoppingListRepositoryImplTest {
         assertEquals("lata", entry.unitName)
         assertEquals("latas", entry.unitNamePlural)
         assertFalse(entry.done)
+        assertEquals("krocy:auto", stub.items.single().note)
     }
 
     @Test
@@ -157,31 +173,31 @@ class ShoppingListRepositoryImplTest {
     }
 
     @Test
-    fun `manual rows are preserved and crossed-off manual rows are cleared on sync`() = runBlocking {
+    fun `user rows are preserved and crossed-off user rows are cleared on sync`() = runBlocking {
         val stub = ShoppingListDataSourceStub(
             missing = emptyList(),
             items = mutableListOf(
-                autoRow(id = 30, productId = 1, amount = 2.0, quId = 6).copy(note = "krocy:manual"),
-                autoRow(id = 31, productId = 2, amount = 1.0, quId = null, done = 1).copy(note = "krocy:manual"),
+                userRow(id = 30, productId = 1, amount = 2.0, quId = 6, note = "solo eco"),
+                userRow(id = 31, productId = 2, amount = 1.0, quId = null, done = 1),
             ),
         )
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
 
         val entries = repo.getShoppingList().first()
 
-        // The pending manual row survives although its product has no deficit...
+        // The pending user row survives untouched although its product has no deficit...
         assertEquals(listOf(30), entries.map { it.id })
-        // ...and the crossed-off one was bought: cleared.
+        assertEquals("solo eco", stub.items.single().note)
+        assertEquals(2.0, stub.items.single().amount)
+        // ...and the crossed-off one was bought: cleared, whichever client crossed it off.
         assertEquals(listOf(30), stub.items.map { it.id })
     }
 
     @Test
-    fun `a deficit for a manually listed product does not create a second row`() = runBlocking {
+    fun `a deficit for a product already listed by the user does not create a second row`() = runBlocking {
         val stub = ShoppingListDataSourceStub(
             missing = listOf(missing(productId = 1, amount = 3.0)),
-            items = mutableListOf(
-                autoRow(id = 30, productId = 1, amount = 5.0, quId = 6).copy(note = "krocy:manual"),
-            ),
+            items = mutableListOf(userRow(id = 30, productId = 1, amount = 5.0, quId = 6)),
         )
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
 
@@ -193,7 +209,7 @@ class ShoppingListRepositoryImplTest {
     }
 
     @Test
-    fun `manual add creates a marked row with the product's stock unit`() = runBlocking {
+    fun `manual add creates an unmarked user row with the product's stock unit`() = runBlocking {
         val stub = ShoppingListDataSourceStub()
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
         repo.getShoppingList().first()
@@ -201,17 +217,17 @@ class ShoppingListRepositoryImplTest {
         repo.addProduct(productId = 1, amount = 2.0)
 
         val row = stub.items.single()
-        assertEquals("krocy:manual", row.note)
+        assertNull(row.note)
         assertEquals(6, row.quId)
         assertEquals(2.0, row.amount)
         assertEquals(2.0, repo.getShoppingList().first().single().amount)
     }
 
     @Test
-    fun `manual add merges into an existing row and claims it as manual`() = runBlocking {
+    fun `manual add merges into an auto row, clears the marker and un-crosses it`() = runBlocking {
         val stub = ShoppingListDataSourceStub(
             missing = listOf(missing(productId = 1, amount = 3.0)),
-            items = mutableListOf(autoRow(id = 21, productId = 1, amount = 3.0, quId = 6)),
+            items = mutableListOf(autoRow(id = 21, productId = 1, amount = 3.0, quId = 6, done = 1)),
         )
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
         repo.getShoppingList().first()
@@ -220,7 +236,8 @@ class ShoppingListRepositoryImplTest {
 
         val row = stub.items.single()
         assertEquals(5.0, row.amount)
-        assertEquals("krocy:manual", row.note)
+        assertEquals("", row.note)
+        assertEquals(0, row.done)
     }
 
     @Test
@@ -261,5 +278,75 @@ class ShoppingListRepositoryImplTest {
 
         assertTrue(entries.isEmpty())
         assertEquals(listOf(40), stub.items.map { it.id })
+    }
+
+    @Test
+    fun `re-adding a crossed-off product un-crosses the row instead of losing it`() = runBlocking {
+        val stub = ShoppingListDataSourceStub()
+        val repo = ShoppingListRepositoryImpl(stub, genericStub)
+        repo.getShoppingList().first()
+        repo.addProduct(productId = 1, amount = 3.0)
+        // The user crosses it off (e.g. in another client)...
+        stub.items[0] = stub.items[0].copy(done = 1)
+
+        // ...then asks for 2 more of it.
+        repo.addProduct(productId = 1, amount = 2.0)
+
+        val row = stub.items.single()
+        assertEquals(5.0, row.amount)
+        assertEquals(0, row.done)
+        // The next sync must keep it: it is a pending user row again, not a bought one.
+        repo.forceRefresh()
+        assertEquals(5.0, repo.getShoppingList().first().single().amount)
+    }
+
+    @Test
+    fun `a crossed-off auto row with a live deficit stays, crossed off`() = runBlocking {
+        val stub = ShoppingListDataSourceStub(
+            missing = listOf(missing(productId = 1, amount = 3.0)),
+            items = mutableListOf(autoRow(id = 21, productId = 1, amount = 3.0, quId = 6, done = 1)),
+        )
+        val repo = ShoppingListRepositoryImpl(stub, genericStub)
+
+        val entry = repo.getShoppingList().first().single()
+
+        assertTrue(entry.done)
+        assertEquals(listOf(21), stub.items.map { it.id })
+    }
+
+    @Test
+    fun `an unknown deficit amount leaves the product's rows alone and creates nothing`() = runBlocking {
+        val stub = ShoppingListDataSourceStub(
+            missing = listOf(
+                CurrentVolatilStockResponseMissingProductsInner(id = 1, amountMissing = null),
+                CurrentVolatilStockResponseMissingProductsInner(id = 2, amountMissing = null),
+            ),
+            items = mutableListOf(autoRow(id = 21, productId = 1, amount = 3.0, quId = 6)),
+        )
+        val repo = ShoppingListRepositoryImpl(stub, genericStub)
+
+        val entries = repo.getShoppingList().first()
+
+        // Unknown is not zero: the auto row is neither resized nor deleted,
+        // and no row is created for product 2.
+        assertEquals(listOf(21), stub.items.map { it.id })
+        assertEquals(3.0, stub.items.single().amount)
+        assertTrue(stub.updatedIds.isEmpty())
+        assertEquals(listOf(21), entries.map { it.id })
+    }
+
+    @Test
+    fun `no update is issued when the product has no stock unit and the amount matches`() = runBlocking {
+        // Product 2 has no quIdStock; comparing the row's quId against null can never
+        // converge (null is omitted from the PUT body), so it must not trigger updates.
+        val stub = ShoppingListDataSourceStub(
+            missing = listOf(missing(productId = 2, amount = 1.0)),
+            items = mutableListOf(autoRow(id = 21, productId = 2, amount = 1.0, quId = 3)),
+        )
+        val repo = ShoppingListRepositoryImpl(stub, genericStub)
+
+        repo.getShoppingList().first()
+
+        assertTrue(stub.updatedIds.isEmpty())
     }
 }

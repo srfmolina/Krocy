@@ -3,7 +3,6 @@ package com.srfmolina.krocy.data.repository.impl
 import com.srfmolina.krocy.data.datasource.remote.generic.GenericEntityDataSource
 import com.srfmolina.krocy.data.datasource.remote.shoppinglist.ShoppingListDataSource
 import com.srfmolina.krocy.data.mapper.toShoppingListEntry
-import com.srfmolina.krocy.data.repository.impl.ShoppingListRepositoryImpl.Companion.MANUAL_NOTE
 import com.srfmolina.krocy.domain.model.shoppinglist.ShoppingListEntry
 import com.srfmolina.krocy.domain.repository.ShoppingListRepository
 import kotlinx.coroutines.flow.Flow
@@ -53,13 +52,15 @@ internal class ShoppingListRepositoryImpl(
                 .filter { it.shoppingListId == id }
                 .firstOrNull { it.productId == productId }
             if (existing != null) {
-                // Merge into the existing row and claim it as manual, so the sync stops
-                // managing it: the user explicitly asked for more than the deficit.
+                // Merge and hand the row over to the user: clear the auto marker (the user
+                // overrode the deficit) and un-cross it (re-adding means it needs buying
+                // again — a crossed-off row would be cleared by the next sync).
                 shoppingListDataSource.updateItem(
                     itemId = existing.id ?: error("Shopping list row without id"),
                     amount = (existing.amount ?: 0.0) + amount,
                     quId = existing.quId,
-                    note = MANUAL_NOTE,
+                    note = if (existing.note == KROCY_AUTO) "" else null,
+                    done = false,
                 ).getOrThrow()
             } else {
                 shoppingListDataSource.createItem(
@@ -67,7 +68,7 @@ internal class ShoppingListRepositoryImpl(
                     productId = productId,
                     amount = amount,
                     quId = products.firstOrNull { it.id == productId }?.quIdStock,
-                    note = MANUAL_NOTE,
+                    note = null,
                 ).getOrThrow()
             }
             refreshItems(products)
@@ -94,22 +95,35 @@ internal class ShoppingListRepositoryImpl(
      * in stock units (verified against the demo server, 2026-07-09). So the deficits come from
      * `/stock/volatile` and the rows are managed here, always in stock units.
      *
-     * Rows added by hand carry [MANUAL_NOTE] and are never synced; a crossed-off manual row
-     * is considered bought and cleared on the next sync.
+     * Only rows carrying [KROCY_AUTO] are owned by this sync (created, resized, removed).
+     * Every other row — added here by hand, created in another grocy client, or note-only —
+     * is a user row: its amount and note are never touched, and it is deleted only once
+     * crossed off ("bought"), regardless of which client crossed it off.
      */
     private suspend fun reconcile(products: List<ObjectsEntityGet200ResponseInner>) {
         val id = ensureListId()
-        val missingByProduct = shoppingListDataSource.getMissingProducts().getOrThrow()
-            .mapNotNull { missing -> missing.id?.let { it to (missing.amountMissing ?: 0.0) } }
+        val missingProducts = shoppingListDataSource.getMissingProducts().getOrThrow()
+        // A null amountMissing is "unknown", not "no deficit": those products are skipped
+        // entirely, so their rows are neither resized nor deleted and none are created.
+        val unknownDeficits = missingProducts
+            .mapNotNull { missing -> missing.id.takeIf { missing.amountMissing == null } }
+            .toSet()
+        val missingByProduct = missingProducts
+            .mapNotNull { missing ->
+                val productId = missing.id ?: return@mapNotNull null
+                val amount = missing.amountMissing ?: return@mapNotNull null
+                productId to amount
+            }
             .toMap()
         val productsById = products.associateBy { it.id }
         val rows = shoppingListDataSource.getItems().getOrThrow()
             .filter { it.shoppingListId == id }
 
-        val (manualRows, autoRows) = rows.partition { it.note == MANUAL_NOTE }
+        val (autoRows, userRows) = rows.partition { it.note == KROCY_AUTO }
 
-        val (doneManualRows, keptManualRows) = manualRows.partition { it.done == 1 }
-        doneManualRows.forEach { row ->
+        // A crossed-off user row was bought: clear it.
+        val (doneUserRows, keptUserRows) = userRows.partition { it.done == 1 }
+        doneUserRows.forEach { row ->
             row.id?.let { shoppingListDataSource.deleteItem(it).getOrThrow() }
         }
 
@@ -117,8 +131,7 @@ internal class ShoppingListRepositoryImpl(
         autoRows.forEach { row ->
             val rowId = row.id ?: return@forEach
             val productId = row.productId
-            if (productId == null) {
-                // Note-only rows (other clients allow them): not ours to manage.
+            if (productId == null || productId in unknownDeficits) {
                 keptAutoRows += row
                 return@forEach
             }
@@ -127,16 +140,18 @@ internal class ShoppingListRepositoryImpl(
             if (deficit <= 0.0) {
                 shoppingListDataSource.deleteItem(rowId).getOrThrow()
             } else {
-                if (row.amount != deficit || row.quId != stockQuId) {
+                // Only compare units when the stock unit is known: a null quId is omitted
+                // from the PUT body, so that comparison could never converge.
+                if (row.amount != deficit || (stockQuId != null && row.quId != stockQuId)) {
                     shoppingListDataSource.updateItem(rowId, deficit, stockQuId).getOrThrow()
                 }
                 keptAutoRows += row
             }
         }
 
-        // Deficits with no row yet. A manual row counts as listed: the user already decided
+        // Deficits with no row yet. A user row counts as listed: the user already decided
         // how much of that product to buy.
-        val listedProducts = (keptManualRows + keptAutoRows).mapNotNull { it.productId }.toSet()
+        val listedProducts = (keptUserRows + keptAutoRows).mapNotNull { it.productId }.toSet()
         missingByProduct.forEach { (productId, deficit) ->
             if (deficit > 0.0 && productId !in listedProducts) {
                 shoppingListDataSource.createItem(
@@ -144,7 +159,7 @@ internal class ShoppingListRepositoryImpl(
                     productId = productId,
                     amount = deficit,
                     quId = productsById[productId]?.quIdStock,
-                    note = null,
+                    note = KROCY_AUTO,
                 ).getOrThrow()
             }
         }
@@ -187,7 +202,7 @@ internal class ShoppingListRepositoryImpl(
     private companion object {
         const val DEFAULT_LIST_NAME = "Lista de la compra"
 
-        /** Note marker on rows the user added by hand, which the deficit sync must not touch. */
-        const val MANUAL_NOTE = "krocy:manual"
+        /** Marker on rows this sync created for deficits; see [reconcile] for the ownership rules. */
+        const val KROCY_AUTO = "krocy:auto"
     }
 }

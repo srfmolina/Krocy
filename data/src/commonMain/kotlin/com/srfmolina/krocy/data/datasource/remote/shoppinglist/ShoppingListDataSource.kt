@@ -23,12 +23,17 @@ internal interface ShoppingListDataSource {
         note: String?,
     ): Result<Unit>
 
-    /** Partial update; null [quId]/[note] leave the row's current values untouched. */
+    /**
+     * Partial update; null [quId]/[note]/[done] leave the row's current values untouched.
+     * Note: because null is omitted from the body, a note can only be *cleared* by passing
+     * an explicit empty string.
+     */
     suspend fun updateItem(
         itemId: Int,
         amount: Double,
         quId: Int?,
         note: String? = null,
+        done: Boolean? = null,
     ): Result<Unit>
 
     suspend fun setDone(itemId: Int, done: Boolean): Result<Unit>
