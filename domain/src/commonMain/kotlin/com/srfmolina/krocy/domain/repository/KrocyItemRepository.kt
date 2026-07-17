@@ -7,4 +7,7 @@ interface KrocyItemRepository { // An example
     fun getAll(): Flow<List<KrocyItem>>
     suspend fun save(item: KrocyItem)
     suspend fun deleteById(id: Int)
+
+    /** Deletes all locally cached rows (used on logout). */
+    suspend fun clearAll()
 }

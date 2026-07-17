@@ -20,4 +20,7 @@ internal class KrocyItemRepositoryImpl( // An example
 
     override suspend fun deleteById(id: Int) =
         datasource.deleteById(id)
+
+    override suspend fun clearAll() =
+        datasource.clearAll()
 }

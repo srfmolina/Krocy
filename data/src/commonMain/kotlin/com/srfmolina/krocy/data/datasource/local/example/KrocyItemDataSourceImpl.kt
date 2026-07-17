@@ -13,4 +13,7 @@ internal class KrocyItemDataSourceImpl(private val dao: KrocyItemDao): KrocyItem
 
     override suspend fun deleteById(id: Int) =
         dao.deleteById(id)
+
+    override suspend fun clearAll() =
+        dao.deleteAll()
 }
