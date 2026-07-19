@@ -65,7 +65,7 @@ internal class ServerConfigRepositoryImpl(
     // --- HassSessionStore ---
 
     override suspend fun session(): String? =
-        dataStore.data.first()[KEY_INGRESS_SESSION]?.let(cipher::decrypt)
+        decryptOrNull(dataStore.data.first()[KEY_INGRESS_SESSION])
 
     override suspend fun save(session: String) {
         dataStore.edit { it[KEY_INGRESS_SESSION] = cipher.encrypt(session) }
@@ -75,18 +75,24 @@ internal class ServerConfigRepositoryImpl(
         "demo" -> ServerConfig.Demo
         "self" -> {
             val url = this[KEY_SERVER_URL]
-            val key = this[KEY_API_KEY]?.let(cipher::decrypt)
+            val key = decryptOrNull(this[KEY_API_KEY])
             if (url != null && key != null) ServerConfig.SelfHosted(url, key) else null
         }
         "hass" -> {
             val url = this[KEY_HA_URL]
             val proxyId = this[KEY_HA_PROXY_ID]
-            val token = this[KEY_HA_TOKEN]?.let(cipher::decrypt)
-            val key = this[KEY_API_KEY]?.let(cipher::decrypt)
+            val token = decryptOrNull(this[KEY_HA_TOKEN])
+            val key = decryptOrNull(this[KEY_API_KEY])
             if (url != null && proxyId != null && token != null && key != null) {
                 ServerConfig.HomeAssistant(url, proxyId, token, key)
             } else null
         }
         else -> null
     }
+
+    // A corrupt or tampered store (or an Android Keystore key invalidated after a backup
+    // restore) makes decryption throw. Treat that as "value not present" so the store
+    // degrades to logged-out instead of crashing app startup forever.
+    private fun decryptOrNull(value: String?): String? =
+        value?.let { runCatching { cipher.decrypt(it) }.getOrNull() }
 }

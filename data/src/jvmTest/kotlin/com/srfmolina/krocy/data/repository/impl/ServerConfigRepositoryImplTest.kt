@@ -19,6 +19,13 @@ private class FakeCipher : CredentialCipher {
         cipherText.removePrefix("enc(").removeSuffix(")")
 }
 
+/** Simulates a corrupt/tampered store or an invalidated Keystore key: decrypt always fails. */
+private class ThrowingDecryptCipher : CredentialCipher {
+    override fun encrypt(plainText: String) = plainText
+    override fun decrypt(cipherText: String): String =
+        throw IllegalStateException("cannot decrypt")
+}
+
 class ServerConfigRepositoryImplTest {
 
     private fun newStore(): DataStore<Preferences> {
@@ -81,5 +88,15 @@ class ServerConfigRepositoryImplTest {
             ServerConfig.HomeAssistant("http://ha.local:8123", "p", "t", "k")
         )
         assertEquals("ingress-abc", repository.session())
+    }
+
+    @Test
+    fun `undecryptable store degrades to logged out instead of throwing`() = runBlocking {
+        val repository = ServerConfigRepositoryImpl(newStore(), ThrowingDecryptCipher())
+        repository.save(ServerConfig.SelfHosted("https://grocy.casa", "key123"))
+        repository.save(session = "ingress-abc")
+
+        assertNull(repository.get())
+        assertNull(repository.session())
     }
 }
