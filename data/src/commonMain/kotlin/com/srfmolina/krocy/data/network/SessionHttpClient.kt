@@ -14,6 +14,7 @@ import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 
 /** Same relaxed JSON settings as the generated ApiClient.JSON_DEFAULT. */
@@ -53,9 +54,13 @@ internal fun buildSessionHttpClient(
         }
         var call = execute(request)
         if (call.response.status == HttpStatusCode.Unauthorized && config is ServerConfig.HomeAssistant) {
-            val fresh = runCatching {
+            val fresh = try {
                 sessionSource.acquireSession(config.haServerUrl, config.longLivedToken)
-            }.getOrNull()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                null
+            }
             if (fresh == null) {
                 onSessionExpired()
             } else {
