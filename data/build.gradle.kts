@@ -36,8 +36,10 @@ kotlin {
             implementation(project.dependencies.platform(libs.koin.bom))
             implementation(libs.koin.core)
 
-            // Only io.ktor.http URL building is used directly; HTTP calls go through :grocy-client.
+            // HTTP calls go through :grocy-client; io.ktor.http URL building and the
+            // WebSocket handshake with Home Assistant are used directly.
             implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.websockets)
 
             implementation(libs.androidx.datastore.preferences.core)
         }
