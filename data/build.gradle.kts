@@ -38,6 +38,8 @@ kotlin {
 
             // Only io.ktor.http URL building is used directly; HTTP calls go through :grocy-client.
             implementation(libs.ktor.client.core)
+
+            implementation(libs.androidx.datastore.preferences.core)
         }
         androidMain.dependencies {
             implementation(libs.koin.android)
