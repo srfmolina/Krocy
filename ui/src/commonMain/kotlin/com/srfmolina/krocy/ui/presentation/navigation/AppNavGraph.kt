@@ -9,6 +9,7 @@ import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.feature.creation.navigation.createProductScreen
 import com.srfmolina.krocy.ui.presentation.feature.creation.navigation.navigateToCreateProduct
 import com.srfmolina.krocy.ui.presentation.feature.login.navigation.loginScreen
+import com.srfmolina.krocy.ui.presentation.feature.login.setup.navigation.serverSetupScreen
 import com.srfmolina.krocy.ui.presentation.feature.purchase.navigation.navigateToPurchase
 import com.srfmolina.krocy.ui.presentation.feature.purchase.navigation.purchaseScreen
 import com.srfmolina.krocy.ui.presentation.feature.shoppinglist.navigation.shoppingListScreen
@@ -36,6 +37,11 @@ internal fun NavGraphBuilder.appNavGraph(
         )
 
         loginScreen(
+            navController = navController,
+            onShowSnackbar = onShowSnackbar
+        )
+
+        serverSetupScreen(
             navController = navController
         )
 
