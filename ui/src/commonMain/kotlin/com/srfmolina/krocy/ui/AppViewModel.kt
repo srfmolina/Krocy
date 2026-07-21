@@ -51,6 +51,8 @@ internal class AppViewModel(
 
     override fun createInitialState(): State = State()
 
+    private var initialized = false
+
     override suspend fun handleEvent(event: Event) {
         when (event) {
             is Event.Init -> init()
@@ -64,6 +66,8 @@ internal class AppViewModel(
     }
 
     private suspend fun init() {
+        if (initialized) return
+        initialized = true
         watchSessionExpiry()
         val config = getServerConfig().getOrNull()
         val opened = config != null && openSession(config).isSuccess
