@@ -203,8 +203,8 @@ internal fun ServerSetupScreen(
                     if (isConnecting) {
                         CircularProgressIndicator(
                             modifier = Modifier
-                                .size(18.dp)
                                 .padding(end = MaterialTheme.spacing.s2)
+                                .size(18.dp)
                         )
                     }
                     Text(if (isConnecting) "Conectando…" else "Conectar")

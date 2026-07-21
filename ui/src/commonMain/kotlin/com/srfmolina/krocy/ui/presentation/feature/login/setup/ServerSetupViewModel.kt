@@ -55,7 +55,10 @@ internal class ServerSetupViewModel(
             is Event.OnProxyIdChange -> updateForm { copy(ingressProxyId = event.value) }
             is Event.OnConnectClick -> connect()
             is Event.OnContinueAnyway -> pendingConfig?.let { finishLogin(it) }
-            is Event.OnDismissWarning -> setState { copy(connection = ConnectionUi.Idle) }
+            is Event.OnDismissWarning -> {
+                pendingConfig = null
+                setState { copy(connection = ConnectionUi.Idle) }
+            }
         }
     }
 

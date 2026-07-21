@@ -92,6 +92,48 @@ class ServerSetupViewModelTest {
     }
 
     @Test
+    fun `a field edit after a failed validation clears fieldErrors`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val loginRepo = LoginRepositoryFake { error("must not be called") }
+        val vm = viewModel(loginRepo)
+        vm.launchEvent(Event.OnConnectClick)
+        advanceUntilIdle()
+        assertEquals(
+            ValidationResult.Invalid(serverUrlError = "Campo obligatorio", apiKeyError = "Campo obligatorio"),
+            vm.state.value.fieldErrors
+        )
+
+        vm.launchEvent(Event.OnServerUrlChange(validSelfHostedForm.serverUrl))
+        advanceUntilIdle()
+
+        assertNull(vm.state.value.fieldErrors)
+    }
+
+    @Test
+    fun `a field edit after a connection Error resets connection to Idle`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val loginRepo = LoginRepositoryFake { throw LoginFailure.NotGrocyInstance("HTTP 404") }
+        val vm = viewModel(loginRepo)
+        vm.launchEvent(Event.OnServerUrlChange(validSelfHostedForm.serverUrl))
+        vm.launchEvent(Event.OnApiKeyChange(validSelfHostedForm.apiKey))
+        vm.launchEvent(Event.OnConnectClick)
+        advanceUntilIdle()
+        assertEquals(
+            ConnectionUi.Error(
+                message = "No parece una instancia de Grocy. Si usas Home Assistant, " +
+                    "activa el modo Home Assistant.",
+                detail = "HTTP 404"
+            ),
+            vm.state.value.connection
+        )
+
+        vm.launchEvent(Event.OnServerUrlChange("https://other.example.com"))
+        advanceUntilIdle()
+
+        assertEquals(ConnectionUi.Idle, vm.state.value.connection)
+    }
+
+    @Test
     fun `OnConnectClick when validation fails maps the failure to an Error connection`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val loginRepo = LoginRepositoryFake { throw LoginFailure.NotGrocyInstance("HTTP 404") }
