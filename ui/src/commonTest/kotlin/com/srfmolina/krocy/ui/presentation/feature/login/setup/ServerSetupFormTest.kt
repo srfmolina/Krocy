@@ -46,6 +46,16 @@ class ServerSetupFormTest {
     }
 
     @Test
+    fun `uppercase url scheme is accepted and normalized to lowercase`() {
+        val result = ServerSetupForm(
+            serverUrl = "HTTPS://grocy.casa",
+            apiKey = "key123"
+        ).validate()
+        assertIs<ValidationResult.Valid>(result)
+        assertEquals(ServerConfig.SelfHosted("https://grocy.casa", "key123"), result.config)
+    }
+
+    @Test
     fun `non http url is rejected`() {
         val result = ServerSetupForm(serverUrl = "grocy.casa", apiKey = "k").validate()
         assertIs<ValidationResult.Invalid>(result)

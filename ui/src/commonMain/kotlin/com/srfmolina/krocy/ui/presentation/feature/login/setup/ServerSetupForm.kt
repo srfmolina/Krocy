@@ -28,9 +28,12 @@ internal data class ServerSetupForm(
         val token = haToken.trim()
         val proxyId = ingressProxyId.trim()
 
+        // URI schemes are case-insensitive (RFC 3986), so accept e.g. "HTTPS://" as well -
+        // pasted URLs and mobile autocapitalization both produce mixed-case schemes.
         val serverUrlError = when {
             url.isEmpty() -> ERROR_REQUIRED
-            !url.startsWith("http://") && !url.startsWith("https://") -> ERROR_URL
+            !url.startsWith("http://", ignoreCase = true) &&
+                !url.startsWith("https://", ignoreCase = true) -> ERROR_URL
             else -> null
         }
         val apiKeyError = if (key.isEmpty()) ERROR_REQUIRED else null
@@ -42,16 +45,23 @@ internal data class ServerSetupForm(
         ) {
             return ValidationResult.Invalid(serverUrlError, apiKeyError, haTokenError, proxyIdError)
         }
+        // Normalize only the scheme to lowercase for consistent storage/equality; the host and
+        // path are left untouched since they may be legitimately case-sensitive.
+        val normalizedUrl = when {
+            url.startsWith("https://", ignoreCase = true) -> "https://" + url.substring("https://".length)
+            url.startsWith("http://", ignoreCase = true) -> "http://" + url.substring("http://".length)
+            else -> url
+        }
         return ValidationResult.Valid(
             if (usingHass) {
                 ServerConfig.HomeAssistant(
-                    haServerUrl = url,
+                    haServerUrl = normalizedUrl,
                     ingressProxyId = proxyId,
                     longLivedToken = token,
                     apiKey = key
                 )
             } else {
-                ServerConfig.SelfHosted(serverUrl = url, apiKey = key)
+                ServerConfig.SelfHosted(serverUrl = normalizedUrl, apiKey = key)
             }
         )
     }
