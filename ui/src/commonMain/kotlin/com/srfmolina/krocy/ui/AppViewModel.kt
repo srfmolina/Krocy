@@ -76,20 +76,20 @@ internal class AppViewModel(
     }
 
     private suspend fun confirmLogout() {
-        logout()
-        setState { copy(dialogConfig = null, topBarConfig = null, fabConfig = null) }
-        launchEffect(Effect.NavigateToLogin)
+        logoutAndNavigateToLogin()
     }
 
     private fun watchSessionExpiry() {
         viewModelScope.launch {
-            observeSessionExpired().collect { result ->
-                if (result.isSuccess) {
-                    logout()
-                    setState { copy(dialogConfig = null, topBarConfig = null, fabConfig = null) }
-                    launchEffect(Effect.NavigateToLogin)
-                }
-            }
+            // sessionExpired is a plain MutableSharedFlow<Unit> that cannot fail, so every
+            // emission here is unconditionally a real expiry - no result to branch on.
+            observeSessionExpired().collect { logoutAndNavigateToLogin() }
         }
+    }
+
+    private suspend fun logoutAndNavigateToLogin() {
+        logout()
+        setState { copy(dialogConfig = null, topBarConfig = null, fabConfig = null) }
+        launchEffect(Effect.NavigateToLogin)
     }
 }
