@@ -28,6 +28,7 @@ import com.srfmolina.krocy.domain.usecase.stock.RefreshStockUseCase
 import com.srfmolina.krocy.ui.AppViewModel
 import com.srfmolina.krocy.ui.presentation.feature.creation.CreateProductViewModel
 import com.srfmolina.krocy.ui.presentation.feature.login.LoginViewModel
+import com.srfmolina.krocy.ui.presentation.feature.login.setup.ServerSetupViewModel
 import com.srfmolina.krocy.ui.presentation.feature.purchase.PurchaseViewModel
 import com.srfmolina.krocy.ui.presentation.feature.shoppinglist.ShoppingListViewModel
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockViewModel
@@ -64,6 +65,7 @@ val uiModule = module {
 
     viewModelOf(::AppViewModel)
     viewModelOf(::LoginViewModel)
+    viewModelOf(::ServerSetupViewModel)
     viewModelOf(::StockViewModel)
     viewModelOf(::CreateProductViewModel)
     viewModelOf(::PurchaseViewModel)
