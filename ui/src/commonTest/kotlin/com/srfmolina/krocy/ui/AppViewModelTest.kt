@@ -1,5 +1,7 @@
 package com.srfmolina.krocy.ui
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import com.srfmolina.krocy.domain.model.example.KrocyItem
 import com.srfmolina.krocy.domain.model.server.ServerConfig
 import com.srfmolina.krocy.domain.repository.KrocyItemRepository
@@ -11,6 +13,12 @@ import com.srfmolina.krocy.domain.usecase.login.ObserveSessionExpiredUseCase
 import com.srfmolina.krocy.domain.usecase.login.OpenSessionUseCase
 import com.srfmolina.krocy.ui.AppViewModel.Effect
 import com.srfmolina.krocy.ui.AppViewModel.Event
+import com.srfmolina.krocy.ui.presentation.common.model.DialogConfigurationUi
+import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
+import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
+import com.srfmolina.krocy.ui.presentation.common.model.LabeledActionUi
+import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarConfigurationUi
+import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarTypeUi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +35,7 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -77,6 +86,35 @@ class AppViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private suspend fun populateTransientUiState(vm: AppViewModel) {
+        vm.launchEvent(
+            Event.OnTopBarChange(
+                TopBarConfigurationUi(
+                    title = "Stock",
+                    type = TopBarTypeUi.SMALL,
+                    leadingAction = IconActionUi(
+                        icon = Icons.Filled.Menu,
+                        contentDescription = "menu",
+                        onClick = {}
+                    )
+                )
+            )
+        )
+        vm.launchEvent(
+            Event.OnFabChange(FabConfigurationUi(isVisible = true, actions = emptyList()))
+        )
+        vm.launchEvent(
+            Event.OnDialogChange(
+                DialogConfigurationUi(
+                    title = "Confirm",
+                    confirm = LabeledActionUi(label = "Ok", contentDescription = "ok", onClick = {}),
+                    dismiss = LabeledActionUi(label = "Cancel", contentDescription = "cancel", onClick = {}),
+                    content = {}
+                )
+            )
+        )
+    }
+
     @Test
     fun `init with a stored config that opens routes to stock`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
@@ -102,6 +140,25 @@ class AppViewModelTest {
         val vm = viewModel(
             configRepo = ServerConfigRepositoryFake(initial = null),
             sessionManager = SessionManagerFake(),
+            itemRepo = KrocyItemRepositoryFake()
+        )
+        val effects = mutableListOf<Effect>()
+        val collector = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.launchEvent(Event.Init)
+        advanceUntilIdle()
+
+        assertEquals(listOf<Effect>(Effect.NavigateToWelcome), effects)
+        assertFalse(vm.state.value.isLoading)
+        collector.cancel()
+    }
+
+    @Test
+    fun `init with a stored config that fails to open routes to welcome`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val vm = viewModel(
+            configRepo = ServerConfigRepositoryFake(initial = ServerConfig.Demo),
+            sessionManager = SessionManagerFake(openSucceeds = false),
             itemRepo = KrocyItemRepositoryFake()
         )
         val effects = mutableListOf<Effect>()
@@ -149,6 +206,11 @@ class AppViewModelTest {
         vm.launchEvent(Event.Init)
         advanceUntilIdle()
         effects.clear() // drop the startup NavigateToStock, only the logout effect matters here
+        populateTransientUiState(vm)
+        advanceUntilIdle()
+        assertNotNull(vm.state.value.topBarConfig)
+        assertNotNull(vm.state.value.fabConfig)
+        assertNotNull(vm.state.value.dialogConfig)
 
         vm.launchEvent(Event.OnLogoutConfirm)
         advanceUntilIdle()
@@ -175,6 +237,11 @@ class AppViewModelTest {
         vm.launchEvent(Event.Init)
         advanceUntilIdle()
         effects.clear() // drop the startup NavigateToStock, only the expiry effect matters here
+        populateTransientUiState(vm)
+        advanceUntilIdle()
+        assertNotNull(vm.state.value.topBarConfig)
+        assertNotNull(vm.state.value.fabConfig)
+        assertNotNull(vm.state.value.dialogConfig)
 
         sessionManager.expireSession()
         advanceUntilIdle()
