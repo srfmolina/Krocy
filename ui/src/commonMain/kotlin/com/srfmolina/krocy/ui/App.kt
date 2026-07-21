@@ -41,6 +41,7 @@ import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.LabeledActionUi
 import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.feature.login.navigation.navigateToLogin
+import com.srfmolina.krocy.ui.presentation.feature.splash.SplashScreen
 import com.srfmolina.krocy.ui.presentation.feature.stock.navigation.navigateToStock
 import com.srfmolina.krocy.ui.presentation.feature.welcome.navigation.navigateToWelcome
 import com.srfmolina.krocy.ui.presentation.navigation.LoginRoute
@@ -153,7 +154,14 @@ fun App() {
             }
         }
 
-        if (currentRailRoute != null) {
+        if (state.isLoading) {
+            // Session Koin module (and anything it provides, e.g. StockRepository) is still
+            // loading in AppViewModel.init(). Keep the nav graph - and any restored back stack
+            // from process death - unmounted until it is ready, otherwise a screen restored
+            // straight onto an authenticated route can request a session-scoped ViewModel
+            // before its Koin module exists.
+            SplashScreen()
+        } else if (currentRailRoute != null) {
             KrocyNavigationRail(
                 items = navController.appRailItems() + NavigationItemUi(
                     icon = Icons.AutoMirrored.Filled.Logout,
