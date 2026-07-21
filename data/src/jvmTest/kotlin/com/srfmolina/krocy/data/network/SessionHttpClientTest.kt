@@ -103,6 +103,27 @@ class SessionHttpClientTest {
     }
 
     @Test
+    fun `hass 401 with a fresh session that also fails does not persist it`() = runBlocking {
+        val store = MemorySessionStore("stale")
+        val source = FakeSessionSource("fresh")
+        val engine = MockEngine { respond("unauthorized", HttpStatusCode.Unauthorized) }
+        var expired = false
+        val client = buildSessionHttpClient(
+            config = HASS_CONFIG,
+            sessionStore = store,
+            sessionSource = source,
+            onSessionExpired = { expired = true },
+            engine = engine
+        )
+        val response = client.get("http://ha.local:8123/api/hassio_ingress/proxy/api/system/info")
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertEquals(2, engine.requestHistory.size)
+        assertEquals(1, source.acquisitions)
+        assertEquals("stale", store.value)
+        assertTrue(expired)
+    }
+
+    @Test
     fun `hass 401 with failing reauth signals session expiry`() = runBlocking {
         val engine = MockEngine { respond("unauthorized", HttpStatusCode.Unauthorized) }
         var expired = false

@@ -91,6 +91,22 @@ class ServerConfigRepositoryImplTest {
     }
 
     @Test
+    fun `saving a self hosted config clears a stale ingress session`() = runBlocking {
+        val repository = newRepository()
+        repository.save(session = "ingress-abc")
+        repository.save(ServerConfig.SelfHosted("https://grocy.casa", "key123"))
+        assertNull(repository.session())
+    }
+
+    @Test
+    fun `saving a demo config clears a stale ingress session`() = runBlocking {
+        val repository = newRepository()
+        repository.save(session = "ingress-abc")
+        repository.save(ServerConfig.Demo)
+        assertNull(repository.session())
+    }
+
+    @Test
     fun `undecryptable store degrades to logged out instead of throwing`() = runBlocking {
         val repository = ServerConfigRepositoryImpl(newStore(), ThrowingDecryptCipher())
         repository.save(ServerConfig.SelfHosted("https://grocy.casa", "key123"))

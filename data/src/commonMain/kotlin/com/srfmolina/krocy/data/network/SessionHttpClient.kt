@@ -64,10 +64,15 @@ internal fun buildSessionHttpClient(
             if (fresh == null) {
                 onSessionExpired()
             } else {
-                sessionStore.save(fresh)
                 request.setIngressCookie(fresh)
                 call = execute(request)
-                if (call.response.status == HttpStatusCode.Unauthorized) onSessionExpired()
+                if (call.response.status == HttpStatusCode.Unauthorized) {
+                    // The freshly-acquired session was evidently invalid too - don't persist
+                    // it, or every later request pays a doomed re-auth handshake against it.
+                    onSessionExpired()
+                } else {
+                    sessionStore.save(fresh)
+                }
             }
         }
         call

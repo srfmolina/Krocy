@@ -23,7 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -43,7 +42,6 @@ class AppViewModelTest {
 
     private class ServerConfigRepositoryFake(initial: ServerConfig? = null) : ServerConfigRepository {
         var stored: ServerConfig? = initial
-        override val config: Flow<ServerConfig?> = MutableStateFlow(stored)
         override suspend fun get(): ServerConfig? = stored
         override suspend fun save(config: ServerConfig) { stored = config }
         override suspend fun clear() { stored = null }

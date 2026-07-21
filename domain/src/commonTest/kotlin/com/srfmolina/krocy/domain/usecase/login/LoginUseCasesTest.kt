@@ -6,7 +6,6 @@ import com.srfmolina.krocy.domain.repository.KrocyItemRepository
 import com.srfmolina.krocy.domain.repository.ServerConfigRepository
 import com.srfmolina.krocy.domain.session.SessionManager
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -18,7 +17,6 @@ class LoginUseCasesTest {
     private class RecordingConfigRepository : ServerConfigRepository {
         val calls = mutableListOf<String>()
         var stored: ServerConfig? = null
-        override val config: Flow<ServerConfig?> = MutableStateFlow(null)
         override suspend fun get(): ServerConfig? = stored
         override suspend fun save(config: ServerConfig) { calls += "save"; stored = config }
         override suspend fun clear() { calls += "clear"; stored = null }
@@ -52,7 +50,6 @@ class LoginUseCasesTest {
     fun `logout closes session then clears config and local cache`() = runBlocking {
         val log = mutableListOf<String>()
         val configRepo = object : ServerConfigRepository {
-            override val config: Flow<ServerConfig?> = MutableStateFlow(null)
             override suspend fun get(): ServerConfig? = null
             override suspend fun save(config: ServerConfig) = Unit
             override suspend fun clear() { log += "clear" }

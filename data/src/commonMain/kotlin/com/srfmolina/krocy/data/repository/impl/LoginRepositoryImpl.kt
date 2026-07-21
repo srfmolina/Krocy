@@ -35,9 +35,12 @@ internal class LoginRepositoryImpl(
 ) : LoginRepository {
 
     override suspend fun validate(config: ServerConfig): ServerValidation {
+        // Kept local (not persisted yet): the session is only proven valid once the
+        // /system/info request below succeeds. Persisting earlier would leave a live HA
+        // credential on disk for a server the user never actually logged into if validation
+        // fails (wrong proxy id, wrong API key, user backs out).
         val ingressSession = if (config is ServerConfig.HomeAssistant) {
             sessionSource.acquireSession(config.haServerUrl, config.longLivedToken)
-                .also { sessionStore.save(it) }
         } else null
 
         val client = buildClient()
@@ -71,6 +74,7 @@ internal class LoginRepositoryImpl(
 
             val version = parseGrocyVersion(response.bodyAsText())
                 ?: throw LoginFailure.NotGrocyInstance("La respuesta no contiene grocy_version")
+            ingressSession?.let { sessionStore.save(it) }
             return ServerValidation.forVersion(version)
         } finally {
             client.close()

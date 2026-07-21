@@ -8,9 +8,9 @@ import com.srfmolina.krocy.data.config.CredentialCipher
 import com.srfmolina.krocy.data.config.HassSessionStore
 import com.srfmolina.krocy.domain.model.server.ServerConfig
 import com.srfmolina.krocy.domain.repository.ServerConfigRepository
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 private val KEY_MODE = stringPreferencesKey("mode") // "demo" | "self" | "hass"
 private val KEY_SERVER_URL = stringPreferencesKey("server_url")
@@ -25,9 +25,27 @@ internal class ServerConfigRepositoryImpl(
     private val cipher: CredentialCipher
 ) : ServerConfigRepository, HassSessionStore {
 
-    override val config: Flow<ServerConfig?> = dataStore.data.map { it.toConfig() }
+    // In-memory cache for both the config and the HA ingress session: without it, every HA
+    // request (session()) and every image request (get()) pays a DataStore disk/flow round-trip
+    // plus an Android Keystore AES-GCM decrypt. Populated lazily on first read and invalidated
+    // (not pre-filled) at the only points that mutate the underlying store - save() and clear() -
+    // so the next read always re-derives the value through the real decrypt path (preserving
+    // e.g. the "undecryptable store degrades to logged out" behaviour) while still avoiding a
+    // disk+decrypt round-trip on every subsequent call, including across a logout+login into a
+    // different server.
+    private val cacheMutex = Mutex()
+    private var cachedConfig: ServerConfig? = null
+    private var configCached = false
+    private var cachedSession: String? = null
+    private var sessionCached = false
 
-    override suspend fun get(): ServerConfig? = config.first()
+    override suspend fun get(): ServerConfig? = cacheMutex.withLock {
+        if (!configCached) {
+            cachedConfig = dataStore.data.first().toConfig()
+            configCached = true
+        }
+        cachedConfig
+    }
 
     override suspend fun save(config: ServerConfig) {
         dataStore.edit { prefs ->
@@ -36,12 +54,14 @@ internal class ServerConfigRepositoryImpl(
                     prefs[KEY_MODE] = "demo"
                     prefs.remove(KEY_SERVER_URL); prefs.remove(KEY_API_KEY)
                     prefs.remove(KEY_HA_URL); prefs.remove(KEY_HA_PROXY_ID); prefs.remove(KEY_HA_TOKEN)
+                    prefs.remove(KEY_INGRESS_SESSION)
                 }
                 is ServerConfig.SelfHosted -> {
                     prefs[KEY_MODE] = "self"
                     prefs[KEY_SERVER_URL] = config.serverUrl
                     prefs[KEY_API_KEY] = cipher.encrypt(config.apiKey)
                     prefs.remove(KEY_HA_URL); prefs.remove(KEY_HA_PROXY_ID); prefs.remove(KEY_HA_TOKEN)
+                    prefs.remove(KEY_INGRESS_SESSION)
                 }
                 is ServerConfig.HomeAssistant -> {
                     prefs[KEY_MODE] = "hass"
@@ -53,6 +73,10 @@ internal class ServerConfigRepositoryImpl(
                 }
             }
         }
+        cacheMutex.withLock {
+            configCached = false
+            if (config !is ServerConfig.HomeAssistant) sessionCached = false
+        }
     }
 
     // Satisfies both ServerConfigRepository.clear() and HassSessionStore.clear() (same
@@ -60,15 +84,25 @@ internal class ServerConfigRepositoryImpl(
     // ingress session alike. Only called from logout paths, where that's the right result.
     override suspend fun clear() {
         dataStore.edit { it.clear() }
+        cacheMutex.withLock {
+            configCached = false
+            sessionCached = false
+        }
     }
 
     // --- HassSessionStore ---
 
-    override suspend fun session(): String? =
-        decryptOrNull(dataStore.data.first()[KEY_INGRESS_SESSION])
+    override suspend fun session(): String? = cacheMutex.withLock {
+        if (!sessionCached) {
+            cachedSession = decryptOrNull(dataStore.data.first()[KEY_INGRESS_SESSION])
+            sessionCached = true
+        }
+        cachedSession
+    }
 
     override suspend fun save(session: String) {
         dataStore.edit { it[KEY_INGRESS_SESSION] = cipher.encrypt(session) }
+        cacheMutex.withLock { sessionCached = false }
     }
 
     private fun Preferences.toConfig(): ServerConfig? = when (this[KEY_MODE]) {

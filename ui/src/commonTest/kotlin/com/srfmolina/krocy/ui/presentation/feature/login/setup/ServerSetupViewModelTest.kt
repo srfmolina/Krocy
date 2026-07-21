@@ -42,7 +42,6 @@ class ServerSetupViewModelTest {
 
     private class ServerConfigRepositoryFake : ServerConfigRepository {
         var stored: ServerConfig? = null
-        override val config: Flow<ServerConfig?> = MutableSharedFlow()
         override suspend fun get(): ServerConfig? = stored
         override suspend fun save(config: ServerConfig) { stored = config }
         override suspend fun clear() { stored = null }

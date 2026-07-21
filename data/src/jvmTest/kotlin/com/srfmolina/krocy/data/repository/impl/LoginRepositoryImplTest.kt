@@ -96,7 +96,7 @@ class LoginRepositoryImplTest {
     }
 
     @Test
-    fun `hass validation acquires and stores an ingress session first`() = runBlocking {
+    fun `hass validation acquires a session and stores it once validation succeeds`() = runBlocking {
         val store = MemorySessionStore()
         val engine = MockEngine { request ->
             assertEquals("ingress_session=session-1", request.headers["Cookie"])
@@ -105,6 +105,16 @@ class LoginRepositoryImplTest {
         }
         repository(engine, sessionStore = store).validate(HASS)
         assertEquals("session-1", store.value)
+    }
+
+    @Test
+    fun `hass validation failure does not persist the acquired ingress session`(): Unit = runBlocking {
+        val store = MemorySessionStore()
+        val engine = MockEngine { respond("", HttpStatusCode.Unauthorized) }
+        assertFailsWith<LoginFailure.InvalidHassToken> {
+            repository(engine, sessionStore = store).validate(HASS)
+        }
+        assertEquals(null, store.value)
     }
 
     @Test
