@@ -115,4 +115,84 @@ class ServerConfigRepositoryImplTest {
         assertNull(repository.get())
         assertNull(repository.session())
     }
+
+    // --- Cache invalidation regression coverage: read -> mutate -> read, so the first read
+    // populates the in-memory cache and the second read must observe the mutation instead of
+    // the stale cached value. ---
+
+    @Test
+    fun `config cache is invalidated on save`() = runBlocking {
+        val repository = newRepository()
+        assertNull(repository.get()) // populates cache with null
+
+        repository.save(ServerConfig.Demo)
+
+        assertEquals(ServerConfig.Demo, repository.get())
+    }
+
+    @Test
+    fun `config cache is invalidated on clear`() = runBlocking {
+        val repository = newRepository()
+        repository.save(ServerConfig.Demo)
+        assertEquals(ServerConfig.Demo, repository.get()) // populates cache
+
+        repository.clear()
+
+        assertNull(repository.get())
+    }
+
+    @Test
+    fun `session cache is invalidated on session save`() = runBlocking {
+        val repository = newRepository()
+        assertNull(repository.session()) // populates cache with null
+
+        repository.save(session = "s1")
+
+        assertEquals("s1", repository.session())
+    }
+
+    @Test
+    fun `session cache is invalidated when switching away from home assistant`() = runBlocking {
+        val repository = newRepository()
+        repository.save(session = "s1")
+        assertEquals("s1", repository.session()) // populates cache
+
+        repository.save(ServerConfig.SelfHosted("https://grocy.casa", "key123"))
+
+        assertNull(repository.session())
+    }
+
+    @Test
+    fun `session cache is not invalidated by a home assistant save`() = runBlocking {
+        val repository = newRepository()
+        repository.save(session = "s1")
+        assertEquals("s1", repository.session()) // populates cache
+
+        repository.save(
+            ServerConfig.HomeAssistant("http://ha.local:8123", "p", "t", "k")
+        )
+
+        assertEquals("s1", repository.session())
+    }
+
+    @Test
+    fun `no stale state survives a logout followed by a login to a different server`() =
+        runBlocking {
+            val repository = newRepository()
+            repository.save(
+                ServerConfig.HomeAssistant("http://ha.local:8123", "p", "t", "k")
+            )
+            repository.save(session = "s1")
+            assertEquals(
+                ServerConfig.HomeAssistant("http://ha.local:8123", "p", "t", "k"),
+                repository.get()
+            ) // populates config cache
+            assertEquals("s1", repository.session()) // populates session cache
+
+            repository.clear() // logout
+            repository.save(ServerConfig.SelfHosted("https://other.casa", "key456")) // login elsewhere
+
+            assertEquals(ServerConfig.SelfHosted("https://other.casa", "key456"), repository.get())
+            assertNull(repository.session())
+        }
 }
