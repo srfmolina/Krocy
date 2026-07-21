@@ -37,6 +37,7 @@ internal class LoginViewModel(
     }
 
     private suspend fun loginToDemo() {
+        if (currentState.isConnecting) return
         setState { copy(isConnecting = true) }
         val result = completeLogin(ServerConfig.Demo)
         setState { copy(isConnecting = false) }

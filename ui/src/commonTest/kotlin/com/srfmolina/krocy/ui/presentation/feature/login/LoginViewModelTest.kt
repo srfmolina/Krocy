@@ -6,6 +6,7 @@ import com.srfmolina.krocy.domain.session.SessionManager
 import com.srfmolina.krocy.domain.usecase.login.CompleteLoginUseCase
 import com.srfmolina.krocy.ui.presentation.feature.login.LoginViewModel.Effect
 import com.srfmolina.krocy.ui.presentation.feature.login.LoginViewModel.Event
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -20,13 +21,13 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
 
     private class ServerConfigRepositoryFake : ServerConfigRepository {
         var stored: ServerConfig? = null
-        override val config: Flow<ServerConfig?> = MutableSharedFlow()
         override suspend fun get(): ServerConfig? = stored
         override suspend fun save(config: ServerConfig) { stored = config }
         override suspend fun clear() { stored = null }
@@ -90,6 +91,41 @@ class LoginViewModelTest {
             effects
         )
         assertFalse(vm.state.value.isConnecting)
+        collector.cancel()
+    }
+
+    @Test
+    fun `a double-tap on the demo login fires only one CompleteLoginUseCase call`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val gate = CompletableDeferred<Unit>()
+        val configRepo = ServerConfigRepositoryFake()
+        val sessionManager = object : SessionManager {
+            var openCallCount = 0
+            override val sessionExpired: Flow<Unit> = MutableSharedFlow()
+            override suspend fun open(config: ServerConfig) {
+                openCallCount++
+                gate.await()
+            }
+            override suspend fun close() = Unit
+        }
+        val vm = viewModel(configRepo, sessionManager)
+        val effects = mutableListOf<Effect>()
+        val collector = launch { vm.effect.collect { effects.add(it) } }
+
+        // Simulate a fast double-tap: both events are queued before either completes.
+        vm.launchEvent(Event.OnDemoServerClick)
+        vm.launchEvent(Event.OnDemoServerClick)
+        advanceUntilIdle()
+
+        assertEquals(1, sessionManager.openCallCount)
+        assertTrue(vm.state.value.isConnecting)
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(1, sessionManager.openCallCount)
+        assertFalse(vm.state.value.isConnecting)
+        assertEquals(listOf<Effect>(Effect.NavigateToStock), effects)
         collector.cancel()
     }
 
