@@ -44,4 +44,15 @@ class ZxingQrDecoderTest {
         )
         assertNull(ZxingQrDecoder().decode(blank))
     }
+
+    @Test
+    fun `a frame whose buffer is smaller than its dimensions decodes to null`() {
+        val size = 240
+        val truncated = QrFrame(
+            luminance = ByteArray(size * size - 1),
+            width = size,
+            height = size
+        )
+        assertNull(ZxingQrDecoder().decode(truncated))
+    }
 }
