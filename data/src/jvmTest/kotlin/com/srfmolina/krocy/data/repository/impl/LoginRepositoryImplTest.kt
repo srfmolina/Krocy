@@ -122,4 +122,31 @@ class LoginRepositoryImplTest {
         val engine = MockEngine { throw java.net.ConnectException("Connection refused") }
         assertFailsWith<LoginFailure.UnreachableServer> { repository(engine).validate(SELF) }
     }
+
+    @Test
+    fun `unknown host errors map to unreachable`(): Unit = runBlocking {
+        val engine = MockEngine { throw java.net.UnknownHostException("grocy.casa") }
+        assertFailsWith<LoginFailure.UnreachableServer> { repository(engine).validate(SELF) }
+    }
+
+    @Test
+    fun `tls errors map to ssl handshake`(): Unit = runBlocking {
+        val engine = MockEngine {
+            throw javax.net.ssl.SSLHandshakeException("PKIX path building failed")
+        }
+        assertFailsWith<LoginFailure.SslHandshake> { repository(engine).validate(SELF) }
+    }
+
+    @Test
+    fun `socket timeouts map to timeout`(): Unit = runBlocking {
+        val engine = MockEngine { throw java.net.SocketTimeoutException("Read timeout") }
+        assertFailsWith<LoginFailure.Timeout> { repository(engine).validate(SELF) }
+    }
+
+    @Test
+    fun `exceptions matching no network heuristic map to unexpected, not unreachable`(): Unit =
+        runBlocking {
+            val engine = MockEngine { throw IllegalStateException("mapper bug") }
+            assertFailsWith<LoginFailure.Unexpected> { repository(engine).validate(SELF) }
+        }
 }

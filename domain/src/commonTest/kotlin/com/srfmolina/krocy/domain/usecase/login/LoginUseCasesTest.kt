@@ -47,6 +47,62 @@ class LoginUseCasesTest {
     }
 
     @Test
+    fun `logout still clears config and cache when closing the session fails`() = runBlocking {
+        val log = mutableListOf<String>()
+        val failingSessionManager = object : SessionManager {
+            override val sessionExpired: Flow<Unit> = emptyFlow()
+            override suspend fun open(config: ServerConfig) = Unit
+            override suspend fun close() { log += "close"; error("close failed") }
+        }
+        val configRepo = object : ServerConfigRepository {
+            override suspend fun get(): ServerConfig? = null
+            override suspend fun save(config: ServerConfig) = Unit
+            override suspend fun clear() { log += "clear" }
+        }
+        val result = LogoutUseCase(
+            failingSessionManager, configRepo, RecordingItemRepository(log)
+        ).invoke()
+        assertTrue(result.isFailure)
+        assertEquals(listOf("close", "clear", "wipe"), log)
+    }
+
+    @Test
+    fun `logout still wipes the cache when clearing the config fails`() = runBlocking {
+        val log = mutableListOf<String>()
+        val failingConfigRepo = object : ServerConfigRepository {
+            override suspend fun get(): ServerConfig? = null
+            override suspend fun save(config: ServerConfig) = Unit
+            override suspend fun clear() { log += "clear"; error("clear failed") }
+        }
+        val result = LogoutUseCase(
+            RecordingSessionManager(log), failingConfigRepo, RecordingItemRepository(log)
+        ).invoke()
+        assertTrue(result.isFailure)
+        assertEquals(listOf("close", "clear", "wipe"), log)
+    }
+
+    @Test
+    fun `logout reports failure when the cache wipe fails`() = runBlocking {
+        val log = mutableListOf<String>()
+        val configRepo = object : ServerConfigRepository {
+            override suspend fun get(): ServerConfig? = null
+            override suspend fun save(config: ServerConfig) = Unit
+            override suspend fun clear() { log += "clear" }
+        }
+        val failingItemRepo = object : KrocyItemRepository {
+            override fun getAll(): Flow<List<KrocyItem>> = emptyFlow()
+            override suspend fun save(item: KrocyItem) = Unit
+            override suspend fun deleteById(id: Int) = Unit
+            override suspend fun clearAll() { log += "wipe"; error("wipe failed") }
+        }
+        val result = LogoutUseCase(
+            RecordingSessionManager(log), configRepo, failingItemRepo
+        ).invoke()
+        assertTrue(result.isFailure)
+        assertEquals(listOf("close", "clear", "wipe"), log)
+    }
+
+    @Test
     fun `logout closes session then clears config and local cache`() = runBlocking {
         val log = mutableListOf<String>()
         val configRepo = object : ServerConfigRepository {

@@ -107,12 +107,19 @@ internal class LoginRepositoryImpl(
                 cause = cause.cause?.takeIf { it !== cause }
             }
         }.trim()
+        val looksLikeConnectivity = listOf(
+            "connect", "unknownhost", "unresolved", "unreachable", "refused",
+            "socket", "network", "route", "reset", "broken pipe", "eof"
+        ).any { text.contains(it, ignoreCase = true) }
         return when {
             text.contains("SSL", ignoreCase = true) ||
                 text.contains("certificate", ignoreCase = true) ||
                 text.contains("handshake", ignoreCase = true) -> LoginFailure.SslHandshake(text)
             text.contains("timeout", ignoreCase = true) -> LoginFailure.Timeout(text)
-            else -> LoginFailure.UnreachableServer(text)
+            looksLikeConnectivity -> LoginFailure.UnreachableServer(text)
+            // "Cannot connect" would actively mislead for, say, a client-side bug; the
+            // cause chain in [text] survives either way in the detail line.
+            else -> LoginFailure.Unexpected(text)
         }
     }
 }

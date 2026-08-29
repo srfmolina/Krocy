@@ -3,6 +3,7 @@ package com.srfmolina.krocy.data.config
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
+import java.nio.file.attribute.PosixFilePermissions
 import java.security.SecureRandom
 import java.util.Base64
 import javax.crypto.Cipher
@@ -18,16 +19,41 @@ internal class JvmCredentialCipher(private val keyFile: File) : CredentialCipher
 
     private fun loadOrCreateKey(): ByteArray {
         if (keyFile.exists()) return keyFile.readBytes()
-        keyFile.parentFile?.mkdirs()
+        keyFile.parentFile?.let(::createPrivateDirectory)
+        // Restrictive permissions must be in place BEFORE any key material touches disk;
+        // chmod-after-write leaves the raw key world-readable during the window (and
+        // forever, if the chmod silently fails).
+        createOwnerOnly(keyFile)
         val bytes = ByteArray(32).also { SecureRandom().nextBytes(it) }
         keyFile.writeBytes(bytes)
-        runCatching {
-            Files.setPosixFilePermissions(
-                keyFile.toPath(),
-                setOf(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE)
-            )
-        } // Non-POSIX filesystems (e.g. NTFS) fall back to default permissions.
         return bytes
+    }
+
+    private fun createPrivateDirectory(dir: File) {
+        if (dir.exists()) return
+        val ownerOnly = PosixFilePermissions.asFileAttribute(
+            setOf(
+                PosixFilePermission.OWNER_READ,
+                PosixFilePermission.OWNER_WRITE,
+                PosixFilePermission.OWNER_EXECUTE
+            )
+        )
+        try {
+            Files.createDirectories(dir.toPath(), ownerOnly)
+        } catch (_: UnsupportedOperationException) {
+            Files.createDirectories(dir.toPath()) // non-POSIX (e.g. NTFS): default ACLs
+        }
+    }
+
+    private fun createOwnerOnly(file: File) {
+        val ownerOnly = PosixFilePermissions.asFileAttribute(
+            setOf(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE)
+        )
+        try {
+            Files.createFile(file.toPath(), ownerOnly)
+        } catch (_: UnsupportedOperationException) {
+            Files.createFile(file.toPath()) // non-POSIX (e.g. NTFS): default ACLs
+        }
     }
 
     override fun encrypt(plainText: String): String {

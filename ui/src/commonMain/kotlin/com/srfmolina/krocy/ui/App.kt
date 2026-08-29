@@ -40,6 +40,7 @@ import com.srfmolina.krocy.ui.presentation.common.model.DialogConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.LabeledActionUi
 import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
+import com.srfmolina.krocy.ui.presentation.common.model.SnackbarTypeUi
 import com.srfmolina.krocy.ui.presentation.feature.login.navigation.navigateToLogin
 import com.srfmolina.krocy.ui.presentation.feature.splash.SplashScreen
 import com.srfmolina.krocy.ui.presentation.feature.stock.navigation.navigateToStock
@@ -148,6 +149,14 @@ fun App() {
                                     Text("Se eliminarán las credenciales y los datos locales de este servidor.")
                                 }
                             )
+                        )
+                    )
+
+                    is Effect.ShowLogoutIncompleteWarning -> onShowSnackbar(
+                        SnackbarConfigurationUi(
+                            message = "No se pudo completar el cierre de sesión. " +
+                                "Algunas credenciales o datos locales podrían no haberse borrado.",
+                            type = SnackbarTypeUi.ERROR
                         )
                     )
                 }

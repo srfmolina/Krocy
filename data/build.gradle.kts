@@ -51,9 +51,16 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
         jvmTest.dependencies {
             implementation(libs.ktor.client.mock)
+            // Real loopback WebSocket server for the HA handshake tests: ktor-client-mock
+            // declares WebSocketCapability but ships no upgrade path, so the handshake is
+            // exercised against an embedded server instead.
+            implementation(libs.ktor.server.cio)
+            implementation(libs.ktor.server.websockets)
+            implementation(libs.ktor.client.cio)
         }
     }
 }

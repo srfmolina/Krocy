@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The server-config DataStore holds the encrypted API key / HA token plus the
+    plaintext server URL and ingress proxy id. Restored ciphertext is useless anyway
+    (the Keystore key never leaves the device) and only produces a silent logged-out
+    state, so keep the whole file - server topology included - out of backups and
+    device transfers.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="server_config.preferences_pb" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="server_config.preferences_pb" />
+    </device-transfer>
+</data-extraction-rules>

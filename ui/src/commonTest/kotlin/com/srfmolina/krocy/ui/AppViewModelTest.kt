@@ -47,7 +47,10 @@ class AppViewModelTest {
         override suspend fun clear() { stored = null }
     }
 
-    private class SessionManagerFake(private val openSucceeds: Boolean = true) : SessionManager {
+    private class SessionManagerFake(
+        private val openSucceeds: Boolean = true,
+        private val closeSucceeds: Boolean = true
+    ) : SessionManager {
         var openCallCount = 0
         var closeCallCount = 0
         private val _sessionExpired = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
@@ -56,7 +59,10 @@ class AppViewModelTest {
             openCallCount++
             if (!openSucceeds) error("boom")
         }
-        override suspend fun close() { closeCallCount++ }
+        override suspend fun close() {
+            closeCallCount++
+            if (!closeSucceeds) error("close failed")
+        }
         suspend fun expireSession() { _sessionExpired.emit(Unit) }
     }
 
@@ -220,6 +226,54 @@ class AppViewModelTest {
         assertNull(vm.state.value.topBarConfig)
         assertNull(vm.state.value.fabConfig)
         assertEquals(listOf<Effect>(Effect.NavigateToLogin), effects)
+        collector.cancel()
+    }
+
+    @Test
+    fun `a failed logout still navigates to login but warns that it may be incomplete`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val configRepo = ServerConfigRepositoryFake(initial = ServerConfig.Demo)
+        val sessionManager = SessionManagerFake(closeSucceeds = false)
+        val itemRepo = KrocyItemRepositoryFake()
+        val vm = viewModel(configRepo, sessionManager, itemRepo)
+        val effects = mutableListOf<Effect>()
+        val collector = launch { vm.effect.collect { effects.add(it) } }
+        vm.launchEvent(Event.Init)
+        advanceUntilIdle()
+        effects.clear() // drop the startup NavigateToStock, only the logout effects matter here
+
+        vm.launchEvent(Event.OnLogoutConfirm)
+        advanceUntilIdle()
+
+        // The remaining teardown steps must still have run despite the close failure.
+        assertNull(configRepo.stored)
+        assertEquals(1, itemRepo.clearAllCallCount)
+        assertEquals(
+            listOf(Effect.ShowLogoutIncompleteWarning, Effect.NavigateToLogin),
+            effects
+        )
+        collector.cancel()
+    }
+
+    @Test
+    fun `a failed logout on session expiry also warns that it may be incomplete`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val configRepo = ServerConfigRepositoryFake(initial = ServerConfig.Demo)
+        val sessionManager = SessionManagerFake(closeSucceeds = false)
+        val vm = viewModel(configRepo, sessionManager, KrocyItemRepositoryFake())
+        val effects = mutableListOf<Effect>()
+        val collector = launch { vm.effect.collect { effects.add(it) } }
+        vm.launchEvent(Event.Init)
+        advanceUntilIdle()
+        effects.clear()
+
+        sessionManager.expireSession()
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(Effect.ShowLogoutIncompleteWarning, Effect.NavigateToLogin),
+            effects
+        )
         collector.cancel()
     }
 

@@ -34,6 +34,21 @@ class JvmCredentialCipherTest {
     }
 
     @Test
+    fun `creates the key directory owner-only where posix permissions exist`() {
+        // The credentials DataStore lives next to the key, so the directory the cipher
+        // creates must itself be private — not umask-default 755.
+        val dir = File(Files.createTempDirectory("krocy-cipher").toFile(), ".krocy")
+        JvmCredentialCipher(File(dir, "credentials.key")).encrypt("x")
+        val posix = runCatching {
+            Files.getPosixFilePermissions(dir.toPath())
+        }.getOrNull() ?: return // non-POSIX filesystem: nothing to assert
+        assertEquals(
+            "[OWNER_READ, OWNER_WRITE, OWNER_EXECUTE]",
+            posix.sorted().toString()
+        )
+    }
+
+    @Test
     fun `key file is owner-only where posix permissions exist`() {
         val keyFile = tempKeyFile()
         JvmCredentialCipher(keyFile).encrypt("x")

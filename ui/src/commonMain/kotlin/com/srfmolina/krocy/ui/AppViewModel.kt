@@ -39,6 +39,7 @@ internal class AppViewModel(
         data object NavigateToStock : Effect
         data object NavigateToLogin : Effect
         data object ShowLogoutDialog : Effect
+        data object ShowLogoutIncompleteWarning : Effect
     }
 
     data class State(
@@ -88,7 +89,9 @@ internal class AppViewModel(
     }
 
     private suspend fun logoutAndNavigateToLogin() {
-        logout()
+        // Even a failed teardown navigates to login (staying "logged in" on a dead session
+        // would be worse), but the user must know the wipe may have been incomplete.
+        if (logout().isFailure) launchEffect(Effect.ShowLogoutIncompleteWarning)
         setState { copy(dialogConfig = null, topBarConfig = null, fabConfig = null) }
         launchEffect(Effect.NavigateToLogin)
     }
