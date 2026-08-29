@@ -1,12 +1,16 @@
 package com.srfmolina.krocy.ui.presentation.feature.login.setup
 
+import com.srfmolina.krocy.domain.model.server.GrocyQrCredentials
 import com.srfmolina.krocy.domain.model.server.LoginFailure
+import com.srfmolina.krocy.domain.model.server.QrFrame
 import com.srfmolina.krocy.domain.model.server.ServerConfig
 import com.srfmolina.krocy.domain.model.server.ServerValidation
 import com.srfmolina.krocy.domain.repository.LoginRepository
+import com.srfmolina.krocy.domain.repository.QrScannerRepository
 import com.srfmolina.krocy.domain.repository.ServerConfigRepository
 import com.srfmolina.krocy.domain.session.SessionManager
 import com.srfmolina.krocy.domain.usecase.login.CompleteLoginUseCase
+import com.srfmolina.krocy.domain.usecase.login.ScanGrocyQrUseCase
 import com.srfmolina.krocy.domain.usecase.login.ValidateServerUseCase
 import com.srfmolina.krocy.ui.presentation.feature.login.setup.ServerSetupViewModel.ConnectionUi
 import com.srfmolina.krocy.ui.presentation.feature.login.setup.ServerSetupViewModel.Effect
@@ -25,7 +29,10 @@ import kotlinx.coroutines.test.setMain
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ServerSetupViewModelTest {
@@ -54,13 +61,25 @@ class ServerSetupViewModelTest {
         override suspend fun close() = Unit
     }
 
+    private class QrScannerRepositoryFake(
+        var onDecode: suspend (QrFrame) -> String? = { null }
+    ) : QrScannerRepository {
+        var callCount = 0
+        override suspend fun decode(frame: QrFrame): String? {
+            callCount++
+            return onDecode(frame)
+        }
+    }
+
     private fun viewModel(
         loginRepo: LoginRepository,
         configRepo: ServerConfigRepository = ServerConfigRepositoryFake(),
-        sessionManager: SessionManager = SessionManagerFake()
+        sessionManager: SessionManager = SessionManagerFake(),
+        qrRepo: QrScannerRepository = QrScannerRepositoryFake()
     ) = ServerSetupViewModel(
         validateServer = ValidateServerUseCase(loginRepo),
-        completeLogin = CompleteLoginUseCase(configRepo, sessionManager)
+        completeLogin = CompleteLoginUseCase(configRepo, sessionManager),
+        scanGrocyQr = ScanGrocyQrUseCase(qrRepo)
     )
 
     private val validSelfHostedForm = ServerSetupForm(
@@ -268,5 +287,166 @@ class ServerSetupViewModelTest {
         assertEquals(1, sessionManager.openCallCount)
         assertEquals(listOf<Effect>(Effect.NavigateToStock), effects)
         collector.cancel()
+    }
+
+    private val anyFrame = QrFrame(luminance = ByteArray(4), width = 2, height = 2)
+
+    @Test
+    fun `scan click opens the scanner`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val vm = viewModel(LoginRepositoryFake { ServerValidation("4.0.0", true) })
+
+        vm.launchEvent(Event.OnScanQrClick)
+        advanceUntilIdle()
+
+        assertTrue(vm.currentState.isScanning)
+    }
+
+    @Test
+    fun `dismissing closes the scanner`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val vm = viewModel(LoginRepositoryFake { ServerValidation("4.0.0", true) })
+
+        vm.launchEvent(Event.OnScanQrClick)
+        vm.launchEvent(Event.OnQrScannerDismiss)
+        advanceUntilIdle()
+
+        assertFalse(vm.currentState.isScanning)
+    }
+
+    @Test
+    fun `a grocy qr closes the scanner and asks the user to confirm the host`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val qrRepo = QrScannerRepositoryFake { "http://ha.local:8123/api/hassio_ingress/px/api|k" }
+        val vm = viewModel(LoginRepositoryFake { ServerValidation("4.0.0", true) }, qrRepo = qrRepo)
+
+        vm.launchEvent(Event.OnScanQrClick)
+        vm.launchEvent(Event.OnQrFrame(anyFrame))
+        advanceUntilIdle()
+
+        assertFalse(vm.currentState.isScanning)
+        // Nothing is applied until the user vouches for the host.
+        assertEquals(ServerSetupForm(), vm.currentState.form)
+        val connection = vm.currentState.connection
+        assertIs<ConnectionUi.QrConfirmation>(connection)
+        assertEquals(
+            GrocyQrCredentials.HomeAssistant("http://ha.local:8123", "px", "k"),
+            connection.credentials
+        )
+        assertFalse(connection.isCleartext) // .local is the user's own network
+    }
+
+    @Test
+    fun `confirming applies the scanned credentials to the form`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val qrRepo = QrScannerRepositoryFake { "http://ha.local:8123/api/hassio_ingress/px/api|k" }
+        val vm = viewModel(LoginRepositoryFake { ServerValidation("4.0.0", true) }, qrRepo = qrRepo)
+
+        vm.launchEvent(Event.OnScanQrClick)
+        vm.launchEvent(Event.OnQrFrame(anyFrame))
+        advanceUntilIdle()
+        vm.launchEvent(Event.OnQrConfirm)
+        advanceUntilIdle()
+
+        assertTrue(vm.currentState.form.usingHass)
+        assertEquals("http://ha.local:8123", vm.currentState.form.serverUrl)
+        assertEquals("px", vm.currentState.form.ingressProxyId)
+        assertEquals("k", vm.currentState.form.apiKey)
+        assertEquals(ConnectionUi.Idle, vm.currentState.connection)
+    }
+
+    @Test
+    fun `rejecting the confirmation leaves the form untouched`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val qrRepo = QrScannerRepositoryFake { "https://evil.host/api|stolen" }
+        val vm = viewModel(LoginRepositoryFake { ServerValidation("4.0.0", true) }, qrRepo = qrRepo)
+
+        vm.launchEvent(Event.OnScanQrClick)
+        vm.launchEvent(Event.OnQrFrame(anyFrame))
+        advanceUntilIdle()
+        vm.launchEvent(Event.OnQrReject)
+        advanceUntilIdle()
+
+        assertEquals(ServerSetupForm(), vm.currentState.form)
+        assertEquals(ConnectionUi.Idle, vm.currentState.connection)
+    }
+
+    @Test
+    fun `a cleartext public host is flagged in the confirmation`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val qrRepo = QrScannerRepositoryFake { "http://grocy.midominio.com/api|k" }
+        val vm = viewModel(LoginRepositoryFake { ServerValidation("4.0.0", true) }, qrRepo = qrRepo)
+
+        vm.launchEvent(Event.OnScanQrClick)
+        vm.launchEvent(Event.OnQrFrame(anyFrame))
+        advanceUntilIdle()
+
+        val connection = vm.currentState.connection
+        assertIs<ConnectionUi.QrConfirmation>(connection)
+        assertTrue(connection.isCleartext)
+    }
+
+    @Test
+    fun `a non grocy qr closes the scanner and shows an error`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val qrRepo = QrScannerRepositoryFake { "WIFI:S:MiRed;;" }
+        val vm = viewModel(LoginRepositoryFake { ServerValidation("4.0.0", true) }, qrRepo = qrRepo)
+
+        vm.launchEvent(Event.OnScanQrClick)
+        vm.launchEvent(Event.OnQrFrame(anyFrame))
+        advanceUntilIdle()
+
+        assertFalse(vm.currentState.isScanning)
+        val connection = vm.currentState.connection
+        assertIs<ConnectionUi.Error>(connection)
+        assertEquals("El código QR no pertenece a un servidor Grocy", connection.message)
+    }
+
+    @Test
+    fun `a frame without a qr changes nothing and keeps scanning`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val qrRepo = QrScannerRepositoryFake { null }
+        val vm = viewModel(LoginRepositoryFake { ServerValidation("4.0.0", true) }, qrRepo = qrRepo)
+
+        vm.launchEvent(Event.OnScanQrClick)
+        vm.launchEvent(Event.OnQrFrame(anyFrame))
+        advanceUntilIdle()
+
+        assertTrue(vm.currentState.isScanning)
+        assertEquals(ServerSetupForm(), vm.currentState.form)
+    }
+
+    @Test
+    fun `frames arriving while a decode is in flight are dropped`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val gate = CompletableDeferred<Unit>()
+        val qrRepo = QrScannerRepositoryFake {
+            gate.await()
+            "https://grocy.casa/api|key"
+        }
+        val vm = viewModel(LoginRepositoryFake { ServerValidation("4.0.0", true) }, qrRepo = qrRepo)
+
+        vm.launchEvent(Event.OnScanQrClick)
+        advanceUntilIdle()
+        repeat(5) { vm.launchEvent(Event.OnQrFrame(anyFrame)) }
+        advanceUntilIdle()
+
+        assertEquals(1, qrRepo.callCount) // the camera outruns the decoder; only one gets through
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertIs<ConnectionUi.QrConfirmation>(vm.currentState.connection)
+    }
+
+    @Test
+    fun `frames arriving after the scanner closed are ignored`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val qrRepo = QrScannerRepositoryFake { "https://grocy.casa/api|key" }
+        val vm = viewModel(LoginRepositoryFake { ServerValidation("4.0.0", true) }, qrRepo = qrRepo)
+
+        vm.launchEvent(Event.OnQrFrame(anyFrame)) // scanner never opened
+        advanceUntilIdle()
+
+        assertEquals(0, qrRepo.callCount)
+        assertEquals(ServerSetupForm(), vm.currentState.form)
     }
 }

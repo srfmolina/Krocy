@@ -1,5 +1,6 @@
 package com.srfmolina.krocy.ui.presentation.feature.login.setup
 
+import com.srfmolina.krocy.domain.model.server.GrocyQrCredentials
 import com.srfmolina.krocy.domain.model.server.ServerConfig
 import com.srfmolina.krocy.domain.model.server.hasHttpScheme
 import com.srfmolina.krocy.domain.model.server.normalizeUrlScheme
@@ -56,6 +57,24 @@ internal data class ServerSetupForm(
             } else {
                 ServerConfig.SelfHosted(serverUrl = normalizedUrl, apiKey = key)
             }
+        )
+    }
+
+    /**
+     * Fills the form from a scanned QR. `haToken` is never touched: a Grocy QR cannot carry the
+     * Home Assistant long-lived token, so whatever the user typed must survive the scan.
+     */
+    fun applyQr(credentials: GrocyQrCredentials): ServerSetupForm = when (credentials) {
+        is GrocyQrCredentials.SelfHosted -> copy(
+            usingHass = false,
+            serverUrl = credentials.serverUrl,
+            apiKey = credentials.apiKey
+        )
+        is GrocyQrCredentials.HomeAssistant -> copy(
+            usingHass = true,
+            serverUrl = credentials.haServerUrl,
+            ingressProxyId = credentials.ingressProxyId,
+            apiKey = credentials.apiKey
         )
     }
 }
