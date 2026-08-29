@@ -38,6 +38,7 @@ import com.srfmolina.krocy.ui.presentation.common.KrocySnackbar
 import com.srfmolina.krocy.ui.presentation.common.KrocySnackbarVisuals
 import com.srfmolina.krocy.ui.presentation.common.model.DialogConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
+import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
 import com.srfmolina.krocy.ui.presentation.common.model.LabeledActionUi
 import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.SnackbarTypeUi
@@ -45,9 +46,7 @@ import com.srfmolina.krocy.ui.presentation.feature.login.navigation.navigateToLo
 import com.srfmolina.krocy.ui.presentation.feature.splash.SplashScreen
 import com.srfmolina.krocy.ui.presentation.feature.stock.navigation.navigateToStock
 import com.srfmolina.krocy.ui.presentation.feature.welcome.navigation.navigateToWelcome
-import com.srfmolina.krocy.ui.presentation.navigation.LoginRoute
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationComponent
-import com.srfmolina.krocy.ui.presentation.navigation.NavigationItemUi
 import com.srfmolina.krocy.ui.presentation.navigation.SplashRoute
 import com.srfmolina.krocy.ui.presentation.navigation.component.rail.KrocyNavigationRail
 import com.srfmolina.krocy.ui.presentation.navigation.component.rail.model.appRailItems
@@ -172,11 +171,13 @@ fun App() {
             SplashScreen()
         } else if (currentRailRoute != null) {
             KrocyNavigationRail(
-                items = navController.appRailItems() + NavigationItemUi(
-                    icon = Icons.AutoMirrored.Filled.Logout,
-                    label = "Cerrar sesión",
-                    navigateTo = { viewModel.launchEvent(Event.OnLogoutClick) },
-                    route = LoginRoute
+                items = navController.appRailItems(),
+                bottomActions = listOf(
+                    IconActionUi(
+                        icon = Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = "Cerrar sesión",
+                        onClick = { viewModel.launchEvent(Event.OnLogoutClick) }
+                    )
                 ),
                 selectedRoute = currentRailRoute,
                 compactExpanded = state.isNavRailOpen,
