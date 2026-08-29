@@ -31,8 +31,10 @@ ktorfit = "2.7.2"
 adaptive = "1.2.0"
 coil = "3.2.0"
 datastore = "1.1.7"
+zxing = "3.5.3"
 
 [libraries]
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
