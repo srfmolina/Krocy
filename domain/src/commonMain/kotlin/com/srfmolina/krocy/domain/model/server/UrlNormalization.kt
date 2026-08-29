@@ -33,13 +33,23 @@ fun isCleartextRisk(url: String): Boolean {
 }
 
 private fun isPrivateOrLocalHost(host: String): Boolean {
-    if (host == "localhost" || host == "127.0.0.1" || host == "[::1]" || host == "::1") return true
+    if (host == "localhost" || host == "::1" || host == "[::1]") return true
     if (host.endsWith(".local") || host.endsWith(".lan") || host.endsWith(".home.arpa")) return true
-    if (host.startsWith("10.") || host.startsWith("192.168.")) return true
+
+    // Only a genuine dotted-quad IPv4 literal can be a private address. Checking string
+    // prefixes instead would read "10.attacker.com" as a LAN host and silently drop the
+    // cleartext warning for a public server.
     val octets = host.split('.')
-    if (octets.size == 4 && octets[0] == "172") {
-        val second = octets[1].toIntOrNull()
-        if (second != null && second in 16..31) return true // 172.16.0.0/12
+    if (octets.size != 4) return false
+    val numbers = octets.map { octet -> octet.toIntOrNull() ?: return false }
+    if (numbers.any { it !in 0..255 }) return false
+
+    return when {
+        numbers[0] == 127 -> true                          // loopback
+        numbers[0] == 10 -> true                           // 10.0.0.0/8
+        numbers[0] == 192 && numbers[1] == 168 -> true     // 192.168.0.0/16
+        numbers[0] == 172 && numbers[1] in 16..31 -> true  // 172.16.0.0/12
+        numbers[0] == 169 && numbers[1] == 254 -> true     // link-local
+        else -> false
     }
-    return false
 }

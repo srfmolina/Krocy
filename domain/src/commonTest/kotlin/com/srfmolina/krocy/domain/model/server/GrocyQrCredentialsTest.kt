@@ -77,6 +77,11 @@ class GrocyQrCredentialsTest {
     }
 
     @Test
+    fun `rejects an authority that is only a port`() {
+        assertNull(GrocyQrCredentials.parse("http://:8080/api|key"))
+    }
+
+    @Test
     fun `rejects an ingress payload with an empty proxy id`() {
         assertNull(GrocyQrCredentials.parse("http://ha.local:8123/api/hassio_ingress//api|key"))
     }

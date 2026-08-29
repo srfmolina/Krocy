@@ -28,4 +28,23 @@ class UrlNormalizationTest {
         assertTrue(isCleartextRisk("http://172.32.0.1")) // just outside 172.16.0.0/12
         assertTrue(isCleartextRisk("http://100.10.10.11")) // not the 10.0.0.0/8 block
     }
+
+    @Test
+    fun `a public host that merely looks private is flagged`() {
+        assertTrue(isCleartextRisk("http://10.attacker.com"))
+        assertTrue(isCleartextRisk("http://192.168.attacker.com"))
+        assertTrue(isCleartextRisk("http://172.16.evil.com"))
+    }
+
+    @Test
+    fun `a malformed ipv4 literal is not treated as private`() {
+        assertTrue(isCleartextRisk("http://999.1.1.1"))
+        assertTrue(isCleartextRisk("http://10.0.0"))
+    }
+
+    @Test
+    fun `loopback and link local are not flagged`() {
+        assertFalse(isCleartextRisk("http://127.0.0.1:8080"))
+        assertFalse(isCleartextRisk("http://169.254.10.1"))
+    }
 }

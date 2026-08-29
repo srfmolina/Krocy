@@ -70,15 +70,16 @@ sealed interface GrocyQrCredentials {
             // A payload without it is still accepted - the suffix carries nothing we need.
             var url = normalizeUrlScheme(rawUrl).trimEnd('/')
             if (url.endsWith(API_SUFFIX)) url = url.removeSuffix(API_SUFFIX)
-            // Re-check after stripping: "http:///api" collapses to a bare scheme, which would
-            // otherwise sail through the authority check below as the host "http:".
+            // Re-check after stripping: the suffix strip can reduce the URL to something that
+            // no longer carries a scheme at all.
             if (!hasHttpScheme(url)) return null
 
             val authorityAndPath = url.substringAfter("://")
             val authority = authorityAndPath.substringBefore('/')
             // Reject userinfo: "http://grocy.midominio.com@evil.host/" shows the user a host
-            // they recognize and connects them to one they do not.
-            if (authority.isEmpty() || '@' in authority) return null
+            // they recognize and connects them to one they do not. Reject an authority that is
+            // only a port ("http://:8080/") too - there is no host to connect to.
+            if (authority.isEmpty() || '@' in authority || authority.startsWith(":")) return null
 
             val path = authorityAndPath.removePrefix(authority)
             if (path.contains("//")) return null
