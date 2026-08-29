@@ -237,7 +237,7 @@ internal fun ServerSetupScreen(
                         if (credentials is GrocyQrCredentials.HomeAssistant) {
                             Text(
                                 text = "Modo Home Assistant. Comprueba que esta dirección es la " +
-                                    "de tu servidor antes de introducir tu token de acceso.",
+                                    "de tu servidor antes de introducir tu token de acceso de larga duración.",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         } else {

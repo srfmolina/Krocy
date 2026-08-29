@@ -38,6 +38,8 @@ import com.srfmolina.krocy.domain.model.server.QrFrame
 import com.srfmolina.krocy.ui.presentation.theme.spacing
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 internal actual val isQrScannerSupported: Boolean = true
@@ -57,6 +59,7 @@ internal actual fun CameraQrScanner(
         )
     }
     var permissionDenied by remember { mutableStateOf(false) }
+    var cameraError by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -87,33 +90,47 @@ internal actual fun CameraQrScanner(
         }
 
         LaunchedEffect(Unit) {
-            val provider = awaitProcessCameraProvider(context)
-            cameraProvider = provider
+            try {
+                val provider = awaitProcessCameraProvider(context)
+                cameraProvider = provider
 
-            val preview = Preview.Builder().build().apply {
-                setSurfaceProvider { request -> surfaceRequest = request }
-            }
-            val analysis = ImageAnalysis.Builder()
-                // Decoding is slower than capture; queued frames would only ever be stale.
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-                .apply {
-                    setAnalyzer(analysisExecutor) { image ->
-                        try {
-                            onFrame(image.toQrFrame())
-                        } finally {
-                            image.close()
+                val preview = Preview.Builder().build().apply {
+                    setSurfaceProvider { request -> surfaceRequest = request }
+                }
+                val analysis = ImageAnalysis.Builder()
+                    // Decoding is slower than capture; queued frames would only ever be stale.
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .build()
+                    .apply {
+                        setAnalyzer(analysisExecutor) { image ->
+                            try {
+                                onFrame(image.toQrFrame())
+                            } finally {
+                                image.close()
+                            }
                         }
                     }
-                }
 
-            provider.unbindAll()
-            provider.bindToLifecycle(
-                lifecycleOwner,
-                CameraSelector.DEFAULT_BACK_CAMERA,
-                preview,
-                analysis
-            )
+                provider.unbindAll()
+                provider.bindToLifecycle(
+                    lifecycleOwner,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    preview,
+                    analysis
+                )
+            } catch (e: CancellationException) {
+                throw e // never swallow cancellation
+            } catch (e: Throwable) {
+                // No usable camera, or the provider failed to start. The manifest marks the
+                // camera as not required, so this must degrade to a message rather than take
+                // the app down - the form still works by hand.
+                cameraError = true
+            }
+        }
+
+        if (cameraError) {
+            CameraErrorMessage(onDismiss = onDismiss)
+            return@Surface
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -165,6 +182,26 @@ private fun PermissionMessage(denied: Boolean, onDismiss: () -> Unit) {
     }
 }
 
+@Composable
+private fun CameraErrorMessage(onDismiss: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(MaterialTheme.spacing.s4),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(
+            MaterialTheme.spacing.s3,
+            alignment = Alignment.CenterVertically
+        )
+    ) {
+        Text(
+            text = "No se ha podido iniciar la cámara. Puedes introducir los datos a mano.",
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Button(onClick = onDismiss) { Text("Volver") }
+    }
+}
+
 /**
  * CameraX 1.6.2 does not ship the `awaitInstance` coroutine extension yet - only the classic
  * `ListenableFuture` accessor - so this bridges it with `suspendCancellableCoroutine` instead of
@@ -174,9 +211,20 @@ private suspend fun awaitProcessCameraProvider(context: Context): ProcessCameraP
     suspendCancellableCoroutine { continuation ->
         val future = ProcessCameraProvider.getInstance(context)
         future.addListener(
-            { continuation.resume(future.get()) },
+            {
+                try {
+                    continuation.resume(future.get())
+                } catch (e: Throwable) {
+                    // The future completes exceptionally when the provider cannot start. Without
+                    // this the ExecutionException would surface on the main looper as an
+                    // uncaught crash, and the coroutine would park forever with no camera and no
+                    // message.
+                    continuation.resumeWithException(e)
+                }
+            },
             ContextCompat.getMainExecutor(context)
         )
+        continuation.invokeOnCancellation { future.cancel(false) }
     }
 
 /**
