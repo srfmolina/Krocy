@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Users type their own Grocy / Home Assistant server address (ServerSetupScreen), which is
+    commonly a plain-http:// LAN host: a bare self-hosted Grocy instance, or the Home Assistant
+    add-on itself (the app's own help text tells users to enter exactly "http://homeassistant.local:8123",
+    and the HA ingress session handshake additionally opens a ws:// WebSocket).
+
+    Android's network-security-config can only allowlist specific domains, not IP ranges, so it
+    cannot express "any RFC1918 address" or "any mDNS/.local hostname" the way arbitrary LAN
+    setups need. Since correctness for arbitrary user-chosen hosts matters more than tightening
+    this policy, cleartext is permitted for all destinations here; HTTPS is unaffected and
+    preferred whenever the user's server offers it.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

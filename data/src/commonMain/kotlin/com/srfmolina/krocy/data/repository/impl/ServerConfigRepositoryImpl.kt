@@ -1,0 +1,132 @@
+package com.srfmolina.krocy.data.repository.impl
+
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.srfmolina.krocy.data.config.CredentialCipher
+import com.srfmolina.krocy.data.config.HassSessionStore
+import com.srfmolina.krocy.domain.model.server.ServerConfig
+import com.srfmolina.krocy.domain.repository.ServerConfigRepository
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+
+private val KEY_MODE = stringPreferencesKey("mode") // "demo" | "self" | "hass"
+private val KEY_SERVER_URL = stringPreferencesKey("server_url")
+private val KEY_API_KEY = stringPreferencesKey("api_key_enc")
+private val KEY_HA_URL = stringPreferencesKey("ha_url")
+private val KEY_HA_PROXY_ID = stringPreferencesKey("ha_proxy_id")
+private val KEY_HA_TOKEN = stringPreferencesKey("ha_token_enc")
+private val KEY_INGRESS_SESSION = stringPreferencesKey("ingress_session_enc")
+
+internal class ServerConfigRepositoryImpl(
+    private val dataStore: DataStore<Preferences>,
+    private val cipher: CredentialCipher
+) : ServerConfigRepository, HassSessionStore {
+
+    // In-memory cache for both the config and the HA ingress session: without it, every HA
+    // request (session()) and every image request (get()) pays a DataStore disk/flow round-trip
+    // plus an Android Keystore AES-GCM decrypt. Populated lazily on first read and invalidated
+    // (not pre-filled) at the only points that mutate the underlying store - save() and clear() -
+    // so the next read always re-derives the value through the real decrypt path (preserving
+    // e.g. the "undecryptable store degrades to logged out" behaviour) while still avoiding a
+    // disk+decrypt round-trip on every subsequent call, including across a logout+login into a
+    // different server.
+    private val cacheMutex = Mutex()
+    private var cachedConfig: ServerConfig? = null
+    private var configCached = false
+    private var cachedSession: String? = null
+    private var sessionCached = false
+
+    override suspend fun get(): ServerConfig? = cacheMutex.withLock {
+        if (!configCached) {
+            cachedConfig = dataStore.data.first().toConfig()
+            configCached = true
+        }
+        cachedConfig
+    }
+
+    override suspend fun save(config: ServerConfig) {
+        dataStore.edit { prefs ->
+            when (config) {
+                is ServerConfig.Demo -> {
+                    prefs[KEY_MODE] = "demo"
+                    prefs.remove(KEY_SERVER_URL); prefs.remove(KEY_API_KEY)
+                    prefs.remove(KEY_HA_URL); prefs.remove(KEY_HA_PROXY_ID); prefs.remove(KEY_HA_TOKEN)
+                    prefs.remove(KEY_INGRESS_SESSION)
+                }
+                is ServerConfig.SelfHosted -> {
+                    prefs[KEY_MODE] = "self"
+                    prefs[KEY_SERVER_URL] = config.serverUrl
+                    prefs[KEY_API_KEY] = cipher.encrypt(config.apiKey)
+                    prefs.remove(KEY_HA_URL); prefs.remove(KEY_HA_PROXY_ID); prefs.remove(KEY_HA_TOKEN)
+                    prefs.remove(KEY_INGRESS_SESSION)
+                }
+                is ServerConfig.HomeAssistant -> {
+                    prefs[KEY_MODE] = "hass"
+                    prefs[KEY_HA_URL] = config.haServerUrl
+                    prefs[KEY_HA_PROXY_ID] = config.ingressProxyId
+                    prefs[KEY_HA_TOKEN] = cipher.encrypt(config.longLivedToken)
+                    prefs[KEY_API_KEY] = cipher.encrypt(config.apiKey)
+                    prefs.remove(KEY_SERVER_URL)
+                }
+            }
+        }
+        cacheMutex.withLock {
+            configCached = false
+            if (config !is ServerConfig.HomeAssistant) sessionCached = false
+        }
+    }
+
+    // Satisfies both ServerConfigRepository.clear() and HassSessionStore.clear() (same
+    // signature, merged into one override): wipes the whole store, config and cached
+    // ingress session alike. Only called from logout paths, where that's the right result.
+    override suspend fun clear() {
+        dataStore.edit { it.clear() }
+        cacheMutex.withLock {
+            configCached = false
+            sessionCached = false
+        }
+    }
+
+    // --- HassSessionStore ---
+
+    override suspend fun session(): String? = cacheMutex.withLock {
+        if (!sessionCached) {
+            cachedSession = decryptOrNull(dataStore.data.first()[KEY_INGRESS_SESSION])
+            sessionCached = true
+        }
+        cachedSession
+    }
+
+    override suspend fun save(session: String) {
+        dataStore.edit { it[KEY_INGRESS_SESSION] = cipher.encrypt(session) }
+        cacheMutex.withLock { sessionCached = false }
+    }
+
+    private fun Preferences.toConfig(): ServerConfig? = when (this[KEY_MODE]) {
+        "demo" -> ServerConfig.Demo
+        "self" -> {
+            val url = this[KEY_SERVER_URL]
+            val key = decryptOrNull(this[KEY_API_KEY])
+            if (url != null && key != null) ServerConfig.SelfHosted(url, key) else null
+        }
+        "hass" -> {
+            val url = this[KEY_HA_URL]
+            val proxyId = this[KEY_HA_PROXY_ID]
+            val token = decryptOrNull(this[KEY_HA_TOKEN])
+            val key = decryptOrNull(this[KEY_API_KEY])
+            if (url != null && proxyId != null && token != null && key != null) {
+                ServerConfig.HomeAssistant(url, proxyId, token, key)
+            } else null
+        }
+        else -> null
+    }
+
+    // A corrupt or tampered store (or an Android Keystore key invalidated after a backup
+    // restore) makes decryption throw. Treat that as "value not present" so the store
+    // degrades to logged-out instead of crashing app startup forever.
+    private fun decryptOrNull(value: String?): String? =
+        value?.let { runCatching { cipher.decrypt(it) }.getOrNull() }
+}

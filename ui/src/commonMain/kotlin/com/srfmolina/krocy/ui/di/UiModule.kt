@@ -1,5 +1,11 @@
 package com.srfmolina.krocy.ui.di
 
+import com.srfmolina.krocy.domain.usecase.login.CompleteLoginUseCase
+import com.srfmolina.krocy.domain.usecase.login.GetServerConfigUseCase
+import com.srfmolina.krocy.domain.usecase.login.LogoutUseCase
+import com.srfmolina.krocy.domain.usecase.login.ObserveSessionExpiredUseCase
+import com.srfmolina.krocy.domain.usecase.login.OpenSessionUseCase
+import com.srfmolina.krocy.domain.usecase.login.ValidateServerUseCase
 import com.srfmolina.krocy.domain.usecase.masterdata.GetLocationsUseCase
 import com.srfmolina.krocy.domain.usecase.masterdata.GetProductGroupsUseCase
 import com.srfmolina.krocy.domain.usecase.masterdata.GetQuConversionsUseCase
@@ -21,35 +27,45 @@ import com.srfmolina.krocy.domain.usecase.stock.PurchaseStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.RefreshStockUseCase
 import com.srfmolina.krocy.ui.AppViewModel
 import com.srfmolina.krocy.ui.presentation.feature.creation.CreateProductViewModel
+import com.srfmolina.krocy.ui.presentation.feature.login.LoginViewModel
+import com.srfmolina.krocy.ui.presentation.feature.login.setup.ServerSetupViewModel
 import com.srfmolina.krocy.ui.presentation.feature.purchase.PurchaseViewModel
 import com.srfmolina.krocy.ui.presentation.feature.shoppinglist.ShoppingListViewModel
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockViewModel
-import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val uiModule = module {
-    singleOf(::ObserveStockUseCase)
-    singleOf(::ConsumeStockUseCase)
-    singleOf(::AddStockUseCase)
-    singleOf(::OpenStockUseCase)
-    singleOf(::RefreshStockUseCase)
-    singleOf(::CreateProductUseCase)
-    singleOf(::CreateQuConversionUseCase)
-    singleOf(::GetQuantityUnitsUseCase)
-    singleOf(::GetLocationsUseCase)
-    singleOf(::GetProductGroupsUseCase)
-    singleOf(::GetQuConversionsUseCase)
-    singleOf(::PurchaseStockUseCase)
-    singleOf(::GetProductsUseCase)
-    singleOf(::GetProductPurchaseInfoUseCase)
-    singleOf(::GetShoppingLocationsUseCase)
-    singleOf(::ObserveShoppingListUseCase)
-    singleOf(::RefreshShoppingListUseCase)
-    singleOf(::SetEntryDoneUseCase)
-    singleOf(::AddToShoppingListUseCase)
+    factoryOf(::ObserveStockUseCase)
+    factoryOf(::ConsumeStockUseCase)
+    factoryOf(::AddStockUseCase)
+    factoryOf(::OpenStockUseCase)
+    factoryOf(::RefreshStockUseCase)
+    factoryOf(::CreateProductUseCase)
+    factoryOf(::CreateQuConversionUseCase)
+    factoryOf(::GetQuantityUnitsUseCase)
+    factoryOf(::GetLocationsUseCase)
+    factoryOf(::GetProductGroupsUseCase)
+    factoryOf(::GetQuConversionsUseCase)
+    factoryOf(::PurchaseStockUseCase)
+    factoryOf(::GetProductsUseCase)
+    factoryOf(::GetProductPurchaseInfoUseCase)
+    factoryOf(::GetShoppingLocationsUseCase)
+    factoryOf(::ObserveShoppingListUseCase)
+    factoryOf(::RefreshShoppingListUseCase)
+    factoryOf(::SetEntryDoneUseCase)
+    factoryOf(::AddToShoppingListUseCase)
+    factoryOf(::ValidateServerUseCase)
+    factoryOf(::CompleteLoginUseCase)
+    factoryOf(::OpenSessionUseCase)
+    factoryOf(::GetServerConfigUseCase)
+    factoryOf(::LogoutUseCase)
+    factoryOf(::ObserveSessionExpiredUseCase)
 
     viewModelOf(::AppViewModel)
+    viewModelOf(::LoginViewModel)
+    viewModelOf(::ServerSetupViewModel)
     viewModelOf(::StockViewModel)
     viewModelOf(::CreateProductViewModel)
     viewModelOf(::PurchaseViewModel)

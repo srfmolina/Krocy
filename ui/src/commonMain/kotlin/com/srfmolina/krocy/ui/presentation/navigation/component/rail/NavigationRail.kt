@@ -24,12 +24,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.MenuOpen
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -54,6 +56,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
+import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
 import com.srfmolina.krocy.ui.presentation.navigation.KrocyRoute
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationItemUi
 import com.srfmolina.krocy.ui.presentation.navigation.SplashRoute
@@ -82,6 +85,8 @@ private const val ANIM_DURATION_MS = 300
  * @param compactExpanded   Whether the compact modal rail is open. Ignored on wide screens.
  * @param onCompactDismiss  Called when the compact modal should close (scrim tap or item select).
  * @param modifier          Modifier applied to the root container.
+ * @param bottomActions     Icon-only actions anchored to the bottom of the rail, separated from
+ *                          the destinations by a divider (e.g. logout).
  * @param content           Main screen content rendered beside or behind the rail.
  */
 @Composable
@@ -91,6 +96,7 @@ internal fun KrocyNavigationRail(
     compactExpanded: Boolean,
     onCompactDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    bottomActions: List<IconActionUi> = emptyList(),
     content: @Composable () -> Unit,
 ) {
     Box(
@@ -109,6 +115,7 @@ internal fun KrocyNavigationRail(
                     item.navigateTo()
                     onCompactDismiss()
                 },
+                bottomActions = bottomActions,
                 content = content,
             )
         } else {
@@ -120,6 +127,7 @@ internal fun KrocyNavigationRail(
                 onItemSelected = { item ->
                     item.navigateTo()
                 },
+                bottomActions = bottomActions,
                 content = content,
             )
         }
@@ -135,6 +143,7 @@ private fun CompactLayout(
     expanded: Boolean,
     onCollapse: () -> Unit,
     onItemSelected: (NavigationItemUi) -> Unit,
+    bottomActions: List<IconActionUi>,
     content: @Composable () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -178,6 +187,7 @@ private fun CompactLayout(
                 menuIconPadding = MaterialTheme.spacing.s2,
                 menuContentDescription = "Close navigation menu",
                 onMenuClick = onCollapse,
+                bottomActions = bottomActions,
             )
         }
     }
@@ -192,6 +202,7 @@ private fun WideLayout(
     expanded: Boolean,
     onToggle: () -> Unit,
     onItemSelected: (NavigationItemUi) -> Unit,
+    bottomActions: List<IconActionUi>,
     content: @Composable () -> Unit,
 ) {
     val railWidth by animateDpAsState(
@@ -219,6 +230,7 @@ private fun WideLayout(
             menuIconPadding = MaterialTheme.spacing.s4,
             menuContentDescription = if (expanded) "Collapse navigation" else "Expand navigation",
             onMenuClick = onToggle,
+            bottomActions = bottomActions,
         )
         Box(
             modifier = Modifier
@@ -251,6 +263,7 @@ private fun RailPanel(
     menuIconPadding: Dp,
     menuContentDescription: String,
     onMenuClick: () -> Unit,
+    bottomActions: List<IconActionUi>,
     modifier: Modifier = Modifier,
     labelRevealProgress: Float = if (showLabels) 1f else 0f,
 ) {
@@ -293,6 +306,32 @@ private fun RailPanel(
                         labelRevealProgress = labelRevealProgress,
                         onClick = { onItemSelected(item) },
                     )
+                }
+            }
+
+            if (bottomActions.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = MaterialTheme.spacing.s3),
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                    )
+                    bottomActions.forEach { action ->
+                        IconButton(
+                            modifier = Modifier.padding(top = MaterialTheme.spacing.s2),
+                            onClick = action.onClick,
+                            shapes = IconButtonDefaults.shapes(),
+                        ) {
+                            Icon(
+                                imageVector = action.icon,
+                                contentDescription = action.contentDescription,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -372,6 +411,10 @@ private val previewItems = listOf(
     NavigationItemUi(icon = Icons.Filled.ShoppingCart, label = "Stock", navigateTo = {}, route = StockRoute),
 )
 
+private val previewBottomActions = listOf(
+    IconActionUi(icon = Icons.AutoMirrored.Filled.Logout, contentDescription = "Log out", onClick = {}),
+)
+
 @Composable
 private fun PreviewContent() {
     Surface(modifier = Modifier.fillMaxSize()) {
@@ -393,6 +436,7 @@ fun KrocyNavigationRailCompactClosedPreview() {
             selectedRoute = SplashRoute,
             compactExpanded = false,
             onCompactDismiss = {},
+            bottomActions = previewBottomActions,
             content = { PreviewContent() },
         )
     }
@@ -407,6 +451,7 @@ fun KrocyNavigationRailCompactOpenPreview() {
             selectedRoute = SplashRoute,
             compactExpanded = true,
             onCompactDismiss = {},
+            bottomActions = previewBottomActions,
             content = { PreviewContent() },
         )
     }
@@ -421,6 +466,7 @@ fun KrocyNavigationRailWideCollapsedPreview() {
             selectedRoute = SplashRoute,
             compactExpanded = false,
             onCompactDismiss = {},
+            bottomActions = previewBottomActions,
             content = { PreviewContent() },
         )
     }
@@ -437,6 +483,7 @@ fun KrocyNavigationRailWideExpandedPreview() {
             expanded = true,
             onToggle = {},
             onItemSelected = {},
+            bottomActions = previewBottomActions,
             content = { PreviewContent() },
         )
     }

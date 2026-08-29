@@ -20,4 +20,7 @@ interface KrocyItemDao { // An example
 
     @Query("DELETE FROM krocy_items WHERE id = :id")
     suspend fun deleteById(id: Int)
+
+    @Query("DELETE FROM krocy_items")
+    suspend fun deleteAll()
 }

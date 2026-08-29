@@ -7,4 +7,5 @@ internal interface KrocyItemDataSource { // An example
     fun getAll(): Flow<List<KrocyItemEntity>>
     suspend fun save(entity: KrocyItemEntity)
     suspend fun deleteById(id: Int)
+    suspend fun clearAll()
 }

@@ -14,6 +14,9 @@ data object WelcomeRoute: KrocyRoute
 data object LoginRoute: KrocyRoute
 
 @Serializable
+data object ServerSetupRoute: KrocyRoute
+
+@Serializable
 data object StockRoute: KrocyRoute
 
 @Serializable

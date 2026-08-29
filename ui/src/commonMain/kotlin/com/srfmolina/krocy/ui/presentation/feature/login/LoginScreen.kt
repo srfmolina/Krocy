@@ -18,18 +18,52 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.srfmolina.krocy.ui.presentation.common.AppIcon
+import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 import com.srfmolina.krocy.ui.presentation.theme.spacing
+import org.koin.compose.viewmodel.koinViewModel
+
+@Composable
+internal fun LoginScreen(
+    onNavigateToStock: () -> Unit,
+    onNavigateToServerSetup: () -> Unit,
+    onShowSnackbar: (SnackbarConfigurationUi) -> Unit,
+    viewModel: LoginViewModel = koinViewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is LoginViewModel.Effect.NavigateToStock -> onNavigateToStock()
+                is LoginViewModel.Effect.NavigateToServerSetup -> onNavigateToServerSetup()
+                is LoginViewModel.Effect.ShowError ->
+                    onShowSnackbar(SnackbarConfigurationUi(message = effect.message))
+            }
+        }
+    }
+
+    LoginScreenContent(
+        isConnecting = state.isConnecting,
+        onDemoClick = { viewModel.launchEvent(LoginViewModel.Event.OnDemoServerClick) },
+        onOwnClick = { viewModel.launchEvent(LoginViewModel.Event.OnOwnServerClick) }
+    )
+}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-internal fun LoginScreen(
-    onDemoServer: () -> Unit
+private fun LoginScreenContent(
+    isConnecting: Boolean,
+    onDemoClick: () -> Unit,
+    onOwnClick: () -> Unit
 ) {
 
     Column(
@@ -69,16 +103,16 @@ internal fun LoginScreen(
         Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2)) {
             OutlinedButton(
                 shapes = ButtonDefaults.shapes(),
-                onClick = onDemoServer,
+                enabled = !isConnecting,
+                onClick = onDemoClick,
             ) {
                 Text("Servidor de prueba")
             }
 
             Button(
                 shapes = ButtonDefaults.shapes(),
-                onClick = {
-                    //TODO
-                },
+                enabled = !isConnecting,
+                onClick = onOwnClick,
             ) {
                 Text("Servidor propio")
             }
@@ -91,8 +125,10 @@ internal fun LoginScreen(
 private fun LoginScreenPreview() {
     KrocyTheme {
         Surface {
-            LoginScreen(
-                onDemoServer = {}
+            LoginScreenContent(
+                isConnecting = false,
+                onDemoClick = {},
+                onOwnClick = {}
             )
         }
     }

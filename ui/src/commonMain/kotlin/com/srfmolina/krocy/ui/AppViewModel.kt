@@ -1,5 +1,10 @@
 package com.srfmolina.krocy.ui
 
+import androidx.lifecycle.viewModelScope
+import com.srfmolina.krocy.domain.usecase.login.GetServerConfigUseCase
+import com.srfmolina.krocy.domain.usecase.login.LogoutUseCase
+import com.srfmolina.krocy.domain.usecase.login.ObserveSessionExpiredUseCase
+import com.srfmolina.krocy.domain.usecase.login.OpenSessionUseCase
 import com.srfmolina.krocy.ui.AppViewModel.Effect
 import com.srfmolina.krocy.ui.AppViewModel.Event
 import com.srfmolina.krocy.ui.AppViewModel.State
@@ -10,11 +15,19 @@ import com.srfmolina.krocy.ui.base.UiState
 import com.srfmolina.krocy.ui.presentation.common.model.DialogConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarConfigurationUi
+import kotlinx.coroutines.launch
 
-internal class AppViewModel : BaseViewModel<Event, State, Effect>() {
+internal class AppViewModel(
+    private val getServerConfig: GetServerConfigUseCase,
+    private val openSession: OpenSessionUseCase,
+    private val logout: LogoutUseCase,
+    private val observeSessionExpired: ObserveSessionExpiredUseCase
+) : BaseViewModel<Event, State, Effect>() {
 
-    sealed interface Event: UiEvent {
+    sealed interface Event : UiEvent {
         data object Init : Event
+        data object OnLogoutClick : Event
+        data object OnLogoutConfirm : Event
         data class OnTopBarChange(val config: TopBarConfigurationUi) : Event
         data class OnChangeNavRailStatus(val open: Boolean) : Event
         data class OnFabChange(val config: FabConfigurationUi) : Event
@@ -23,6 +36,10 @@ internal class AppViewModel : BaseViewModel<Event, State, Effect>() {
 
     sealed interface Effect : UiEffect {
         data object NavigateToWelcome : Effect
+        data object NavigateToStock : Effect
+        data object NavigateToLogin : Effect
+        data object ShowLogoutDialog : Effect
+        data object ShowLogoutIncompleteWarning : Effect
     }
 
     data class State(
@@ -35,9 +52,13 @@ internal class AppViewModel : BaseViewModel<Event, State, Effect>() {
 
     override fun createInitialState(): State = State()
 
+    private var initialized = false
+
     override suspend fun handleEvent(event: Event) {
         when (event) {
             is Event.Init -> init()
+            is Event.OnLogoutClick -> launchEffect(Effect.ShowLogoutDialog)
+            is Event.OnLogoutConfirm -> confirmLogout()
             is Event.OnTopBarChange -> setState { copy(topBarConfig = event.config) }
             is Event.OnChangeNavRailStatus -> setState { copy(isNavRailOpen = event.open) }
             is Event.OnFabChange -> setState { copy(fabConfig = event.config) }
@@ -45,10 +66,33 @@ internal class AppViewModel : BaseViewModel<Event, State, Effect>() {
         }
     }
 
-    private fun init() {
-        //TODO: check logins...
+    private suspend fun init() {
+        if (initialized) return
+        initialized = true
+        watchSessionExpiry()
+        val config = getServerConfig().getOrNull()
+        val opened = config != null && openSession(config).isSuccess
         setState { copy(isLoading = false) }
-        launchEffect(Effect.NavigateToWelcome) // If the user is not logged
+        launchEffect(if (opened) Effect.NavigateToStock else Effect.NavigateToWelcome)
     }
 
+    private suspend fun confirmLogout() {
+        logoutAndNavigateToLogin()
+    }
+
+    private fun watchSessionExpiry() {
+        viewModelScope.launch {
+            // sessionExpired is a plain MutableSharedFlow<Unit> that cannot fail, so every
+            // emission here is unconditionally a real expiry - no result to branch on.
+            observeSessionExpired().collect { logoutAndNavigateToLogin() }
+        }
+    }
+
+    private suspend fun logoutAndNavigateToLogin() {
+        // Even a failed teardown navigates to login (staying "logged in" on a dead session
+        // would be worse), but the user must know the wipe may have been incomplete.
+        if (logout().isFailure) launchEffect(Effect.ShowLogoutIncompleteWarning)
+        setState { copy(dialogConfig = null, topBarConfig = null, fabConfig = null) }
+        launchEffect(Effect.NavigateToLogin)
+    }
 }

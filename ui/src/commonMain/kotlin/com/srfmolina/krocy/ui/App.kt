@@ -3,12 +3,15 @@ package com.srfmolina.krocy.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
@@ -24,6 +27,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
+import coil3.ImageLoader
+import coil3.compose.setSingletonImageLoaderFactory
+import coil3.network.ktor3.KtorNetworkFetcherFactory
 import com.srfmolina.krocy.ui.AppViewModel.Effect
 import com.srfmolina.krocy.ui.AppViewModel.Event
 import com.srfmolina.krocy.ui.presentation.common.KrocyDialog
@@ -32,7 +38,13 @@ import com.srfmolina.krocy.ui.presentation.common.KrocySnackbar
 import com.srfmolina.krocy.ui.presentation.common.KrocySnackbarVisuals
 import com.srfmolina.krocy.ui.presentation.common.model.DialogConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
+import com.srfmolina.krocy.ui.presentation.common.model.IconActionUi
+import com.srfmolina.krocy.ui.presentation.common.model.LabeledActionUi
 import com.srfmolina.krocy.ui.presentation.common.model.SnackbarConfigurationUi
+import com.srfmolina.krocy.ui.presentation.common.model.SnackbarTypeUi
+import com.srfmolina.krocy.ui.presentation.feature.login.navigation.navigateToLogin
+import com.srfmolina.krocy.ui.presentation.feature.splash.SplashScreen
+import com.srfmolina.krocy.ui.presentation.feature.stock.navigation.navigateToStock
 import com.srfmolina.krocy.ui.presentation.feature.welcome.navigation.navigateToWelcome
 import com.srfmolina.krocy.ui.presentation.navigation.NavigationComponent
 import com.srfmolina.krocy.ui.presentation.navigation.SplashRoute
@@ -45,9 +57,12 @@ import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.Top
 import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarTypeUi
 import com.srfmolina.krocy.ui.presentation.theme.KrocyTheme
 import com.srfmolina.krocy.ui.presentation.theme.spacing
+import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.qualifier.named
+import org.koin.mp.KoinPlatform
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,6 +92,18 @@ fun App() {
 
     val currentRailRoute = navController.currentRailRoute()
 
+    setSingletonImageLoaderFactory { context ->
+        ImageLoader.Builder(context)
+            .components {
+                add(
+                    KtorNetworkFetcherFactory(httpClient = {
+                        KoinPlatform.getKoin().get<HttpClient>(named("imageHttpClient"))
+                    })
+                )
+            }
+            .build()
+    }
+
     KrocyTheme {
 
         LaunchedEffect(Unit) {
@@ -94,13 +121,64 @@ fun App() {
                             }
                         }
                     )
+
+                    is Effect.NavigateToStock -> navController.navigateToStock(
+                        navOptions = navOptions { popUpTo(0) { inclusive = true } }
+                    )
+
+                    is Effect.NavigateToLogin -> navController.navigateToLogin(
+                        navOptions = navOptions { popUpTo(0) { inclusive = true } }
+                    )
+
+                    is Effect.ShowLogoutDialog -> viewModel.launchEvent(
+                        Event.OnDialogChange(
+                            DialogConfigurationUi(
+                                title = "Cerrar sesión",
+                                confirm = LabeledActionUi(
+                                    label = "Cerrar sesión",
+                                    contentDescription = "Confirmar cierre de sesión",
+                                    onClick = { viewModel.launchEvent(Event.OnLogoutConfirm) }
+                                ),
+                                dismiss = LabeledActionUi(
+                                    label = "Cancelar",
+                                    contentDescription = "Cancelar cierre de sesión",
+                                    onClick = { viewModel.launchEvent(Event.OnDialogChange(null)) }
+                                ),
+                                content = {
+                                    Text("Se eliminarán las credenciales y los datos locales de este servidor.")
+                                }
+                            )
+                        )
+                    )
+
+                    is Effect.ShowLogoutIncompleteWarning -> onShowSnackbar(
+                        SnackbarConfigurationUi(
+                            message = "No se pudo completar el cierre de sesión. " +
+                                "Algunas credenciales o datos locales podrían no haberse borrado.",
+                            type = SnackbarTypeUi.ERROR
+                        )
+                    )
                 }
             }
         }
 
-        if (currentRailRoute != null) {
+        if (state.isLoading) {
+            // Session Koin module (and anything it provides, e.g. StockRepository) is still
+            // loading in AppViewModel.init(). Keep the nav graph - and any restored back stack
+            // from process death - unmounted until it is ready, otherwise a screen restored
+            // straight onto an authenticated route can request a session-scoped ViewModel
+            // before its Koin module exists.
+            SplashScreen()
+        } else if (currentRailRoute != null) {
             KrocyNavigationRail(
                 items = navController.appRailItems(),
+                bottomActions = listOf(
+                    IconActionUi(
+                        icon = Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = "Cerrar sesión",
+                        onClick = { viewModel.launchEvent(Event.OnLogoutClick) }
+                    )
+                ),
                 selectedRoute = currentRailRoute,
                 compactExpanded = state.isNavRailOpen,
                 onCompactDismiss = { viewModel.launchEvent(Event.OnChangeNavRailStatus(false)) },
