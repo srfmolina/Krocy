@@ -156,4 +156,22 @@ class GrocyQrCredentialsTest {
     fun `rejects an oversized api key inside a short payload`() {
         assertNull(GrocyQrCredentials.parse("https://grocy.casa/api|" + "k".repeat(513)))
     }
+
+    @Test
+    fun `rejects an oversized url`() {
+        assertNull(GrocyQrCredentials.parse("https://grocy.casa/" + "a".repeat(300) + "/api|key"))
+    }
+
+    @Test
+    fun `rejects a percent encoded userinfo separator in the authority`() {
+        assertNull(GrocyQrCredentials.parse("http://grocy.midominio.com%40evil.host/api|k"))
+    }
+
+    @Test
+    fun `accepts an ipv6 literal authority`() {
+        assertEquals(
+            GrocyQrCredentials.SelfHosted("http://[::1]:8080", "key"),
+            GrocyQrCredentials.parse("http://[::1]:8080/api|key")
+        )
+    }
 }

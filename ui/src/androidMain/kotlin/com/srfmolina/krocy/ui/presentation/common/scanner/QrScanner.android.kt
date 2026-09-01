@@ -1,7 +1,6 @@
 package com.srfmolina.krocy.ui.presentation.common.scanner
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,6 +11,7 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceRequest
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.lifecycle.awaitInstance
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,11 +36,9 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.srfmolina.krocy.domain.model.server.QrFrame
 import com.srfmolina.krocy.ui.presentation.theme.spacing
+import java.nio.ByteBuffer
 import java.util.concurrent.Executors
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.suspendCancellableCoroutine
 
 internal actual val isQrScannerSupported: Boolean = true
 
@@ -91,7 +89,7 @@ internal actual fun CameraQrScanner(
 
         LaunchedEffect(Unit) {
             try {
-                val provider = awaitProcessCameraProvider(context)
+                val provider = ProcessCameraProvider.awaitInstance(context)
                 cameraProvider = provider
 
                 val preview = Preview.Builder().build().apply {
@@ -104,7 +102,14 @@ internal actual fun CameraQrScanner(
                     .apply {
                         setAnalyzer(analysisExecutor) { image ->
                             try {
+                                // A frame we cannot read (an unusual OEM buffer layout, an
+                                // out-of-range stride) is a dropped frame, not a crash - the
+                                // same reasoning as the provider/bind guards above. CameraX
+                                // runs this on its own executor, so an uncaught Throwable here
+                                // would reach the thread's default handler and take the app down.
                                 onFrame(image.toQrFrame())
+                            } catch (e: Throwable) {
+                                // Drop the frame and keep scanning.
                             } finally {
                                 image.close()
                             }
@@ -203,38 +208,21 @@ private fun CameraErrorMessage(onDismiss: () -> Unit) {
 }
 
 /**
- * CameraX 1.6.2 does not ship the `awaitInstance` coroutine extension yet - only the classic
- * `ListenableFuture` accessor - so this bridges it with `suspendCancellableCoroutine` instead of
- * pulling in `kotlinx-coroutines-guava` for a single call site.
- */
-private suspend fun awaitProcessCameraProvider(context: Context): ProcessCameraProvider =
-    suspendCancellableCoroutine { continuation ->
-        val future = ProcessCameraProvider.getInstance(context)
-        future.addListener(
-            {
-                try {
-                    continuation.resume(future.get())
-                } catch (e: Throwable) {
-                    // The future completes exceptionally when the provider cannot start. Without
-                    // this the ExecutionException would surface on the main looper as an
-                    // uncaught crash, and the coroutine would park forever with no camera and no
-                    // message.
-                    continuation.resumeWithException(e)
-                }
-            },
-            ContextCompat.getMainExecutor(context)
-        )
-        continuation.invokeOnCancellation { future.cancel(false) }
-    }
-
-/**
  * Copies the Y (luminance) plane into a tightly packed buffer. The camera pads rows to a stride
  * that is often wider than the image, so a straight bulk copy would shear the picture.
  */
 private fun ImageProxy.toQrFrame(): QrFrame {
     val plane = planes[0]
-    val buffer = plane.buffer
-    val rowStride = plane.rowStride
+    val data = packLuminance(plane.buffer, plane.rowStride, width, height)
+    return QrFrame(luminance = data, width = width, height = height)
+}
+
+/**
+ * Pure pixel-packing logic pulled out of [toQrFrame] so it can be unit-tested without any
+ * CameraX types: copies a possibly row-padded buffer into a tightly packed `width * height`
+ * byte array.
+ */
+internal fun packLuminance(buffer: ByteBuffer, rowStride: Int, width: Int, height: Int): ByteArray {
     val data = ByteArray(width * height)
 
     if (rowStride == width) {
@@ -248,5 +236,5 @@ private fun ImageProxy.toQrFrame(): QrFrame {
             row.copyInto(data, destinationOffset = y * width, startIndex = 0, endIndex = width)
         }
     }
-    return QrFrame(luminance = data, width = width, height = height)
+    return data
 }

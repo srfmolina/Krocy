@@ -30,7 +30,6 @@ kotlin {
         val jvmCommonMain by creating {
             dependsOn(commonMain.get())
             dependencies {
-                implementation(project(":domain"))
                 implementation(libs.zxing.core)
             }
         }

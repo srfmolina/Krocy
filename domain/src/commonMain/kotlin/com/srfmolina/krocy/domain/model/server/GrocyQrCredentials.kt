@@ -8,6 +8,10 @@ private const val INGRESS_MARKER = "/api/hassio_ingress/"
 private const val MAX_PAYLOAD_LENGTH = 2048
 private const val MAX_API_KEY_LENGTH = 512
 
+/** Nothing legitimate is longer; an overlong URL exists only to push the confirmation
+ *  card's buttons and warning off screen. */
+private const val MAX_URL_LENGTH = 256
+
 /**
  * Printable ASCII, no space. Excludes CR, LF, tab and every control character - the API key is
  * sent verbatim as the `GROCY-API-KEY` header, where a CR or LF is header injection - and
@@ -17,6 +21,9 @@ private val SAFE_TEXT = Regex("[!-~]+")
 
 /** The proxy id is interpolated into a request path; this charset is all a real one uses. */
 private val SAFE_PROXY_ID = Regex("[A-Za-z0-9_.-]+")
+
+/** Hostname, IPv6 literal or port characters only - the authority must be exactly what it looks like. */
+private val SAFE_AUTHORITY = Regex("[A-Za-z0-9._~\\-:\\[\\]]+")
 
 /**
  * What a Grocy QR code carries: `<apiBaseUrl>|<apiKey>`.
@@ -61,6 +68,7 @@ sealed interface GrocyQrCredentials {
             if (!SAFE_TEXT.matches(apiKey)) return null
 
             val rawUrl = parts[0].trim()
+            if (rawUrl.length > MAX_URL_LENGTH) return null
             if (!SAFE_TEXT.matches(rawUrl) || !hasHttpScheme(rawUrl)) return null
             // A query, fragment or backslash is a way to make the URL we finally request differ
             // from the one the user reads in the form.
@@ -80,6 +88,7 @@ sealed interface GrocyQrCredentials {
             // they recognize and connects them to one they do not. Reject an authority that is
             // only a port ("http://:8080/") too - there is no host to connect to.
             if (authority.isEmpty() || '@' in authority || authority.startsWith(":")) return null
+            if (!SAFE_AUTHORITY.matches(authority)) return null
 
             val path = authorityAndPath.removePrefix(authority)
             if (path.contains("//")) return null

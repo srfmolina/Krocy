@@ -152,7 +152,15 @@ internal class ServerSetupViewModel(
     }
 
     private fun updateForm(reduce: ServerSetupForm.() -> ServerSetupForm) {
-        setState { copy(form = form.reduce(), fieldErrors = null, connection = ConnectionUi.Idle) }
+        setState {
+            copy(
+                form = form.reduce(),
+                fieldErrors = null,
+                // A pending QR confirmation survives a keystroke elsewhere in the form; only
+                // dropping otherwise clears connection state (an error, a version warning...).
+                connection = if (connection is ConnectionUi.QrConfirmation) connection else ConnectionUi.Idle
+            )
+        }
     }
 
     private suspend fun connect() {

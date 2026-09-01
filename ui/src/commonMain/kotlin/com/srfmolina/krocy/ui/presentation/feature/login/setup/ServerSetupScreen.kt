@@ -37,6 +37,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.srfmolina.krocy.domain.model.server.GrocyQrCredentials
+import com.srfmolina.krocy.domain.model.server.isCleartextRisk
 import com.srfmolina.krocy.ui.presentation.common.scanner.CameraQrScanner
 import com.srfmolina.krocy.ui.presentation.common.scanner.isQrScannerSupported
 import com.srfmolina.krocy.ui.presentation.feature.login.setup.ServerSetupViewModel.ConnectionUi
@@ -116,9 +117,15 @@ internal fun ServerSetupScreen(
                 },
                 supportingText = {
                     val error = state.fieldErrors?.serverUrlError
-                    if (error != null) Text(error)
-                    else if (state.form.usingHass) Text("Ejemplo: http://homeassistant.local:8123")
-                    else Text("Ejemplo: https://grocy.midominio.com")
+                    when {
+                        error != null -> Text(error)
+                        isCleartextRisk(state.form.serverUrl) -> Text(
+                            text = "Conexión sin cifrar: tus credenciales viajarían visibles por la red.",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        state.form.usingHass -> Text("Ejemplo: http://homeassistant.local:8123")
+                        else -> Text("Ejemplo: https://grocy.midominio.com")
+                    }
                 },
                 isError = state.fieldErrors?.serverUrlError != null,
                 enabled = !isConnecting,
@@ -231,9 +238,25 @@ internal fun ServerSetupScreen(
                             is GrocyQrCredentials.SelfHosted -> credentials.serverUrl
                             is GrocyQrCredentials.HomeAssistant -> credentials.haServerUrl
                         }
-                        // The address is the one thing the user must actually check: it came
-                        // from the QR, not from them.
-                        Text(text = scannedUrl, style = MaterialTheme.typography.bodyLarge)
+                        // The authority (scheme + host + port) is the only part the user can
+                        // actually judge, so it is the prominent element - a long path could
+                        // otherwise push a look-alike host off the visible line.
+                        val schemeSeparator = scannedUrl.indexOf("://")
+                        val pathStart = if (schemeSeparator >= 0) {
+                            scannedUrl.indexOf('/', schemeSeparator + "://".length)
+                        } else {
+                            -1
+                        }
+                        val authority = if (pathStart >= 0) scannedUrl.substring(0, pathStart) else scannedUrl
+                        val path = if (pathStart >= 0) scannedUrl.substring(pathStart) else ""
+                        Text(text = authority, style = MaterialTheme.typography.titleMedium)
+                        if (path.isNotEmpty()) {
+                            Text(
+                                text = path,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         if (credentials is GrocyQrCredentials.HomeAssistant) {
                             Text(
                                 text = "Modo Home Assistant. Comprueba que esta dirección es la " +

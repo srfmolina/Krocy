@@ -68,7 +68,8 @@ internal data class ServerSetupForm(
         is GrocyQrCredentials.SelfHosted -> copy(
             usingHass = false,
             serverUrl = credentials.serverUrl,
-            apiKey = credentials.apiKey
+            apiKey = credentials.apiKey,
+            ingressProxyId = ""
         )
         is GrocyQrCredentials.HomeAssistant -> copy(
             usingHass = true,

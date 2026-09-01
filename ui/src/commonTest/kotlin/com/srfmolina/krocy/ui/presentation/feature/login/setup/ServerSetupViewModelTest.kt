@@ -449,4 +449,30 @@ class ServerSetupViewModelTest {
         assertEquals(0, qrRepo.callCount)
         assertEquals(ServerSetupForm(), vm.currentState.form)
     }
+
+    @Test
+    fun `editing a field keeps a pending qr confirmation`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val qrRepo = QrScannerRepositoryFake { "https://grocy.casa/api|key" }
+        val vm = viewModel(LoginRepositoryFake { ServerValidation("4.0.0", true) }, qrRepo = qrRepo)
+
+        vm.launchEvent(Event.OnScanQrClick)
+        vm.launchEvent(Event.OnQrFrame(anyFrame))
+        advanceUntilIdle()
+        vm.launchEvent(Event.OnApiKeyChange("typed"))
+        advanceUntilIdle()
+
+        assertIs<ConnectionUi.QrConfirmation>(vm.currentState.connection)
+    }
+
+    @Test
+    fun `OnQrConfirm is a no-op when there is no pending confirmation`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val vm = viewModel(LoginRepositoryFake { ServerValidation("4.0.0", true) })
+
+        vm.launchEvent(Event.OnQrConfirm)
+        advanceUntilIdle()
+
+        assertEquals(ServerSetupForm(), vm.currentState.form)
+    }
 }
