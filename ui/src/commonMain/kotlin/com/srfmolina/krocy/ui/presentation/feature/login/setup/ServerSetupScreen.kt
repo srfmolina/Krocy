@@ -302,7 +302,7 @@ internal fun ServerSetupScreen(
 
                 Button(
                     shapes = ButtonDefaults.shapes(),
-                    onClick = { viewModel.launchEvent(Event.OnConnectClick) },
+                    onClick = { viewModel.launchEvent(Event.OnConnectClick(state.form)) },
                     enabled = !isConnecting
                 ) {
                     if (isConnecting) {

@@ -199,6 +199,28 @@ class AppViewModelTest {
     }
 
     @Test
+    fun `two Init events racing each other open the session once`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val sessionManager = SessionManagerFake()
+        val vm = viewModel(
+            configRepo = ServerConfigRepositoryFake(initial = ServerConfig.Demo),
+            sessionManager = sessionManager,
+            itemRepo = KrocyItemRepositoryFake()
+        )
+        val effects = mutableListOf<Effect>()
+        val collector = launch { vm.effect.collect { effects.add(it) } }
+
+        // Both are queued before either completes, unlike the sequential re-fire above.
+        vm.launchEvent(Event.Init)
+        vm.launchEvent(Event.Init)
+        advanceUntilIdle()
+
+        assertEquals(listOf<Effect>(Effect.NavigateToStock), effects)
+        assertEquals(1, sessionManager.openCallCount)
+        collector.cancel()
+    }
+
+    @Test
     fun `OnLogoutConfirm logs out and navigates to login`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val configRepo = ServerConfigRepositoryFake(initial = ServerConfig.Demo)

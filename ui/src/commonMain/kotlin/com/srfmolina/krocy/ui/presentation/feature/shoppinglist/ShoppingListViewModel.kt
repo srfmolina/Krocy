@@ -76,6 +76,10 @@ internal class ShoppingListViewModel(
 
         val selectedProductName: String?
             get() = products.options.firstOrNull { it.id == selectedProductId }?.label
+
+        /** Everything the submit needs is present, including a name to report back. */
+        val isSubmittable: Boolean
+            get() = isValid && selectedProductName != null
     }
 
     data class State(
@@ -165,16 +169,17 @@ internal class ShoppingListViewModel(
     }
 
     private suspend fun submitAdd() {
-        // Nulling the dialog before any suspension point makes this idempotent: a second
-        // OnAddSubmit dispatched before recomposition disables the button bounces off this
-        // null check, because events run on the confined main dispatcher.
-        val dialog = currentState.addDialog ?: return
-        if (!dialog.isValid) return
-        val productName = dialog.selectedProductName ?: return
-
+        // Claiming the dialog and closing it in one step makes this idempotent: a second
+        // OnAddSubmit dispatched before recomposition disables the button finds nothing left
+        // to claim. Reading it and closing it separately would rely on the two never being
+        // split by a suspension. An incomplete dialog is left open instead.
+        //
         // The dialog closes right away; the screen shows the loading skeleton until the
         // repository's post-add refresh lands in the observed cache.
-        setState { copy(addDialog = null, isLoading = true) }
+        val dialog = getAndSetState {
+            if (addDialog?.isSubmittable == true) copy(addDialog = null, isLoading = true) else this
+        }.addDialog?.takeIf { it.isSubmittable } ?: return
+        val productName = dialog.selectedProductName ?: return
         addToShoppingListUseCase(
             AddToShoppingListUCRequest(
                 productId = dialog.selectedProductId!!,

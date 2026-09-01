@@ -9,10 +9,13 @@ import com.srfmolina.krocy.ui.base.UiState
 import com.srfmolina.krocy.ui.presentation.feature.login.LoginViewModel.Effect
 import com.srfmolina.krocy.ui.presentation.feature.login.LoginViewModel.Event
 import com.srfmolina.krocy.ui.presentation.feature.login.LoginViewModel.State
+import kotlinx.coroutines.sync.Mutex
 
 internal class LoginViewModel(
     private val completeLogin: CompleteLoginUseCase
 ) : BaseViewModel<Event, State, Effect>() {
+
+    private val loginLock = Mutex()
 
     sealed interface Event : UiEvent {
         data object OnDemoServerClick : Event
@@ -37,14 +40,22 @@ internal class LoginViewModel(
     }
 
     private suspend fun loginToDemo() {
-        if (currentState.isConnecting) return
-        setState { copy(isConnecting = true) }
-        val result = completeLogin(ServerConfig.Demo)
-        setState { copy(isConnecting = false) }
-        if (result.isSuccess) {
-            launchEffect(Effect.NavigateToStock)
-        } else {
-            launchEffect(Effect.ShowError("No se pudo preparar el servidor de prueba"))
+        // Events are not serialized (each runs in its own coroutine), so a second tap
+        // dispatched before recomposition disables the button must be rejected here.
+        // isConnecting is for rendering only - guarding on it would depend on the read and
+        // the write never being split by a suspension.
+        if (!loginLock.tryLock()) return
+        try {
+            setState { copy(isConnecting = true) }
+            val result = completeLogin(ServerConfig.Demo)
+            if (result.isSuccess) {
+                launchEffect(Effect.NavigateToStock)
+            } else {
+                launchEffect(Effect.ShowError("No se pudo preparar el servidor de prueba"))
+            }
+        } finally {
+            setState { copy(isConnecting = false) }
+            loginLock.unlock()
         }
     }
 }

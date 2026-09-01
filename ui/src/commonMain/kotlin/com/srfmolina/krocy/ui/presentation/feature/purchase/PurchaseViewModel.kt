@@ -51,7 +51,8 @@ internal class PurchaseViewModel(
         data object Init : Event
         data object OnRetryLoadOptions : Event
         data class OnProductSelected(val id: Int?) : Event
-        data object OnRetryLoadInfo : Event
+        /** [productId] is the product the retried row belongs to, so no state read is needed. */
+        data class OnRetryLoadInfo(val productId: Int) : Event
         data class OnAmountChange(val value: String) : Event
         data class OnAmountUnitChange(val value: AmountUnitUi) : Event
         data class OnDueDateChange(val value: LocalDate?) : Event
@@ -161,7 +162,7 @@ internal class PurchaseViewModel(
             is Event.Init -> loadOptions()
             is Event.OnRetryLoadOptions -> loadOptions()
             is Event.OnProductSelected -> onProductSelected(event.id)
-            is Event.OnRetryLoadInfo -> currentState.selectedProductId?.let { retryLoadInfo(it) }
+            is Event.OnRetryLoadInfo -> retryLoadInfo(event.productId)
             is Event.OnAmountChange -> setState { copy(amount = event.value) }
             is Event.OnAmountUnitChange -> setState { copy(amountUnit = event.value) }
             is Event.OnDueDateChange -> setState { copy(dueDate = event.value) }
