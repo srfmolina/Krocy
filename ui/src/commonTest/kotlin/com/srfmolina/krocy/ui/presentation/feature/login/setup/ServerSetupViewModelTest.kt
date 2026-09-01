@@ -466,6 +466,50 @@ class ServerSetupViewModelTest {
     }
 
     @Test
+    fun `a decode landing after the scanner is dismissed raises no confirmation`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val gate = CompletableDeferred<Unit>()
+        val qrRepo = QrScannerRepositoryFake {
+            gate.await()
+            "https://grocy.casa/api|key"
+        }
+        val vm = viewModel(LoginRepositoryFake { ServerValidation("4.0.0", true) }, qrRepo = qrRepo)
+
+        vm.launchEvent(Event.OnScanQrClick)
+        vm.launchEvent(Event.OnQrFrame(anyFrame))
+        advanceUntilIdle()
+        vm.launchEvent(Event.OnQrScannerDismiss) // the user cancels mid-decode
+        advanceUntilIdle()
+        gate.complete(Unit) // and only then does the decode land
+        advanceUntilIdle()
+
+        assertFalse(vm.currentState.isScanning)
+        assertEquals(ConnectionUi.Idle, vm.currentState.connection)
+        assertEquals(ServerSetupForm(), vm.currentState.form)
+    }
+
+    @Test
+    fun `a non grocy decode landing after the scanner is dismissed raises no error`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val gate = CompletableDeferred<Unit>()
+        val qrRepo = QrScannerRepositoryFake {
+            gate.await()
+            "WIFI:S:MiRed;;"
+        }
+        val vm = viewModel(LoginRepositoryFake { ServerValidation("4.0.0", true) }, qrRepo = qrRepo)
+
+        vm.launchEvent(Event.OnScanQrClick)
+        vm.launchEvent(Event.OnQrFrame(anyFrame))
+        advanceUntilIdle()
+        vm.launchEvent(Event.OnQrScannerDismiss)
+        advanceUntilIdle()
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(ConnectionUi.Idle, vm.currentState.connection)
+    }
+
+    @Test
     fun `OnQrConfirm is a no-op when there is no pending confirmation`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val vm = viewModel(LoginRepositoryFake { ServerValidation("4.0.0", true) })

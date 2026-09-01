@@ -47,4 +47,25 @@ class UrlNormalizationTest {
         assertFalse(isCleartextRisk("http://127.0.0.1:8080"))
         assertFalse(isCleartextRisk("http://169.254.10.1"))
     }
+
+    @Test
+    fun `an ipv6 literal on the user's own network is not flagged`() {
+        assertFalse(isCleartextRisk("http://[::1]"))
+        assertFalse(isCleartextRisk("http://[::1]:8080"))
+        assertFalse(isCleartextRisk("http://[fd12:3456:789a::1]:8123")) // unique local
+        assertFalse(isCleartextRisk("http://[fe80::1]")) // link local
+        assertFalse(isCleartextRisk("http://[fe80::1%eth0]:8080")) // zone id
+    }
+
+    @Test
+    fun `a public ipv6 literal is flagged`() {
+        assertTrue(isCleartextRisk("http://[2001:db8::1]:8080"))
+        assertTrue(isCleartextRisk("http://[fec0::1]")) // site local is not a private block
+    }
+
+    @Test
+    fun `a malformed ipv6 literal is not treated as private`() {
+        assertTrue(isCleartextRisk("http://[::1"))
+        assertTrue(isCleartextRisk("http://[]"))
+    }
 }

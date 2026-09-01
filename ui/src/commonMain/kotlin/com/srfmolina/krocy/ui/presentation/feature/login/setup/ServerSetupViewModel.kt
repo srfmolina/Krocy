@@ -122,6 +122,10 @@ internal class ServerSetupViewModel(
             // A decoder crash is treated as "not a Grocy QR": the user gets an actionable
             // message instead of a silent camera that never resolves.
             val outcome = scanGrocyQr(frame).getOrElse { QrScanOutcome.NotGrocy }
+            // Events run in their own coroutines, so the scanner can be dismissed while this
+            // decode is in flight. A result that lands afterwards belongs to a scan the user
+            // already closed and must not reopen it as a confirmation or an error.
+            if (!currentState.isScanning) return
             when (outcome) {
                 is QrScanOutcome.NotFound -> Unit // still aiming
                 is QrScanOutcome.NotGrocy -> setState {
