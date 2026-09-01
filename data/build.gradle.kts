@@ -21,7 +21,21 @@ kotlin {
 
     jvm()
 
+    // ZXing is a plain Java library and cannot be declared in a KMP commonMain. Both targets
+    // here are JVM-based, so a shared jvmCommon source set holds the decoder once - and lets
+    // jvmTest exercise the real thing instead of a stub.
+    applyDefaultHierarchyTemplate()
+
     sourceSets {
+        val jvmCommonMain by creating {
+            dependsOn(commonMain.get())
+            dependencies {
+                implementation(libs.zxing.core)
+            }
+        }
+        androidMain.get().dependsOn(jvmCommonMain)
+        jvmMain.get().dependsOn(jvmCommonMain)
+
         commonMain.dependencies {
             implementation(project(":domain"))
             implementation(project(":grocy-client"))

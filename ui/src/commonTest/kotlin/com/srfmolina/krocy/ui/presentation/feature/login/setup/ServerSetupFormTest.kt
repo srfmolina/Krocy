@@ -1,5 +1,6 @@
 package com.srfmolina.krocy.ui.presentation.feature.login.setup
 
+import com.srfmolina.krocy.domain.model.server.GrocyQrCredentials
 import com.srfmolina.krocy.domain.model.server.LoginFailure
 import com.srfmolina.krocy.domain.model.server.ServerConfig
 import kotlin.test.Test
@@ -132,5 +133,33 @@ class ServerSetupFormTest {
         val mapped = throwable.toLoginMessage()
         assertEquals("Error inesperado", mapped.message)
         assertEquals(throwable.toString(), mapped.detail)
+    }
+
+    @Test
+    fun `applying a self hosted qr fills the form and leaves hass mode off`() {
+        val form = ServerSetupForm(usingHass = true, haToken = "lltoken")
+            .applyQr(GrocyQrCredentials.SelfHosted("https://grocy.casa", "key123"))
+
+        assertEquals(false, form.usingHass)
+        assertEquals("https://grocy.casa", form.serverUrl)
+        assertEquals("key123", form.apiKey)
+    }
+
+    @Test
+    fun `applying a hass qr switches to hass mode and preserves a typed token`() {
+        val form = ServerSetupForm(haToken = "lltoken")
+            .applyQr(
+                GrocyQrCredentials.HomeAssistant(
+                    haServerUrl = "http://ha.local:8123",
+                    ingressProxyId = "proxy-id",
+                    apiKey = "key123"
+                )
+            )
+
+        assertEquals(true, form.usingHass)
+        assertEquals("http://ha.local:8123", form.serverUrl)
+        assertEquals("proxy-id", form.ingressProxyId)
+        assertEquals("key123", form.apiKey)
+        assertEquals("lltoken", form.haToken) // the QR never carries it; never clobber it
     }
 }

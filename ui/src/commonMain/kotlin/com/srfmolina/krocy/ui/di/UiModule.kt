@@ -5,6 +5,7 @@ import com.srfmolina.krocy.domain.usecase.login.GetServerConfigUseCase
 import com.srfmolina.krocy.domain.usecase.login.LogoutUseCase
 import com.srfmolina.krocy.domain.usecase.login.ObserveSessionExpiredUseCase
 import com.srfmolina.krocy.domain.usecase.login.OpenSessionUseCase
+import com.srfmolina.krocy.domain.usecase.login.ScanGrocyQrUseCase
 import com.srfmolina.krocy.domain.usecase.login.ValidateServerUseCase
 import com.srfmolina.krocy.domain.usecase.masterdata.GetLocationsUseCase
 import com.srfmolina.krocy.domain.usecase.masterdata.GetProductGroupsUseCase
@@ -57,6 +58,7 @@ val uiModule = module {
     factoryOf(::SetEntryDoneUseCase)
     factoryOf(::AddToShoppingListUseCase)
     factoryOf(::ValidateServerUseCase)
+    factoryOf(::ScanGrocyQrUseCase)
     factoryOf(::CompleteLoginUseCase)
     factoryOf(::OpenSessionUseCase)
     factoryOf(::GetServerConfigUseCase)

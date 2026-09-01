@@ -11,12 +11,15 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -30,7 +33,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.srfmolina.krocy.domain.model.server.GrocyQrCredentials
+import com.srfmolina.krocy.domain.model.server.isCleartextRisk
+import com.srfmolina.krocy.ui.presentation.common.scanner.CameraQrScanner
+import com.srfmolina.krocy.ui.presentation.common.scanner.isQrScannerSupported
 import com.srfmolina.krocy.ui.presentation.feature.login.setup.ServerSetupViewModel.ConnectionUi
 import com.srfmolina.krocy.ui.presentation.feature.login.setup.ServerSetupViewModel.Event
 import com.srfmolina.krocy.ui.presentation.theme.spacing
@@ -72,6 +81,22 @@ internal fun ServerSetupScreen(
                 style = MaterialTheme.typography.titleLarge
             )
 
+            if (isQrScannerSupported) {
+                OutlinedButton(
+                    shapes = ButtonDefaults.shapes(),
+                    onClick = { viewModel.launchEvent(Event.OnScanQrClick) },
+                    enabled = !isConnecting,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.QrCodeScanner,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = MaterialTheme.spacing.s2)
+                    )
+                    Text("Escanear código QR")
+                }
+            }
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Switch(
                     checked = state.form.usingHass,
@@ -92,9 +117,15 @@ internal fun ServerSetupScreen(
                 },
                 supportingText = {
                     val error = state.fieldErrors?.serverUrlError
-                    if (error != null) Text(error)
-                    else if (state.form.usingHass) Text("Ejemplo: http://homeassistant.local:8123")
-                    else Text("Ejemplo: https://grocy.midominio.com")
+                    when {
+                        error != null -> Text(error)
+                        isCleartextRisk(state.form.serverUrl) -> Text(
+                            text = "Conexión sin cifrar: tus credenciales viajarían visibles por la red.",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        state.form.usingHass -> Text("Ejemplo: http://homeassistant.local:8123")
+                        else -> Text("Ejemplo: https://grocy.midominio.com")
+                    }
                 },
                 isError = state.fieldErrors?.serverUrlError != null,
                 enabled = !isConnecting,
@@ -188,6 +219,74 @@ internal fun ServerSetupScreen(
                         }
                     }
                 }
+                is ConnectionUi.QrConfirmation -> Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(MaterialTheme.spacing.s3),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2)
+                    ) {
+                        Text(
+                            text = "Código QR leído",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        val credentials = connection.credentials
+                        val scannedUrl = when (credentials) {
+                            is GrocyQrCredentials.SelfHosted -> credentials.serverUrl
+                            is GrocyQrCredentials.HomeAssistant -> credentials.haServerUrl
+                        }
+                        // The authority (scheme + host + port) is the only part the user can
+                        // actually judge, so it is the prominent element - a long path could
+                        // otherwise push a look-alike host off the visible line.
+                        val schemeSeparator = scannedUrl.indexOf("://")
+                        val pathStart = if (schemeSeparator >= 0) {
+                            scannedUrl.indexOf('/', schemeSeparator + "://".length)
+                        } else {
+                            -1
+                        }
+                        val authority = if (pathStart >= 0) scannedUrl.substring(0, pathStart) else scannedUrl
+                        val path = if (pathStart >= 0) scannedUrl.substring(pathStart) else ""
+                        Text(text = authority, style = MaterialTheme.typography.titleMedium)
+                        if (path.isNotEmpty()) {
+                            Text(
+                                text = path,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (credentials is GrocyQrCredentials.HomeAssistant) {
+                            Text(
+                                text = "Modo Home Assistant. Comprueba que esta dirección es la " +
+                                    "de tu servidor antes de introducir tu token de acceso de larga duración.",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        } else {
+                            Text(
+                                text = "Comprueba que esta dirección es la de tu servidor.",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        if (connection.isCleartext) {
+                            Text(
+                                text = "Conexión sin cifrar (http) a un servidor fuera de tu red " +
+                                    "local: tus credenciales viajarían visibles por la red.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2)) {
+                            OutlinedButton(onClick = {
+                                viewModel.launchEvent(Event.OnQrReject)
+                            }) { Text("Cancelar") }
+                            Button(onClick = {
+                                viewModel.launchEvent(Event.OnQrConfirm)
+                            }) { Text("Usar estos datos") }
+                        }
+                    }
+                }
                 else -> Unit
             }
 
@@ -216,6 +315,18 @@ internal fun ServerSetupScreen(
                     Text(if (isConnecting) "Conectando…" else "Conectar")
                 }
             }
+        }
+    }
+
+    if (state.isScanning) {
+        Dialog(
+            onDismissRequest = { viewModel.launchEvent(Event.OnQrScannerDismiss) },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            CameraQrScanner(
+                onFrame = { frame -> viewModel.launchEvent(Event.OnQrFrame(frame)) },
+                onDismiss = { viewModel.launchEvent(Event.OnQrScannerDismiss) }
+            )
         }
     }
 }

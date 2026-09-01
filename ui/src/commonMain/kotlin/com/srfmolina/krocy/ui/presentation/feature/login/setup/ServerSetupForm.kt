@@ -1,6 +1,9 @@
 package com.srfmolina.krocy.ui.presentation.feature.login.setup
 
+import com.srfmolina.krocy.domain.model.server.GrocyQrCredentials
 import com.srfmolina.krocy.domain.model.server.ServerConfig
+import com.srfmolina.krocy.domain.model.server.hasHttpScheme
+import com.srfmolina.krocy.domain.model.server.normalizeUrlScheme
 
 internal sealed interface ValidationResult {
     data class Valid(val config: ServerConfig) : ValidationResult
@@ -28,12 +31,9 @@ internal data class ServerSetupForm(
         val token = haToken.trim()
         val proxyId = ingressProxyId.trim()
 
-        // URI schemes are case-insensitive (RFC 3986), so accept e.g. "HTTPS://" as well -
-        // pasted URLs and mobile autocapitalization both produce mixed-case schemes.
         val serverUrlError = when {
             url.isEmpty() -> ERROR_REQUIRED
-            !url.startsWith("http://", ignoreCase = true) &&
-                !url.startsWith("https://", ignoreCase = true) -> ERROR_URL
+            !hasHttpScheme(url) -> ERROR_URL
             else -> null
         }
         val apiKeyError = if (key.isEmpty()) ERROR_REQUIRED else null
@@ -45,13 +45,7 @@ internal data class ServerSetupForm(
         ) {
             return ValidationResult.Invalid(serverUrlError, apiKeyError, haTokenError, proxyIdError)
         }
-        // Normalize only the scheme to lowercase for consistent storage/equality; the host and
-        // path are left untouched since they may be legitimately case-sensitive.
-        val normalizedUrl = when {
-            url.startsWith("https://", ignoreCase = true) -> "https://" + url.substring("https://".length)
-            url.startsWith("http://", ignoreCase = true) -> "http://" + url.substring("http://".length)
-            else -> url
-        }
+        val normalizedUrl = normalizeUrlScheme(url)
         return ValidationResult.Valid(
             if (usingHass) {
                 ServerConfig.HomeAssistant(
@@ -63,6 +57,25 @@ internal data class ServerSetupForm(
             } else {
                 ServerConfig.SelfHosted(serverUrl = normalizedUrl, apiKey = key)
             }
+        )
+    }
+
+    /**
+     * Fills the form from a scanned QR. `haToken` is never touched: a Grocy QR cannot carry the
+     * Home Assistant long-lived token, so whatever the user typed must survive the scan.
+     */
+    fun applyQr(credentials: GrocyQrCredentials): ServerSetupForm = when (credentials) {
+        is GrocyQrCredentials.SelfHosted -> copy(
+            usingHass = false,
+            serverUrl = credentials.serverUrl,
+            apiKey = credentials.apiKey,
+            ingressProxyId = ""
+        )
+        is GrocyQrCredentials.HomeAssistant -> copy(
+            usingHass = true,
+            serverUrl = credentials.haServerUrl,
+            ingressProxyId = credentials.ingressProxyId,
+            apiKey = credentials.apiKey
         )
     }
 }
