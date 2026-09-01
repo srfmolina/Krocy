@@ -52,7 +52,7 @@ import com.srfmolina.krocy.ui.presentation.theme.spacing
 @Composable
 internal fun ShoppingGroupCard(
     group: ShoppingGroupUi,
-    onToggleDone: (Int) -> Unit,
+    onToggleDone: (Int, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val accent = groupAccent(group.name)
@@ -147,7 +147,7 @@ private fun GroupHeader(
 @Composable
 private fun ShoppingEntryRow(
     entry: ShoppingListEntryUi,
-    onToggleDone: (Int) -> Unit,
+    onToggleDone: (Int, Boolean) -> Unit,
 ) {
     // The strikethrough draws itself left→right; TextDecoration.LineThrough cannot animate.
     val strikeProgress by animateFloatAsState(
@@ -176,7 +176,7 @@ private fun ShoppingEntryRow(
             .fillMaxWidth()
             .clickable(
                 onClickLabel = if (entry.done) "Desmarcar" else "Marcar como comprado",
-            ) { onToggleDone(entry.id) }
+            ) { onToggleDone(entry.id, entry.done) }
             .padding(horizontal = MaterialTheme.spacing.s4, vertical = MaterialTheme.spacing.s3)
             .semantics { stateDescription = if (entry.done) "Comprado" else "Pendiente" },
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s2),
@@ -245,7 +245,7 @@ private fun ShoppingGroupCardPreview() {
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s6),
             ) {
                 previewGroups.forEach { group ->
-                    ShoppingGroupCard(group = group, onToggleDone = {})
+                    ShoppingGroupCard(group = group, onToggleDone = { _, _ -> })
                 }
             }
         }

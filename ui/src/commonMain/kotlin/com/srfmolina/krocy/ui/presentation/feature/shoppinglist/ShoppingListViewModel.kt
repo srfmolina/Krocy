@@ -22,8 +22,11 @@ import com.srfmolina.krocy.ui.presentation.feature.shoppinglist.mapper.toUi
 import com.srfmolina.krocy.ui.presentation.feature.shoppinglist.mapper.withEntryDone
 import com.srfmolina.krocy.ui.presentation.feature.shoppinglist.model.ShoppingGroupUi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 
 internal class ShoppingListViewModel(
     private val observeShoppingListUseCase: ObserveShoppingListUseCase,
@@ -35,10 +38,17 @@ internal class ShoppingListViewModel(
 
     private var observeJob: Job? = null
 
+    /** Entry ids with a done/undone write in flight; see [toggleDone]. */
+    private val togglesInFlight = MutableStateFlow<Set<Int>>(emptySet())
+
     sealed interface Event : UiEvent {
         data object Init : Event
         data object OnRefresh : Event
-        data class OnToggleDone(val entryId: Int) : Event
+        /**
+         * [done] is the value the tapped row was rendering, so the handler never has to read
+         * it back out of the state after a suspension.
+         */
+        data class OnToggleDone(val entryId: Int, val done: Boolean) : Event
         data object OnOpenAddDialog : Event
         data object OnDismissAddDialog : Event
         data object OnRetryLoadProducts : Event
@@ -81,7 +91,7 @@ internal class ShoppingListViewModel(
         when (event) {
             is Event.Init -> observe()
             is Event.OnRefresh -> refresh()
-            is Event.OnToggleDone -> toggleDone(event.entryId)
+            is Event.OnToggleDone -> toggleDone(event.entryId, event.done)
             is Event.OnOpenAddDialog -> openAddDialog()
             is Event.OnDismissAddDialog -> setState { copy(addDialog = null) }
             is Event.OnRetryLoadProducts -> loadDialogProducts()
@@ -116,19 +126,27 @@ internal class ShoppingListViewModel(
         )
     }
 
-    private suspend fun toggleDone(entryId: Int) {
-        val entry = currentState.groups.asSequence()
-            .flatMap { it.entries.asSequence() }
-            .firstOrNull { it.id == entryId }
-            ?: return
-        val newDone = !entry.done
+    private suspend fun toggleDone(entryId: Int, done: Boolean) {
+        // A second tap on the same entry while its write is still in flight has to be dropped.
+        // Both handlers would otherwise flip against the same pre-toggle value, and the later
+        // revert would restore it on top of the earlier one - leaving the row showing a state
+        // the server never accepted. getAndUpdate claims the entry atomically, so the guard
+        // does not depend on events happening to run on a confined dispatcher.
+        val inFlight = togglesInFlight.getAndUpdate { it + entryId }
+        if (entryId in inFlight) return
 
-        // Optimistic: the cross-off animates immediately; the repository confirms with the
-        // same value, and a failure reverts the flip (the cache never changed).
-        setState { copy(groups = groups.withEntryDone(entryId, newDone)) }
-        setEntryDoneUseCase(SetEntryDoneUCRequest(entryId, newDone)).onFailure {
-            setState { copy(groups = groups.withEntryDone(entryId, entry.done)) }
-            launchEffect(Effect.ShowError("No se pudo actualizar la lista"))
+        val newDone = !done
+        try {
+            // Optimistic: the cross-off animates immediately; the repository confirms with the
+            // same value, and a failure reverts to the value the tap was made against (the
+            // cache never changed).
+            setState { copy(groups = groups.withEntryDone(entryId, newDone)) }
+            setEntryDoneUseCase(SetEntryDoneUCRequest(entryId, newDone)).onFailure {
+                setState { copy(groups = groups.withEntryDone(entryId, done)) }
+                launchEffect(Effect.ShowError("No se pudo actualizar la lista"))
+            }
+        } finally {
+            togglesInFlight.update { it - entryId }
         }
     }
 

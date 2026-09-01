@@ -53,6 +53,7 @@ class ShoppingListViewModelTest {
         var failRefresh: Boolean = false,
     ) : ShoppingListRepository {
         val entriesFlow = MutableStateFlow(entries)
+        val setDoneAttempts = mutableListOf<Pair<Int, Boolean>>()
         val doneCalls = mutableListOf<Pair<Int, Boolean>>()
         val added = mutableListOf<Pair<Int, Double>>()
         var refreshCalls = 0
@@ -61,6 +62,8 @@ class ShoppingListViewModelTest {
             if (failObserve) flow { error("boom") } else entriesFlow
 
         override suspend fun setDone(entryId: Int, done: Boolean) {
+            setDoneAttempts += entryId to done
+            delay(100) // keep the request in flight so a second toggle can race it
             if (failSetDone) error("boom")
             doneCalls += entryId to done
         }
@@ -139,7 +142,7 @@ class ShoppingListViewModelTest {
         vm.launchEvent(Event.Init)
         advanceUntilIdle()
 
-        vm.launchEvent(Event.OnToggleDone(10))
+        vm.launchEvent(Event.OnToggleDone(10, done = false))
         advanceUntilIdle()
 
         assertTrue(vm.entry(10)?.done == true)
@@ -157,11 +160,53 @@ class ShoppingListViewModelTest {
         val effects = mutableListOf<Effect>()
         val collector = launch { vm.effect.collect { effects.add(it) } }
 
-        vm.launchEvent(Event.OnToggleDone(10))
+        vm.launchEvent(Event.OnToggleDone(10, done = false))
         advanceUntilIdle()
 
         assertTrue(vm.entry(10)?.done == false)
         assertTrue(effects.single() is Effect.ShowError)
+        collector.cancel()
+    }
+
+    @Test
+    fun `a second toggle while one is in flight is ignored`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = ShoppingListRepositoryFake(defaultEntries)
+        val vm = viewModel(repo)
+        vm.launchEvent(Event.Init)
+        advanceUntilIdle()
+
+        vm.launchEvent(Event.OnToggleDone(10, done = false))
+        vm.launchEvent(Event.OnToggleDone(10, done = false))
+        advanceUntilIdle()
+
+        // The entry is claimed for the duration of the write, so the second tap never
+        // reaches the repository and cannot flip the row back.
+        assertEquals(listOf(10 to true), repo.setDoneAttempts)
+        assertTrue(vm.entry(10)?.done == true)
+    }
+
+    @Test
+    fun `a second toggle racing an in-flight one leaves the entry as the server has it`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = ShoppingListRepositoryFake(defaultEntries, failSetDone = true)
+        val vm = viewModel(repo)
+        vm.launchEvent(Event.Init)
+        advanceUntilIdle()
+
+        val effects = mutableListOf<Effect>()
+        val collector = launch { vm.effect.collect { effects.add(it) } }
+
+        // Both taps land before the first request resolves, so the two handlers interleave
+        // across the suspension inside setDone. The second carries `true` because the
+        // optimistic flip has already re-rendered the row by the time it is tapped again.
+        vm.launchEvent(Event.OnToggleDone(10, done = false))
+        vm.launchEvent(Event.OnToggleDone(10, done = true))
+        advanceUntilIdle()
+
+        // Nothing reached the server, so the entry must read back exactly as it started.
+        assertTrue(repo.doneCalls.isEmpty())
+        assertTrue(vm.entry(10)?.done == false)
         collector.cancel()
     }
 
