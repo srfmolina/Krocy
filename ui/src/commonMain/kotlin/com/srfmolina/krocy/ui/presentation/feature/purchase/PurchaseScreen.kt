@@ -323,8 +323,10 @@ private fun ProductInfoStatus(
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.weight(1f),
                 )
-                TextButton(onClick = { onEvent(Event.OnRetryLoadInfo) }) {
-                    Text("Reintentar")
+                state.selectedProductId?.let { productId ->
+                    TextButton(onClick = { onEvent(Event.OnRetryLoadInfo(productId)) }) {
+                        Text("Reintentar")
+                    }
                 }
             }
         } else {

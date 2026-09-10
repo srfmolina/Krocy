@@ -15,6 +15,8 @@ import com.srfmolina.krocy.ui.base.UiState
 import com.srfmolina.krocy.ui.presentation.common.model.DialogConfigurationUi
 import com.srfmolina.krocy.ui.presentation.common.model.FabConfigurationUi
 import com.srfmolina.krocy.ui.presentation.navigation.component.topbar.model.TopBarConfigurationUi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.launch
 
 internal class AppViewModel(
@@ -52,7 +54,11 @@ internal class AppViewModel(
 
     override fun createInitialState(): State = State()
 
-    private var initialized = false
+    /**
+     * Once-only latch for [init]. `getAndUpdate { true }` claims it atomically, so a second
+     * Init cannot slip past a plain read while the first is still running.
+     */
+    private val initialized = MutableStateFlow(false)
 
     override suspend fun handleEvent(event: Event) {
         when (event) {
@@ -67,8 +73,7 @@ internal class AppViewModel(
     }
 
     private suspend fun init() {
-        if (initialized) return
-        initialized = true
+        if (initialized.getAndUpdate { true }) return
         watchSessionExpiry()
         val config = getServerConfig().getOrNull()
         val opened = config != null && openSession(config).isSuccess

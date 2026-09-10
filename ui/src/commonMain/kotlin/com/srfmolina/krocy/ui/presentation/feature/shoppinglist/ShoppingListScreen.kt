@@ -175,7 +175,7 @@ internal fun ShoppingListScreen(
         groups = state.groups,
         listState = listState,
         gridState = gridState,
-        onToggleDone = { entryId -> viewModel.launchEvent(Event.OnToggleDone(entryId)) },
+        onToggleDone = { entryId, done -> viewModel.launchEvent(Event.OnToggleDone(entryId, done)) },
         onRetry = { viewModel.launchEvent(Event.OnRefresh) },
     )
 }
@@ -187,7 +187,7 @@ private fun ShoppingListScreen(
     groups: List<ShoppingGroupUi>,
     listState: LazyListState,
     gridState: LazyStaggeredGridState,
-    onToggleDone: (Int) -> Unit,
+    onToggleDone: (Int, Boolean) -> Unit,
     onRetry: () -> Unit,
 ) {
     SkeletonTransitionAnimation(
@@ -195,7 +195,7 @@ private fun ShoppingListScreen(
     ) { loading ->
         when {
             loading -> ProvideSkeleton(active = true) {
-                ShoppingListGroups(groups = skeletonPlaceholders, onToggleDone = {})
+                ShoppingListGroups(groups = skeletonPlaceholders, onToggleDone = { _, _ -> })
             }
             loadError -> LoadError(onRetry = onRetry)
             groups.isEmpty() -> EmptyShoppingList()
@@ -216,7 +216,7 @@ private fun ShoppingListScreen(
 @Composable
 private fun ShoppingListGroups(
     groups: List<ShoppingGroupUi>,
-    onToggleDone: (Int) -> Unit,
+    onToggleDone: (Int, Boolean) -> Unit,
     listState: LazyListState = rememberLazyListState(),
     gridState: LazyStaggeredGridState = rememberLazyStaggeredGridState(),
     contentPadding: PaddingValues = PaddingValues(),
@@ -420,7 +420,7 @@ private fun ShoppingListScreenPreview() {
                 ),
                 listState = rememberLazyListState(),
                 gridState = rememberLazyStaggeredGridState(),
-                onToggleDone = {},
+                onToggleDone = { _, _ -> },
                 onRetry = {},
             )
         }
@@ -438,7 +438,7 @@ private fun ShoppingListScreenEmptyPreview() {
                 groups = emptyList(),
                 listState = rememberLazyListState(),
                 gridState = rememberLazyStaggeredGridState(),
-                onToggleDone = {},
+                onToggleDone = { _, _ -> },
                 onRetry = {},
             )
         }
@@ -456,7 +456,7 @@ private fun ShoppingListScreenSkeletonPreview() {
                 groups = emptyList(),
                 listState = rememberLazyListState(),
                 gridState = rememberLazyStaggeredGridState(),
-                onToggleDone = {},
+                onToggleDone = { _, _ -> },
                 onRetry = {},
             )
         }

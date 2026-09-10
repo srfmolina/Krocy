@@ -17,11 +17,13 @@ import com.srfmolina.krocy.domain.usecase.product.CreateQuConversionUseCase
 import com.srfmolina.krocy.domain.usecase.product.GetProductPurchaseInfoUseCase
 import com.srfmolina.krocy.domain.usecase.product.GetProductsUseCase
 import com.srfmolina.krocy.domain.usecase.shoppinglist.AddToShoppingListUseCase
+import com.srfmolina.krocy.domain.usecase.shoppinglist.LoadShoppingListUseCase
 import com.srfmolina.krocy.domain.usecase.shoppinglist.ObserveShoppingListUseCase
 import com.srfmolina.krocy.domain.usecase.shoppinglist.RefreshShoppingListUseCase
 import com.srfmolina.krocy.domain.usecase.shoppinglist.SetEntryDoneUseCase
 import com.srfmolina.krocy.domain.usecase.stock.AddStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.ConsumeStockUseCase
+import com.srfmolina.krocy.domain.usecase.stock.LoadStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.ObserveStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.OpenStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.PurchaseStockUseCase
@@ -43,6 +45,7 @@ val uiModule = module {
     factoryOf(::AddStockUseCase)
     factoryOf(::OpenStockUseCase)
     factoryOf(::RefreshStockUseCase)
+    factoryOf(::LoadStockUseCase)
     factoryOf(::CreateProductUseCase)
     factoryOf(::CreateQuConversionUseCase)
     factoryOf(::GetQuantityUnitsUseCase)
@@ -55,6 +58,7 @@ val uiModule = module {
     factoryOf(::GetShoppingLocationsUseCase)
     factoryOf(::ObserveShoppingListUseCase)
     factoryOf(::RefreshShoppingListUseCase)
+    factoryOf(::LoadShoppingListUseCase)
     factoryOf(::SetEntryDoneUseCase)
     factoryOf(::AddToShoppingListUseCase)
     factoryOf(::ValidateServerUseCase)

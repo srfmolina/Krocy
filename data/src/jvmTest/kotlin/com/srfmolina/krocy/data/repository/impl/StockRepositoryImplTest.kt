@@ -3,7 +3,12 @@ package com.srfmolina.krocy.data.repository.impl
 import com.srfmolina.krocy.data.datasource.remote.generic.GenericEntityDataSource
 import com.srfmolina.krocy.data.datasource.remote.stock.StockDataSource
 import com.srfmolina.krocy.domain.model.stock.NewPurchase
+import com.srfmolina.krocy.domain.model.stock.StockItem
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.yield
 import kotlinx.datetime.LocalDate
 import org.openapitools.client.models.CurrentStockResponse
 import org.openapitools.client.models.ObjectsEntityGet200ResponseInner
@@ -11,6 +16,8 @@ import org.openapitools.client.models.ProductDetailsResponse
 import org.openapitools.client.models.StockLogEntry
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class StockRepositoryImplTest {
 
@@ -32,9 +39,11 @@ class StockRepositoryImplTest {
         var purchasedShoppingLocationId: Int? = null
         var purchasedNote: String? = null
         var stockFetches = 0
+        var failGetStock = false
 
         override suspend fun getStock(): Result<List<CurrentStockResponse>> {
             stockFetches++
+            if (failGetStock) return Result.failure(IllegalStateException("boom"))
             return Result.success(emptyList())
         }
 
@@ -95,5 +104,37 @@ class StockRepositoryImplTest {
         assertEquals(5, stub.purchasedShoppingLocationId)
         assertEquals("oferta", stub.purchasedNote)
         assertEquals(1, stub.stockFetches)
+    }
+
+    @Test
+    fun `subscribing loads nothing until ensureLoaded is called`() = runBlocking {
+        val stub = StockDataSourceStub()
+        val repo = StockRepositoryImpl(stub, genericStub, baseUrl = "http://test")
+
+        val beforeLoad = withTimeoutOrNull(100) { repo.getStock().first() }
+
+        assertNull(beforeLoad)
+        assertEquals(0, stub.stockFetches)
+        repo.ensureLoaded()
+        assertEquals(emptyList(), repo.getStock().first())
+    }
+
+    @Test
+    fun `a failed load does not end the stream, so a later refresh reaches the same collector`() = runBlocking {
+        val stub = StockDataSourceStub()
+        val repo = StockRepositoryImpl(stub, genericStub, baseUrl = "http://test")
+        val received = mutableListOf<List<StockItem>>()
+        stub.failGetStock = true
+
+        val collector = launch { runCatching { repo.getStock().collect { received += it } } }
+        yield() // subscribed: this is the moment the old contract ran - and failed - the load
+        assertTrue(runCatching { repo.ensureLoaded() }.isFailure)
+
+        stub.failGetStock = false
+        repo.forceRefresh()
+        yield()
+
+        assertEquals(1, received.size, "the refreshed stock never reached the collector")
+        collector.cancel()
     }
 }

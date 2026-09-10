@@ -8,7 +8,7 @@ import com.srfmolina.krocy.domain.model.stock.StockItem
 import com.srfmolina.krocy.domain.repository.StockRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.onSubscription
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -19,16 +19,17 @@ internal class StockRepositoryImpl(
     private val baseUrl: String
 ) : StockRepository {
 
-    private val _cache = MutableStateFlow<List<StockItem>>(emptyList())
+    // null until the first successful load: nothing is emitted before then, and a failed
+    // load leaves it null without ending anyone's collection.
+    private val _cache = MutableStateFlow<List<StockItem>?>(null)
 
     private val refreshMutex = Mutex()
     @Volatile private var loaded = false
 
-    override fun getStock(): Flow<List<StockItem>> = _cache
-        .onSubscription { ensureLoaded() }
+    override fun getStock(): Flow<List<StockItem>> = _cache.filterNotNull()
 
-    /** Loads the stock once; later subscribers reuse the cached value. */
-    private suspend fun ensureLoaded() {
+    /** Loads the stock once; later calls are no-ops. */
+    override suspend fun ensureLoaded() {
         if (loaded) return
         refreshMutex.withLock {
             if (loaded) return

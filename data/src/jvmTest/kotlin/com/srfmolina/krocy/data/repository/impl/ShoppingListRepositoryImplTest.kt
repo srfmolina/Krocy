@@ -2,8 +2,12 @@ package com.srfmolina.krocy.data.repository.impl
 
 import com.srfmolina.krocy.data.datasource.remote.generic.GenericEntityDataSource
 import com.srfmolina.krocy.data.datasource.remote.shoppinglist.ShoppingListDataSource
+import com.srfmolina.krocy.domain.model.shoppinglist.ShoppingListEntry
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.yield
 import org.openapitools.client.models.CurrentVolatilStockResponseMissingProductsInner
 import org.openapitools.client.models.ObjectsEntityGet200ResponseInner
 import kotlin.test.Test
@@ -42,6 +46,7 @@ class ShoppingListRepositoryImplTest {
         val doneCalls = mutableListOf<Pair<Int, Boolean>>()
         val updatedIds = mutableListOf<Int>()
         var itemFetches = 0
+        var failItems = false
         private var nextId = 100
 
         override suspend fun getShoppingLists() = Result.success(lists)
@@ -53,6 +58,7 @@ class ShoppingListRepositoryImplTest {
 
         override suspend fun getItems(): Result<List<ObjectsEntityGet200ResponseInner>> {
             itemFetches++
+            if (failItems) return Result.failure(IllegalStateException("boom"))
             return Result.success(items.toList())
         }
 
@@ -106,6 +112,64 @@ class ShoppingListRepositoryImplTest {
         }
     }
 
+    /** Loads explicitly, then reads the cache: subscribing does not load by itself. */
+    private suspend fun ShoppingListRepositoryImpl.loadedList(): List<ShoppingListEntry> {
+        ensureLoaded()
+        return getShoppingList().first()
+    }
+
+    @Test
+    fun `subscribing loads nothing until ensureLoaded is called`() = runBlocking {
+        val stub = ShoppingListDataSourceStub(missing = listOf(missing(productId = 1, amount = 3.0)))
+        val repo = ShoppingListRepositoryImpl(stub, genericStub)
+
+        val beforeLoad = withTimeoutOrNull(100) { repo.getShoppingList().first() }
+
+        assertNull(beforeLoad)
+        assertEquals(0, stub.itemFetches)
+        repo.ensureLoaded()
+        assertEquals(1, repo.getShoppingList().first().size)
+    }
+
+    @Test
+    fun `a failed load does not end the stream, so a later refresh reaches the same collector`() = runBlocking {
+        val stub = ShoppingListDataSourceStub(missing = listOf(missing(productId = 1, amount = 3.0)))
+        val repo = ShoppingListRepositoryImpl(stub, genericStub)
+        val received = mutableListOf<List<ShoppingListEntry>>()
+        stub.failItems = true
+
+        val collector = launch { runCatching { repo.getShoppingList().collect { received += it } } }
+        yield() // subscribed: this is the moment the old contract ran - and failed - the load
+        assertTrue(runCatching { repo.ensureLoaded() }.isFailure)
+
+        stub.failItems = false
+        repo.forceRefresh()
+        yield()
+
+        assertEquals(1, received.lastOrNull()?.size)
+        collector.cancel()
+    }
+
+    @Test
+    fun `adding a product after a failed first load also syncs the deficits`() = runBlocking {
+        val stub = ShoppingListDataSourceStub(missing = listOf(missing(productId = 1, amount = 3.0)))
+        val repo = ShoppingListRepositoryImpl(stub, genericStub)
+        stub.failItems = true
+        assertTrue(runCatching { repo.ensureLoaded() }.isFailure)
+
+        stub.failItems = false
+        repo.addProduct(productId = 2, amount = 1.0)
+
+        // Nothing retries the load after Init, so this add is the first successful load: a
+        // list without the deficit rows would look complete while silently lacking them.
+        val entries = repo.getShoppingList().first()
+        assertEquals(setOf("P7", "Pan de molde"), entries.map { it.productName }.toSet())
+        // ...and it counts as the load, so a later ensureLoaded does not sync again.
+        val fetchesAfterAdd = stub.itemFetches
+        repo.ensureLoaded()
+        assertEquals(fetchesAfterAdd, stub.itemFetches)
+    }
+
     private fun missing(productId: Int, amount: Double) =
         CurrentVolatilStockResponseMissingProductsInner(id = productId, amountMissing = amount)
 
@@ -129,7 +193,7 @@ class ShoppingListRepositoryImplTest {
         val stub = ShoppingListDataSourceStub(missing = listOf(missing(productId = 1, amount = 3.0)))
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
 
-        val entries = repo.getShoppingList().first()
+        val entries = repo.loadedList()
 
         val entry = entries.single()
         assertEquals("P7", entry.productName)
@@ -151,7 +215,7 @@ class ShoppingListRepositoryImplTest {
         )
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
 
-        val entries = repo.getShoppingList().first()
+        val entries = repo.loadedList()
 
         assertTrue(entries.isEmpty())
         assertTrue(stub.items.isEmpty())
@@ -166,7 +230,7 @@ class ShoppingListRepositoryImplTest {
         )
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
 
-        val entry = repo.getShoppingList().first().single()
+        val entry = repo.loadedList().single()
 
         assertEquals(1.0, entry.amount)
         assertEquals("lata", entry.unitName)
@@ -183,7 +247,7 @@ class ShoppingListRepositoryImplTest {
         )
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
 
-        val entries = repo.getShoppingList().first()
+        val entries = repo.loadedList()
 
         // The pending user row survives untouched although its product has no deficit...
         assertEquals(listOf(30), entries.map { it.id })
@@ -201,7 +265,7 @@ class ShoppingListRepositoryImplTest {
         )
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
 
-        val entries = repo.getShoppingList().first()
+        val entries = repo.loadedList()
 
         val entry = entries.single()
         assertEquals(30, entry.id)
@@ -212,7 +276,7 @@ class ShoppingListRepositoryImplTest {
     fun `manual add creates an unmarked user row with the product's stock unit`() = runBlocking {
         val stub = ShoppingListDataSourceStub()
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
-        repo.getShoppingList().first()
+        repo.loadedList()
 
         repo.addProduct(productId = 1, amount = 2.0)
 
@@ -220,7 +284,7 @@ class ShoppingListRepositoryImplTest {
         assertNull(row.note)
         assertEquals(6, row.quId)
         assertEquals(2.0, row.amount)
-        assertEquals(2.0, repo.getShoppingList().first().single().amount)
+        assertEquals(2.0, repo.loadedList().single().amount)
     }
 
     @Test
@@ -230,7 +294,7 @@ class ShoppingListRepositoryImplTest {
             items = mutableListOf(autoRow(id = 21, productId = 1, amount = 3.0, quId = 6, done = 1)),
         )
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
-        repo.getShoppingList().first()
+        repo.loadedList()
 
         repo.addProduct(productId = 1, amount = 2.0)
 
@@ -245,7 +309,7 @@ class ShoppingListRepositoryImplTest {
         val stub = ShoppingListDataSourceStub(lists = emptyList())
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
 
-        repo.getShoppingList().first()
+        repo.loadedList()
 
         assertEquals("Lista de la compra", stub.createdListName)
     }
@@ -254,13 +318,13 @@ class ShoppingListRepositoryImplTest {
     fun `setDone updates the row and patches the cache without refetching`() = runBlocking {
         val stub = ShoppingListDataSourceStub(missing = listOf(missing(productId = 1, amount = 3.0)))
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
-        val entryId = repo.getShoppingList().first().single().id
+        val entryId = repo.loadedList().single().id
         val fetchesAfterLoad = stub.itemFetches
 
         repo.setDone(entryId = entryId, done = true)
 
         assertEquals(listOf(entryId to true), stub.doneCalls)
-        assertTrue(repo.getShoppingList().first().single().done)
+        assertTrue(repo.loadedList().single().done)
         assertEquals(fetchesAfterLoad, stub.itemFetches)
     }
 
@@ -274,7 +338,7 @@ class ShoppingListRepositoryImplTest {
         )
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
 
-        val entries = repo.getShoppingList().first()
+        val entries = repo.loadedList()
 
         assertTrue(entries.isEmpty())
         assertEquals(listOf(40), stub.items.map { it.id })
@@ -284,7 +348,7 @@ class ShoppingListRepositoryImplTest {
     fun `re-adding a crossed-off product un-crosses the row instead of losing it`() = runBlocking {
         val stub = ShoppingListDataSourceStub()
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
-        repo.getShoppingList().first()
+        repo.loadedList()
         repo.addProduct(productId = 1, amount = 3.0)
         // The user crosses it off (e.g. in another client)...
         stub.items[0] = stub.items[0].copy(done = 1)
@@ -297,7 +361,7 @@ class ShoppingListRepositoryImplTest {
         assertEquals(0, row.done)
         // The next sync must keep it: it is a pending user row again, not a bought one.
         repo.forceRefresh()
-        assertEquals(5.0, repo.getShoppingList().first().single().amount)
+        assertEquals(5.0, repo.loadedList().single().amount)
     }
 
     @Test
@@ -308,7 +372,7 @@ class ShoppingListRepositoryImplTest {
         )
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
 
-        val entry = repo.getShoppingList().first().single()
+        val entry = repo.loadedList().single()
 
         assertTrue(entry.done)
         assertEquals(listOf(21), stub.items.map { it.id })
@@ -325,7 +389,7 @@ class ShoppingListRepositoryImplTest {
         )
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
 
-        val entries = repo.getShoppingList().first()
+        val entries = repo.loadedList()
 
         // Unknown is not zero: the auto row is neither resized nor deleted,
         // and no row is created for product 2.
@@ -345,7 +409,7 @@ class ShoppingListRepositoryImplTest {
 
         // A row with no id cannot be crossed off or deleted; emitting it with id 0 would
         // render a tappable entry whose PUT goes to /objects/shopping_list/0.
-        assertTrue(repo.getShoppingList().first().isEmpty())
+        assertTrue(repo.loadedList().isEmpty())
     }
 
     @Test
@@ -358,7 +422,7 @@ class ShoppingListRepositoryImplTest {
         )
         val repo = ShoppingListRepositoryImpl(stub, genericStub)
 
-        repo.getShoppingList().first()
+        repo.loadedList()
 
         assertTrue(stub.updatedIds.isEmpty())
     }

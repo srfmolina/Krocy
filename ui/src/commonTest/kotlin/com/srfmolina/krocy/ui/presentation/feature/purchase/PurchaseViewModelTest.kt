@@ -40,6 +40,7 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
@@ -75,6 +76,7 @@ class PurchaseViewModelTest {
     private class StockRepositoryFake : StockRepository {
         val purchases = mutableListOf<NewPurchase>()
         override fun getStock(): Flow<List<StockItem>> = flowOf(emptyList())
+        override suspend fun ensureLoaded() {}
         override suspend fun consume(productId: Int, amount: Int) {}
         override suspend fun open(productId: Int, amount: Int) {}
         override suspend fun add(productId: Int, amount: Int) {}
@@ -344,5 +346,25 @@ class PurchaseViewModelTest {
         assertTrue(vm.state.value.infoError)
         assertFalse(vm.state.value.infoLoading)
         assertNull(vm.state.value.info)
+    }
+
+    @Test
+    fun `retrying after a failed info fetch loads the info for that product`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val productRepo = ProductRepositoryStub(info(), throwOnGetPurchaseInfo = true)
+        val vm = viewModel(productRepo = productRepo)
+        vm.launchEvent(Event.Init)
+        advanceUntilIdle()
+        vm.launchEvent(Event.OnProductSelected(7))
+        advanceUntilIdle()
+        assertTrue(vm.state.value.infoError)
+
+        productRepo.throwOnGetPurchaseInfo = false
+        vm.launchEvent(Event.OnRetryLoadInfo(7))
+        advanceUntilIdle()
+
+        assertFalse(vm.state.value.infoError)
+        assertFalse(vm.state.value.infoLoading)
+        assertNotNull(vm.state.value.info)
     }
 }

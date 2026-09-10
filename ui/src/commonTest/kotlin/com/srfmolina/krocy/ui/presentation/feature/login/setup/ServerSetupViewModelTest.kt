@@ -97,8 +97,9 @@ class ServerSetupViewModelTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val loginRepo = LoginRepositoryFake { error("must not be called") }
         val vm = viewModel(loginRepo)
+        advanceUntilIdle() // the form edits land before the button is tapped, as in the UI
 
-        vm.launchEvent(Event.OnConnectClick)
+        vm.launchEvent(Event.OnConnectClick(vm.state.value.form))
         advanceUntilIdle()
 
         assertEquals(
@@ -114,7 +115,8 @@ class ServerSetupViewModelTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val loginRepo = LoginRepositoryFake { error("must not be called") }
         val vm = viewModel(loginRepo)
-        vm.launchEvent(Event.OnConnectClick)
+        advanceUntilIdle() // the form edits land before the button is tapped, as in the UI
+        vm.launchEvent(Event.OnConnectClick(vm.state.value.form))
         advanceUntilIdle()
         assertEquals(
             ValidationResult.Invalid(serverUrlError = "Campo obligatorio", apiKeyError = "Campo obligatorio"),
@@ -134,7 +136,8 @@ class ServerSetupViewModelTest {
         val vm = viewModel(loginRepo)
         vm.launchEvent(Event.OnServerUrlChange(validSelfHostedForm.serverUrl))
         vm.launchEvent(Event.OnApiKeyChange(validSelfHostedForm.apiKey))
-        vm.launchEvent(Event.OnConnectClick)
+        advanceUntilIdle() // the form edits land before the button is tapped, as in the UI
+        vm.launchEvent(Event.OnConnectClick(vm.state.value.form))
         advanceUntilIdle()
         assertEquals(
             ConnectionUi.Error(
@@ -158,8 +161,9 @@ class ServerSetupViewModelTest {
         val vm = viewModel(loginRepo)
         vm.launchEvent(Event.OnServerUrlChange(validSelfHostedForm.serverUrl))
         vm.launchEvent(Event.OnApiKeyChange(validSelfHostedForm.apiKey))
+        advanceUntilIdle() // the form edits land before the button is tapped, as in the UI
 
-        vm.launchEvent(Event.OnConnectClick)
+        vm.launchEvent(Event.OnConnectClick(vm.state.value.form))
         advanceUntilIdle()
 
         assertEquals(
@@ -181,8 +185,9 @@ class ServerSetupViewModelTest {
         val vm = viewModel(loginRepo, sessionManager = sessionManager)
         vm.launchEvent(Event.OnServerUrlChange(validSelfHostedForm.serverUrl))
         vm.launchEvent(Event.OnApiKeyChange(validSelfHostedForm.apiKey))
+        advanceUntilIdle() // the form edits land before the button is tapped, as in the UI
 
-        vm.launchEvent(Event.OnConnectClick)
+        vm.launchEvent(Event.OnConnectClick(vm.state.value.form))
         advanceUntilIdle()
 
         assertEquals(ConnectionUi.VersionWarning("3.3.1"), vm.state.value.connection)
@@ -200,7 +205,8 @@ class ServerSetupViewModelTest {
         val collector = launch { vm.effect.collect { effects.add(it) } }
         vm.launchEvent(Event.OnServerUrlChange(validSelfHostedForm.serverUrl))
         vm.launchEvent(Event.OnApiKeyChange(validSelfHostedForm.apiKey))
-        vm.launchEvent(Event.OnConnectClick)
+        advanceUntilIdle() // the form edits land before the button is tapped, as in the UI
+        vm.launchEvent(Event.OnConnectClick(vm.state.value.form))
         advanceUntilIdle()
 
         vm.launchEvent(Event.OnContinueAnyway)
@@ -216,13 +222,39 @@ class ServerSetupViewModelTest {
     }
 
     @Test
+    fun `a double-tap on continue anyway logs in once`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val loginRepo = LoginRepositoryFake { ServerValidation.forVersion("3.3.1") }
+        val configRepo = ServerConfigRepositoryFake()
+        val sessionManager = SessionManagerFake()
+        val vm = viewModel(loginRepo, configRepo, sessionManager)
+        val effects = mutableListOf<Effect>()
+        val collector = launch { vm.effect.collect { effects.add(it) } }
+        vm.launchEvent(Event.OnServerUrlChange(validSelfHostedForm.serverUrl))
+        vm.launchEvent(Event.OnApiKeyChange(validSelfHostedForm.apiKey))
+        advanceUntilIdle() // the form edits land before the button is tapped, as in the UI
+        vm.launchEvent(Event.OnConnectClick(vm.state.value.form))
+        advanceUntilIdle()
+
+        // Simulate a fast double-tap on the warning's confirm button.
+        vm.launchEvent(Event.OnContinueAnyway)
+        vm.launchEvent(Event.OnContinueAnyway)
+        advanceUntilIdle()
+
+        assertEquals(1, sessionManager.openCallCount)
+        assertEquals(listOf<Effect>(Effect.NavigateToStock), effects)
+        collector.cancel()
+    }
+
+    @Test
     fun `OnDismissWarning resets the connection back to idle`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val loginRepo = LoginRepositoryFake { ServerValidation.forVersion("3.3.1") }
         val vm = viewModel(loginRepo)
         vm.launchEvent(Event.OnServerUrlChange(validSelfHostedForm.serverUrl))
         vm.launchEvent(Event.OnApiKeyChange(validSelfHostedForm.apiKey))
-        vm.launchEvent(Event.OnConnectClick)
+        advanceUntilIdle() // the form edits land before the button is tapped, as in the UI
+        vm.launchEvent(Event.OnConnectClick(vm.state.value.form))
         advanceUntilIdle()
         assertEquals(ConnectionUi.VersionWarning("3.3.1"), vm.state.value.connection)
 
@@ -243,8 +275,9 @@ class ServerSetupViewModelTest {
         val collector = launch { vm.effect.collect { effects.add(it) } }
         vm.launchEvent(Event.OnServerUrlChange(validSelfHostedForm.serverUrl))
         vm.launchEvent(Event.OnApiKeyChange(validSelfHostedForm.apiKey))
+        advanceUntilIdle() // the form edits land before the button is tapped, as in the UI
 
-        vm.launchEvent(Event.OnConnectClick)
+        vm.launchEvent(Event.OnConnectClick(vm.state.value.form))
         advanceUntilIdle()
 
         assertEquals(
@@ -271,10 +304,11 @@ class ServerSetupViewModelTest {
         val collector = launch { vm.effect.collect { effects.add(it) } }
         vm.launchEvent(Event.OnServerUrlChange(validSelfHostedForm.serverUrl))
         vm.launchEvent(Event.OnApiKeyChange(validSelfHostedForm.apiKey))
+        advanceUntilIdle() // the form edits land before the button is tapped, as in the UI
 
         // Simulate a fast double-tap: both events are queued before either completes.
-        vm.launchEvent(Event.OnConnectClick)
-        vm.launchEvent(Event.OnConnectClick)
+        vm.launchEvent(Event.OnConnectClick(vm.state.value.form))
+        vm.launchEvent(Event.OnConnectClick(vm.state.value.form))
         advanceUntilIdle()
 
         assertEquals(1, loginRepo.callCount)
@@ -299,7 +333,7 @@ class ServerSetupViewModelTest {
         vm.launchEvent(Event.OnScanQrClick)
         advanceUntilIdle()
 
-        assertTrue(vm.currentState.isScanning)
+        assertTrue(vm.state.value.isScanning)
     }
 
     @Test
@@ -311,7 +345,7 @@ class ServerSetupViewModelTest {
         vm.launchEvent(Event.OnQrScannerDismiss)
         advanceUntilIdle()
 
-        assertFalse(vm.currentState.isScanning)
+        assertFalse(vm.state.value.isScanning)
     }
 
     @Test
@@ -324,10 +358,10 @@ class ServerSetupViewModelTest {
         vm.launchEvent(Event.OnQrFrame(anyFrame))
         advanceUntilIdle()
 
-        assertFalse(vm.currentState.isScanning)
+        assertFalse(vm.state.value.isScanning)
         // Nothing is applied until the user vouches for the host.
-        assertEquals(ServerSetupForm(), vm.currentState.form)
-        val connection = vm.currentState.connection
+        assertEquals(ServerSetupForm(), vm.state.value.form)
+        val connection = vm.state.value.connection
         assertIs<ConnectionUi.QrConfirmation>(connection)
         assertEquals(
             GrocyQrCredentials.HomeAssistant("http://ha.local:8123", "px", "k"),
@@ -348,11 +382,11 @@ class ServerSetupViewModelTest {
         vm.launchEvent(Event.OnQrConfirm)
         advanceUntilIdle()
 
-        assertTrue(vm.currentState.form.usingHass)
-        assertEquals("http://ha.local:8123", vm.currentState.form.serverUrl)
-        assertEquals("px", vm.currentState.form.ingressProxyId)
-        assertEquals("k", vm.currentState.form.apiKey)
-        assertEquals(ConnectionUi.Idle, vm.currentState.connection)
+        assertTrue(vm.state.value.form.usingHass)
+        assertEquals("http://ha.local:8123", vm.state.value.form.serverUrl)
+        assertEquals("px", vm.state.value.form.ingressProxyId)
+        assertEquals("k", vm.state.value.form.apiKey)
+        assertEquals(ConnectionUi.Idle, vm.state.value.connection)
     }
 
     @Test
@@ -367,8 +401,8 @@ class ServerSetupViewModelTest {
         vm.launchEvent(Event.OnQrReject)
         advanceUntilIdle()
 
-        assertEquals(ServerSetupForm(), vm.currentState.form)
-        assertEquals(ConnectionUi.Idle, vm.currentState.connection)
+        assertEquals(ServerSetupForm(), vm.state.value.form)
+        assertEquals(ConnectionUi.Idle, vm.state.value.connection)
     }
 
     @Test
@@ -381,7 +415,7 @@ class ServerSetupViewModelTest {
         vm.launchEvent(Event.OnQrFrame(anyFrame))
         advanceUntilIdle()
 
-        val connection = vm.currentState.connection
+        val connection = vm.state.value.connection
         assertIs<ConnectionUi.QrConfirmation>(connection)
         assertTrue(connection.isCleartext)
     }
@@ -396,8 +430,8 @@ class ServerSetupViewModelTest {
         vm.launchEvent(Event.OnQrFrame(anyFrame))
         advanceUntilIdle()
 
-        assertFalse(vm.currentState.isScanning)
-        val connection = vm.currentState.connection
+        assertFalse(vm.state.value.isScanning)
+        val connection = vm.state.value.connection
         assertIs<ConnectionUi.Error>(connection)
         assertEquals("El código QR no pertenece a un servidor Grocy", connection.message)
     }
@@ -412,8 +446,8 @@ class ServerSetupViewModelTest {
         vm.launchEvent(Event.OnQrFrame(anyFrame))
         advanceUntilIdle()
 
-        assertTrue(vm.currentState.isScanning)
-        assertEquals(ServerSetupForm(), vm.currentState.form)
+        assertTrue(vm.state.value.isScanning)
+        assertEquals(ServerSetupForm(), vm.state.value.form)
     }
 
     @Test
@@ -434,7 +468,7 @@ class ServerSetupViewModelTest {
         assertEquals(1, qrRepo.callCount) // the camera outruns the decoder; only one gets through
         gate.complete(Unit)
         advanceUntilIdle()
-        assertIs<ConnectionUi.QrConfirmation>(vm.currentState.connection)
+        assertIs<ConnectionUi.QrConfirmation>(vm.state.value.connection)
     }
 
     @Test
@@ -447,7 +481,7 @@ class ServerSetupViewModelTest {
         advanceUntilIdle()
 
         assertEquals(0, qrRepo.callCount)
-        assertEquals(ServerSetupForm(), vm.currentState.form)
+        assertEquals(ServerSetupForm(), vm.state.value.form)
     }
 
     @Test
@@ -462,7 +496,7 @@ class ServerSetupViewModelTest {
         vm.launchEvent(Event.OnApiKeyChange("typed"))
         advanceUntilIdle()
 
-        assertIs<ConnectionUi.QrConfirmation>(vm.currentState.connection)
+        assertIs<ConnectionUi.QrConfirmation>(vm.state.value.connection)
     }
 
     @Test
@@ -483,9 +517,9 @@ class ServerSetupViewModelTest {
         gate.complete(Unit) // and only then does the decode land
         advanceUntilIdle()
 
-        assertFalse(vm.currentState.isScanning)
-        assertEquals(ConnectionUi.Idle, vm.currentState.connection)
-        assertEquals(ServerSetupForm(), vm.currentState.form)
+        assertFalse(vm.state.value.isScanning)
+        assertEquals(ConnectionUi.Idle, vm.state.value.connection)
+        assertEquals(ServerSetupForm(), vm.state.value.form)
     }
 
     @Test
@@ -506,7 +540,7 @@ class ServerSetupViewModelTest {
         gate.complete(Unit)
         advanceUntilIdle()
 
-        assertEquals(ConnectionUi.Idle, vm.currentState.connection)
+        assertEquals(ConnectionUi.Idle, vm.state.value.connection)
     }
 
     @Test
@@ -517,6 +551,6 @@ class ServerSetupViewModelTest {
         vm.launchEvent(Event.OnQrConfirm)
         advanceUntilIdle()
 
-        assertEquals(ServerSetupForm(), vm.currentState.form)
+        assertEquals(ServerSetupForm(), vm.state.value.form)
     }
 }
