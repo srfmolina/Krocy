@@ -76,7 +76,9 @@ internal class ShoppingListRepositoryImpl(
                     note = null,
                 ).getOrThrow()
             }
-            refreshItems(products)
+            // Before the first successful load a bare refresh would publish a list lacking
+            // the deficit rows, and nothing retries the load later: sync them here instead.
+            if (loaded) refreshItems(products) else syncAndRefresh()
         }
     }
 

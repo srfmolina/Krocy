@@ -150,6 +150,26 @@ class ShoppingListRepositoryImplTest {
         collector.cancel()
     }
 
+    @Test
+    fun `adding a product after a failed first load also syncs the deficits`() = runBlocking {
+        val stub = ShoppingListDataSourceStub(missing = listOf(missing(productId = 1, amount = 3.0)))
+        val repo = ShoppingListRepositoryImpl(stub, genericStub)
+        stub.failItems = true
+        assertTrue(runCatching { repo.ensureLoaded() }.isFailure)
+
+        stub.failItems = false
+        repo.addProduct(productId = 2, amount = 1.0)
+
+        // Nothing retries the load after Init, so this add is the first successful load: a
+        // list without the deficit rows would look complete while silently lacking them.
+        val entries = repo.getShoppingList().first()
+        assertEquals(setOf("P7", "Pan de molde"), entries.map { it.productName }.toSet())
+        // ...and it counts as the load, so a later ensureLoaded does not sync again.
+        val fetchesAfterAdd = stub.itemFetches
+        repo.ensureLoaded()
+        assertEquals(fetchesAfterAdd, stub.itemFetches)
+    }
+
     private fun missing(productId: Int, amount: Double) =
         CurrentVolatilStockResponseMissingProductsInner(id = productId, amountMissing = amount)
 
