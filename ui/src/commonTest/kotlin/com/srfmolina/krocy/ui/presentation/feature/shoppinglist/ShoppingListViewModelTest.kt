@@ -9,6 +9,7 @@ import com.srfmolina.krocy.domain.repository.ProductRepository
 import com.srfmolina.krocy.domain.repository.ShoppingListRepository
 import com.srfmolina.krocy.domain.usecase.product.GetProductsUseCase
 import com.srfmolina.krocy.domain.usecase.shoppinglist.AddToShoppingListUseCase
+import com.srfmolina.krocy.domain.usecase.shoppinglist.LoadShoppingListUseCase
 import com.srfmolina.krocy.domain.usecase.shoppinglist.ObserveShoppingListUseCase
 import com.srfmolina.krocy.domain.usecase.shoppinglist.RefreshShoppingListUseCase
 import com.srfmolina.krocy.domain.usecase.shoppinglist.SetEntryDoneUseCase
@@ -20,7 +21,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -45,21 +46,32 @@ class ShoppingListViewModelTest {
         ShoppingListEntry(12, 3, "Pan de molde", null, 1.0, "paquete", "paquetes", done = false),
     )
 
+    /**
+     * Mirrors the repository contract: the stream emits nothing until a load or refresh
+     * succeeds, and it never fails or completes, so one collector survives a failed load.
+     */
     private class ShoppingListRepositoryFake(
-        entries: List<ShoppingListEntry>,
-        var failObserve: Boolean = false,
+        private val serverEntries: List<ShoppingListEntry>,
+        var failLoad: Boolean = false,
         var failSetDone: Boolean = false,
         var failAdd: Boolean = false,
         var failRefresh: Boolean = false,
     ) : ShoppingListRepository {
-        val entriesFlow = MutableStateFlow(entries)
+        val cache = MutableStateFlow<List<ShoppingListEntry>?>(null)
         val setDoneAttempts = mutableListOf<Pair<Int, Boolean>>()
         val doneCalls = mutableListOf<Pair<Int, Boolean>>()
         val added = mutableListOf<Pair<Int, Double>>()
+        var loadCalls = 0
         var refreshCalls = 0
 
-        override fun getShoppingList(): Flow<List<ShoppingListEntry>> =
-            if (failObserve) flow { error("boom") } else entriesFlow
+        override fun getShoppingList(): Flow<List<ShoppingListEntry>> = cache.filterNotNull()
+
+        override suspend fun ensureLoaded() {
+            loadCalls++
+            if (cache.value != null) return
+            if (failLoad) error("boom")
+            cache.value = serverEntries
+        }
 
         override suspend fun setDone(entryId: Int, done: Boolean) {
             setDoneAttempts += entryId to done
@@ -74,13 +86,15 @@ class ShoppingListViewModelTest {
             added += productId to amount
             // Mirror production: the repository's cache emits the newly added entry before
             // addProduct returns, which is what actually ends the ViewModel's loading state.
-            entriesFlow.value = entriesFlow.value +
+            cache.value = cache.value.orEmpty() +
                 ShoppingListEntry(99, productId, "Queso curado", null, amount, "ud", "uds", done = false)
         }
 
         override suspend fun forceRefresh() {
             refreshCalls++
             if (failRefresh) error("boom")
+            // An unchanged list: the StateFlow dedupes it and emits nothing, like the real one.
+            cache.value = serverEntries
         }
     }
 
@@ -102,6 +116,7 @@ class ShoppingListViewModelTest {
         productRepo: ProductRepository = ProductRepositoryStub(),
     ) = ShoppingListViewModel(
         observeShoppingListUseCase = ObserveShoppingListUseCase(repo),
+        loadShoppingListUseCase = LoadShoppingListUseCase(repo),
         refreshShoppingListUseCase = RefreshShoppingListUseCase(repo),
         setEntryDoneUseCase = SetEntryDoneUseCase(repo),
         addToShoppingListUseCase = AddToShoppingListUseCase(repo),
@@ -213,20 +228,56 @@ class ShoppingListViewModelTest {
     @Test
     fun `a failing load surfaces the error state and refresh recovers from it`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
-        val repo = ShoppingListRepositoryFake(defaultEntries, failObserve = true)
+        val repo = ShoppingListRepositoryFake(defaultEntries, failLoad = true)
         val vm = viewModel(repo)
 
         vm.launchEvent(Event.Init)
         advanceUntilIdle()
         assertTrue(vm.state.value.loadError)
 
-        repo.failObserve = false
+        repo.failLoad = false
         vm.launchEvent(Event.OnRefresh)
         advanceUntilIdle()
 
         assertEquals(1, repo.refreshCalls)
         assertFalse(vm.state.value.loadError)
         assertEquals(3, vm.state.value.groups.size)
+        // Recovered by the collector started in Init: nothing had to re-subscribe.
+        assertEquals(1, repo.cache.subscriptionCount.value)
+    }
+
+    @Test
+    fun `a second Init neither loads again nor starts a second collection`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = ShoppingListRepositoryFake(defaultEntries)
+        val vm = viewModel(repo)
+
+        vm.launchEvent(Event.Init)
+        advanceUntilIdle()
+        // LaunchedEffect(Unit) re-sends Init whenever the screen re-enters composition while
+        // the ViewModel survives.
+        vm.launchEvent(Event.Init)
+        advanceUntilIdle()
+
+        assertEquals(1, repo.loadCalls)
+        assertEquals(1, repo.cache.subscriptionCount.value)
+    }
+
+    @Test
+    fun `refreshing an unchanged list still clears the loading state`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = ShoppingListRepositoryFake(defaultEntries)
+        val vm = viewModel(repo)
+        vm.launchEvent(Event.Init)
+        advanceUntilIdle()
+
+        // The refreshed list equals the cached one, so the StateFlow emits nothing new.
+        vm.launchEvent(Event.OnRefresh)
+        advanceUntilIdle()
+
+        assertEquals(1, repo.refreshCalls)
+        assertFalse(vm.state.value.isLoading)
+        assertFalse(vm.state.value.loadError)
     }
 
     @Test

@@ -76,6 +76,7 @@ class PurchaseViewModelTest {
     private class StockRepositoryFake : StockRepository {
         val purchases = mutableListOf<NewPurchase>()
         override fun getStock(): Flow<List<StockItem>> = flowOf(emptyList())
+        override suspend fun ensureLoaded() {}
         override suspend fun consume(productId: Int, amount: Int) {}
         override suspend fun open(productId: Int, amount: Int) {}
         override suspend fun add(productId: Int, amount: Int) {}

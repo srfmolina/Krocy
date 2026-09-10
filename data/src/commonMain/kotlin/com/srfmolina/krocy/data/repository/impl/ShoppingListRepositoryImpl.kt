@@ -7,7 +7,7 @@ import com.srfmolina.krocy.domain.model.shoppinglist.ShoppingListEntry
 import com.srfmolina.krocy.domain.repository.ShoppingListRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.onSubscription
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -18,17 +18,18 @@ internal class ShoppingListRepositoryImpl(
     private val genericEntityDataSource: GenericEntityDataSource,
 ) : ShoppingListRepository {
 
-    private val _cache = MutableStateFlow<List<ShoppingListEntry>>(emptyList())
+    // null until the first successful load: nothing is emitted before then, and a failed
+    // load leaves it null without ending anyone's collection.
+    private val _cache = MutableStateFlow<List<ShoppingListEntry>?>(null)
 
     private val refreshMutex = Mutex()
     @Volatile private var loaded = false
     @Volatile private var listId: Int? = null
 
-    override fun getShoppingList(): Flow<List<ShoppingListEntry>> = _cache
-        .onSubscription { ensureLoaded() }
+    override fun getShoppingList(): Flow<List<ShoppingListEntry>> = _cache.filterNotNull()
 
-    /** Syncs min-stock deficits and loads the list once; later subscribers reuse the cached value. */
-    private suspend fun ensureLoaded() {
+    /** Syncs min-stock deficits and loads the list once; later calls are no-ops. */
+    override suspend fun ensureLoaded() {
         if (loaded) return
         refreshMutex.withLock {
             if (loaded) return
@@ -43,7 +44,7 @@ internal class ShoppingListRepositoryImpl(
             shoppingListDataSource.setDone(entryId, done).getOrThrow()
             // Patch the cache in place: a full refetch here would defeat the instant cross-off.
             _cache.update { entries ->
-                entries.map { if (it.id == entryId) it.copy(done = done) else it }
+                entries?.map { if (it.id == entryId) it.copy(done = done) else it }
             }
         }
     }

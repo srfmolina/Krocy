@@ -3,6 +3,7 @@ package com.srfmolina.krocy.ui.presentation.feature.stock
 import androidx.lifecycle.viewModelScope
 import com.srfmolina.krocy.domain.usecase.stock.AddStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.ConsumeStockUseCase
+import com.srfmolina.krocy.domain.usecase.stock.LoadStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.ObserveStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.OpenStockUseCase
 import com.srfmolina.krocy.domain.usecase.stock.RefreshStockUseCase
@@ -16,6 +17,8 @@ import com.srfmolina.krocy.ui.presentation.feature.stock.StockViewModel.Event
 import com.srfmolina.krocy.ui.presentation.feature.stock.StockViewModel.State
 import com.srfmolina.krocy.ui.presentation.feature.stock.mapper.toUi
 import com.srfmolina.krocy.ui.presentation.feature.stock.model.StockItemUi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -24,8 +27,12 @@ internal class StockViewModel(
     private val consumeStockUseCase: ConsumeStockUseCase,
     private val addStockUseCase: AddStockUseCase,
     private val openStockUseCase: OpenStockUseCase,
-    private val refreshStockUseCase: RefreshStockUseCase
+    private val refreshStockUseCase: RefreshStockUseCase,
+    private val loadStockUseCase: LoadStockUseCase,
 ) : BaseViewModel<Event, State, Effect>() {
+
+    /** Once-only latch for [init]; see there. */
+    private val initialized = MutableStateFlow(false)
 
     sealed interface Event : UiEvent {
         data object Init : Event
@@ -55,8 +62,14 @@ internal class StockViewModel(
         }
     }
 
-    private fun init() {
+    private suspend fun init() {
+        // LaunchedEffect(Unit) re-sends Init whenever the screen re-enters composition while
+        // this ViewModel survives: a second collector would duplicate every emission.
+        if (initialized.getAndUpdate { true }) return
+        // One collection for the ViewModel's lifetime. The repository's stream never ends,
+        // not even on a failed load, so a later OnRefresh reaches this same collector.
         getStock()
+        loadStockUseCase().onFailure { setState { copy(isLoading = false) } }
     }
 
     private fun getStock() = observeStockUseCase().onEach { result ->
